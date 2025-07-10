@@ -6,17 +6,31 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		BFD2D8DD2E1F2C8600BFAC11 /* CompositorApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFD2D8DC2E1F2C8600BFAC11 /* CompositorApp.swift */; };
+		BFD2D8DF2E1F2C8600BFAC11 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFD2D8DE2E1F2C8600BFAC11 /* ContentView.swift */; };
+		BFD2D8E12E1F2C8900BFAC11 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BFD2D8E02E1F2C8900BFAC11 /* Assets.xcassets */; };
+		BFD2D8E62E1F2C8900BFAC11 /* Compositor.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = BFD2D8E42E1F2C8900BFAC11 /* Compositor.xcdatamodeld */; };
+		BFD2D8EE2E1F2E1A00BFAC11 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = BFD2D8ED2E1F2E1400BFAC11 /* README.md */; };
+		BFD2D9382E1FED5500BFAC11 /* CompositorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFD2D9372E1FED5500BFAC11 /* CompositorView.swift */; };
+		BFD2D93B2E200DF900BFAC11 /* LICENSE.md in Resources */ = {isa = PBXBuildFile; fileRef = BFD2D93A2E200DF500BFAC11 /* LICENSE.md */; };
+		BFD2D93F2E20126800BFAC11 /* ImageProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFD2D93E2E20125F00BFAC11 /* ImageProcessor.swift */; };
+		BFD2D9412E20128600BFAC11 /* NodeGraph.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFD2D9402E20128600BFAC11 /* NodeGraph.swift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		BFD2D8D92E1F2C8600BFAC11 /* Compositor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Compositor.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		BFD2D8DC2E1F2C8600BFAC11 /* CompositorApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompositorApp.swift; sourceTree = "<group>"; };
+		BFD2D8DE2E1F2C8600BFAC11 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		BFD2D8E02E1F2C8900BFAC11 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		BFD2D8E52E1F2C8900BFAC11 /* Compositor.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Compositor.xcdatamodel; sourceTree = "<group>"; };
+		BFD2D8E72E1F2C8900BFAC11 /* Compositor.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Compositor.entitlements; sourceTree = "<group>"; };
+		BFD2D8ED2E1F2E1400BFAC11 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		BFD2D9372E1FED5500BFAC11 /* CompositorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompositorView.swift; sourceTree = "<group>"; };
+		BFD2D93A2E200DF500BFAC11 /* LICENSE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = LICENSE.md; sourceTree = "<group>"; };
+		BFD2D93E2E20125F00BFAC11 /* ImageProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageProcessor.swift; sourceTree = "<group>"; };
+		BFD2D9402E20128600BFAC11 /* NodeGraph.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeGraph.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
-
-/* Begin PBXFileSystemSynchronizedRootGroup section */
-		BFD2D8DB2E1F2C8600BFAC11 /* Compositor */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = Compositor;
-			sourceTree = "<group>";
-		};
-/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		BFD2D8D62E1F2C8600BFAC11 /* Frameworks */ = {
@@ -32,8 +46,15 @@
 		BFD2D8D02E1F2C8600BFAC11 = {
 			isa = PBXGroup;
 			children = (
-				BFD2D8DB2E1F2C8600BFAC11 /* Compositor */,
+				BFD2D8EF2E1F2E5100BFAC11 /* App */,
+				BFD2D93D2E20123400BFAC11 /* Core */,
+				BFD2D8F22E1F2E7F00BFAC11 /* Views */,
+				BFD2D8F42E1F2EA000BFAC11 /* Resources */,
+				BFD2D8ED2E1F2E1400BFAC11 /* README.md */,
+				BFD2D8E72E1F2C8900BFAC11 /* Compositor.entitlements */,
+				BFD2D8E42E1F2C8900BFAC11 /* Compositor.xcdatamodeld */,
 				BFD2D8DA2E1F2C8600BFAC11 /* Products */,
+				BFD2D93A2E200DF500BFAC11 /* LICENSE.md */,
 			);
 			sourceTree = "<group>";
 		};
@@ -43,6 +64,40 @@
 				BFD2D8D92E1F2C8600BFAC11 /* Compositor.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		BFD2D8EF2E1F2E5100BFAC11 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				BFD2D8DC2E1F2C8600BFAC11 /* CompositorApp.swift */,
+				BFD2D8DE2E1F2C8600BFAC11 /* ContentView.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		BFD2D8F22E1F2E7F00BFAC11 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				BFD2D9372E1FED5500BFAC11 /* CompositorView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		BFD2D8F42E1F2EA000BFAC11 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				BFD2D8E02E1F2C8900BFAC11 /* Assets.xcassets */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		BFD2D93D2E20123400BFAC11 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				BFD2D9402E20128600BFAC11 /* NodeGraph.swift */,
+				BFD2D93E2E20125F00BFAC11 /* ImageProcessor.swift */,
+			);
+			path = Core;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -59,9 +114,6 @@
 			buildRules = (
 			);
 			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				BFD2D8DB2E1F2C8600BFAC11 /* Compositor */,
 			);
 			name = Compositor;
 			packageProductDependencies = (
@@ -109,6 +161,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BFD2D8EE2E1F2E1A00BFAC11 /* README.md in Resources */,
+				BFD2D93B2E200DF900BFAC11 /* LICENSE.md in Resources */,
+				BFD2D8E12E1F2C8900BFAC11 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -119,6 +174,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BFD2D8DF2E1F2C8600BFAC11 /* ContentView.swift in Sources */,
+				BFD2D8E62E1F2C8900BFAC11 /* Compositor.xcdatamodeld in Sources */,
+				BFD2D93F2E20126800BFAC11 /* ImageProcessor.swift in Sources */,
+				BFD2D8DD2E1F2C8600BFAC11 /* CompositorApp.swift in Sources */,
+				BFD2D9412E20128600BFAC11 /* NodeGraph.swift in Sources */,
+				BFD2D9382E1FED5500BFAC11 /* CompositorView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -250,7 +311,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = Compositor/Compositor.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Compositor.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -279,7 +340,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = Compositor/Compositor.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Compositor.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -325,6 +386,19 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCVersionGroup section */
+		BFD2D8E42E1F2C8900BFAC11 /* Compositor.xcdatamodeld */ = {
+			isa = XCVersionGroup;
+			children = (
+				BFD2D8E52E1F2C8900BFAC11 /* Compositor.xcdatamodel */,
+			);
+			currentVersion = BFD2D8E52E1F2C8900BFAC11 /* Compositor.xcdatamodel */;
+			path = Compositor.xcdatamodeld;
+			sourceTree = "<group>";
+			versionGroupType = wrapper.xcdatamodel;
+		};
+/* End XCVersionGroup section */
 	};
 	rootObject = BFD2D8D12E1F2C8600BFAC11 /* Project object */;
 }

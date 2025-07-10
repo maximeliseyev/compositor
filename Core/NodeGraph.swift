@@ -1,3 +1,11 @@
+//
+//  NodeGraph.swift
+//  Compositor
+//
+//  Created by Maxim Eliseyev on 10.07.2025.
+//
+
+
 import SwiftUI
 import CoreImage
 
@@ -21,7 +29,6 @@ class NodeGraph: ObservableObject {
     }
     
     func processGraph() -> CIImage? {
-        // Простая обработка графа (будем развивать дальше)
         guard let sourceNode = nodes.first(where: { $0.type == .imageInput }) else { return nil }
         return sourceNode.outputImage
     }
@@ -39,7 +46,6 @@ struct CompositorNode: Identifiable {
         self.type = type
         self.position = position
         
-        // Устанавливаем параметры по умолчанию
         switch type {
         case .imageInput:
             break

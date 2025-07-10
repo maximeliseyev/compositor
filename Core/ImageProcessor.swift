@@ -1,3 +1,11 @@
+//
+//  ImageProcessor.swift
+//  Compositor
+//
+//  Created by Maxim Eliseyev on 10.07.2025.
+//
+
+
 import CoreImage
 import CoreImage.CIFilterBuiltins
 import AppKit

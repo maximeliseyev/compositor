@@ -8,13 +8,12 @@
 import SwiftUI
 
 @main
-struct CompositorApp: App {
-    let persistenceController = PersistenceController.shared
-
+struct SwiftCompositorApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .environment(\.managedObjectContext, persistenceController.container.viewContext)
         }
+        .windowStyle(.titleBar)
+        .windowToolbarStyle(.unified)
     }
 }
