@@ -2,9 +2,8 @@
 //  ImageProcessor.swift
 //  Compositor
 //
-//  Created by Maxim Eliseyev on 10.07.2025.
+//  Enhanced with public filter methods
 //
-
 
 import CoreImage
 import CoreImage.CIFilterBuiltins
@@ -24,7 +23,8 @@ class ImageProcessor: ObservableObject {
         return processedImage
     }
     
-    private func applyFilter(_ filter: ImageFilter, to image: CIImage) -> CIImage {
+    // Публичный метод для применения одного фильтра
+    func applyFilter(_ filter: ImageFilter, to image: CIImage) -> CIImage {
         switch filter.type {
         case .colorControls:
             return applyColorControls(to: image, filter: filter)
@@ -68,10 +68,39 @@ class ImageProcessor: ObservableObject {
         return exposureFilter.outputImage ?? image
     }
     
+    // Дополнительные фильтры для расширения функциональности
+    func applyVignette(to image: CIImage, intensity: Float = 1.0, radius: Float = 1.0) -> CIImage {
+        let vignetteFilter = CIFilter.vignette()
+        vignetteFilter.inputImage = image
+        vignetteFilter.intensity = intensity
+        vignetteFilter.radius = radius
+        return vignetteFilter.outputImage ?? image
+    }
+    
+    func applyHueAdjust(to image: CIImage, angle: Float = 0.0) -> CIImage {
+        let hueFilter = CIFilter.hueAdjust()
+        hueFilter.inputImage = image
+        hueFilter.angle = angle
+        return hueFilter.outputImage ?? image
+    }
+    
+    func applyGammaAdjust(to image: CIImage, power: Float = 1.0) -> CIImage {
+        let gammaFilter = CIFilter.gammaAdjust()
+        gammaFilter.inputImage = image
+        gammaFilter.power = power
+        return gammaFilter.outputImage ?? image
+    }
+    
     // Конвертация CIImage в NSImage
     func ciImageToNSImage(_ ciImage: CIImage) -> NSImage? {
         guard let cgImage = context.createCGImage(ciImage, from: ciImage.extent) else { return nil }
         return NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
+    }
+    
+    // Получение информации об изображении
+    func getImageInfo(_ image: CIImage) -> String {
+        let extent = image.extent
+        return "Size: \(Int(extent.width)) x \(Int(extent.height))"
     }
 }
 
@@ -82,6 +111,12 @@ struct ImageFilter: Identifiable {
     let type: FilterType
     var parameters: [String: Double]
     var isEnabled: Bool = true
+    
+    init(name: String, type: FilterType, parameters: [String: Double]) {
+        self.name = name
+        self.type = type
+        self.parameters = parameters
+    }
 }
 
 enum FilterType: String, CaseIterable {
@@ -89,4 +124,7 @@ enum FilterType: String, CaseIterable {
     case blur = "Blur"
     case sharpen = "Sharpen"
     case exposure = "Exposure"
+    case vignette = "Vignette"
+    case hueAdjust = "Hue Adjust"
+    case gammaAdjust = "Gamma Adjust"
 }
