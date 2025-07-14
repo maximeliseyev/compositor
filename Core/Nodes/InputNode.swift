@@ -8,8 +8,6 @@
 import SwiftUI
 import CoreImage
 
-// Ensure BaseNode and NodeType are accessible
-
 class InputNode: BaseNode {
     @Published var nsImage: NSImage?
     @Published var ciImage: CIImage?

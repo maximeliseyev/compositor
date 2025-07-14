@@ -16,6 +16,7 @@
 		BFB5ACDF2E247F3C0063763C /* NodeGraphPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB5ACDE2E247F3B0063763C /* NodeGraphPanel.swift */; };
 		BFB5ACE12E247F980063763C /* NodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB5ACE02E247F980063763C /* NodeView.swift */; };
 		BFB5ACE72E25165C0063763C /* InputNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB5ACE62E25165C0063763C /* InputNode.swift */; };
+		BFB5ACF02E2524E50063763C /* CorrectorNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB5ACEF2E2524E50063763C /* CorrectorNode.swift */; };
 		BFD2D8DD2E1F2C8600BFAC11 /* CompositorApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFD2D8DC2E1F2C8600BFAC11 /* CompositorApp.swift */; };
 		BFD2D8DF2E1F2C8600BFAC11 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFD2D8DE2E1F2C8600BFAC11 /* ContentView.swift */; };
 		BFD2D8E12E1F2C8900BFAC11 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BFD2D8E02E1F2C8900BFAC11 /* Assets.xcassets */; };
@@ -35,6 +36,7 @@
 		BFB5ACDE2E247F3B0063763C /* NodeGraphPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeGraphPanel.swift; sourceTree = "<group>"; };
 		BFB5ACE02E247F980063763C /* NodeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeView.swift; sourceTree = "<group>"; };
 		BFB5ACE62E25165C0063763C /* InputNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputNode.swift; sourceTree = "<group>"; };
+		BFB5ACEF2E2524E50063763C /* CorrectorNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CorrectorNode.swift; sourceTree = "<group>"; };
 		BFD2D8D92E1F2C8600BFAC11 /* Compositor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Compositor.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BFD2D8DC2E1F2C8600BFAC11 /* CompositorApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompositorApp.swift; sourceTree = "<group>"; };
 		BFD2D8DE2E1F2C8600BFAC11 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -62,6 +64,7 @@
 			children = (
 				BFB5ACD62E245B8C0063763C /* ViewNode.swift */,
 				BFB5ACE62E25165C0063763C /* InputNode.swift */,
+				BFB5ACEF2E2524E50063763C /* CorrectorNode.swift */,
 				BFB5ACD42E245AE90063763C /* BaseNode.swift */,
 				BFB5ACDC2E245C720063763C /* NodeType.swift */,
 			);
@@ -252,6 +255,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				BFD2D8DF2E1F2C8600BFAC11 /* ContentView.swift in Sources */,
+				BFB5ACF02E2524E50063763C /* CorrectorNode.swift in Sources */,
 				BFB5ACDB2E245BC00063763C /* ViewerPanel.swift in Sources */,
 				BFB5ACE72E25165C0063763C /* InputNode.swift in Sources */,
 				BFB5ACE12E247F980063763C /* NodeView.swift in Sources */,

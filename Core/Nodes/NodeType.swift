@@ -8,4 +8,5 @@
 enum NodeType: String, CaseIterable {
     case view = "View"
     case input = "Input"
+    case corrector = "Corrector"
 }

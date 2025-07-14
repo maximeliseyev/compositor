@@ -15,64 +15,133 @@ struct NodeGraphPanel: View {
     @State private var selectedNodes: Set<UUID> = []
     @State private var selectionRect: CGRect? = nil
     @State private var isSelecting: Bool = false
+    // Connection drag state
+    @State private var connectionDragFromNodeID: UUID? = nil
+    @State private var connectionDragFromPosition: CGPoint? = nil
+    @State private var connectionDragCurrentPosition: CGPoint? = nil
+    @State private var panelSize: CGSize = .zero
     
     var body: some View {
-        ZStack {
-            // Grid background
-            Canvas { context, size in
-                let gridSpacing: CGFloat = 40
-                let lineColor = Color.gray.opacity(0.2)
-                // Vertical lines
-                var x: CGFloat = 0
-                while x <= size.width {
-                    var path = Path()
-                    path.move(to: CGPoint(x: x, y: 0))
-                    path.addLine(to: CGPoint(x: x, y: size.height))
-                    context.stroke(path, with: .color(lineColor), lineWidth: 1)
-                    x += gridSpacing
+        GeometryReader { geo in
+            ZStack {
+                // Grid background
+                Canvas { context, size in
+                    let gridSpacing: CGFloat = 40
+                    let lineColor = Color.gray.opacity(0.2)
+                    // Vertical lines
+                    var x: CGFloat = 0
+                    while x <= size.width {
+                        var path = Path()
+                        path.move(to: CGPoint(x: x, y: 0))
+                        path.addLine(to: CGPoint(x: x, y: size.height))
+                        context.stroke(path, with: .color(lineColor), lineWidth: 1)
+                        x += gridSpacing
+                    }
+                    // Horizontal lines
+                    var y: CGFloat = 0
+                    while y <= size.height {
+                        var path = Path()
+                        path.move(to: CGPoint(x: 0, y: y))
+                        path.addLine(to: CGPoint(x: size.width, y: y))
+                        context.stroke(path, with: .color(lineColor), lineWidth: 1)
+                        y += gridSpacing
+                    }
                 }
-                // Horizontal lines
-                var y: CGFloat = 0
-                while y <= size.height {
-                    var path = Path()
-                    path.move(to: CGPoint(x: 0, y: y))
-                    path.addLine(to: CGPoint(x: size.width, y: y))
-                    context.stroke(path, with: .color(lineColor), lineWidth: 1)
-                    y += gridSpacing
-                }
-            }
-            // Panel background
-            Rectangle()
-                .fill(Color.gray.opacity(0.1))
-                .contentShape(Rectangle())
-            
-            ForEach(nodeGraph.nodes, id: \.id) { node in
-                NodeView(
-                    node: node,
-                    isSelected: selectedNodes.contains(node.id),
-                    onSelect: {
-                        selectedNode = node
-                        selectedNodes = [node.id]
-                    },
-                    onDelete: { deleteNode(node) }
-                )
-                .position(node.position)
-            }
-            // Draw selection rectangle
-            if let rect = selectionRect, isSelecting {
+                // Panel background
                 Rectangle()
-                    .stroke(Color.accentColor, style: StrokeStyle(lineWidth: 1, dash: [5]))
-                    .background(Rectangle().fill(Color.accentColor.opacity(0.15)))
-                    .frame(width: rect.width, height: rect.height)
-                    .position(x: rect.midX, y: rect.midY)
-                    .allowsHitTesting(false)
+                    .fill(Color.gray.opacity(0.1))
+                    .contentShape(Rectangle())
+                
+                ForEach(nodeGraph.nodes, id: \.id) { node in
+                    NodeView(
+                        node: node,
+                        isSelected: selectedNodes.contains(node.id),
+                        onSelect: {
+                            selectedNode = node
+                            selectedNodes = [node.id]
+                        },
+                        onDelete: { deleteNode(node) },
+                        onStartConnection: { fromNodeID, portPosition in
+                            // Start connection drag from output port
+                            connectionDragFromNodeID = fromNodeID
+                            // Convert portPosition to global position
+                            if let node = nodeGraph.nodes.first(where: { $0.id == fromNodeID }) {
+                                let globalPos = node.position
+                                connectionDragFromPosition = CGPoint(x: globalPos.x, y: globalPos.y + 30) // 30 = node half height + triangle offset
+                            }
+                            connectionDragCurrentPosition = connectionDragFromPosition
+                        },
+                        onEndConnection: { toNodeID in
+                            // Complete connection if valid
+                            if let fromID = connectionDragFromNodeID,
+                               fromID != toNodeID,
+                               let fromNode = nodeGraph.nodes.first(where: { $0.id == fromID }),
+                               let toNode = nodeGraph.nodes.first(where: { $0.id == toNodeID }) {
+                                nodeGraph.connectNodes(from: fromNode, to: toNode)
+                            }
+                            connectionDragFromNodeID = nil
+                            connectionDragFromPosition = nil
+                            connectionDragCurrentPosition = nil
+                        },
+                        onConnectionDrag: { pos in
+                            connectionDragCurrentPosition = pos
+                        },
+                        onMove: { newPosition in
+                            nodeGraph.moveNode(node, to: newPosition)
+                        }
+                    )
+                    .position(node.position)
+                }
+                // Draw all connections
+                ForEach(nodeGraph.connections) { connection in
+                    if let fromNode = nodeGraph.nodes.first(where: { $0.id == connection.fromNode }),
+                       let toNode = nodeGraph.nodes.first(where: { $0.id == connection.toNode }) {
+                        Path { path in
+                            let from = CGPoint(x: fromNode.position.x, y: fromNode.position.y + 30) // bottom center
+                            let to = CGPoint(x: toNode.position.x, y: toNode.position.y - 30) // top center
+                            path.move(to: from)
+                            path.addLine(to: to)
+                        }
+                        .stroke(Color.orange, lineWidth: 3)
+                    }
+                }
+                // Draw preview connection
+                if let from = connectionDragFromPosition, let to = connectionDragCurrentPosition {
+                    Path { path in
+                        path.move(to: from)
+                        path.addLine(to: to)
+                    }
+                    .stroke(Color.orange.opacity(0.5), style: StrokeStyle(lineWidth: 2, dash: [6]))
+                }
+                // Draw selection rectangle
+                if let rect = selectionRect, isSelecting {
+                    Rectangle()
+                        .stroke(Color.accentColor, style: StrokeStyle(lineWidth: 1, dash: [5]))
+                        .background(Rectangle().fill(Color.accentColor.opacity(0.15)))
+                        .frame(width: rect.width, height: rect.height)
+                        .position(x: rect.midX, y: rect.midY)
+                        .allowsHitTesting(false)
+                }
+                
+                NodePanelMouseView { nodeType, location in
+                    createNode(ofType: nodeType, at: location)
+                }
+                .allowsHitTesting(true)
+                .background(Color.clear)
+                NodePanelKeyHandler(onDelete: deleteSelectedNodes)
             }
-            
-            NodePanelMouseView { nodeType, location in
-                createNode(ofType: nodeType, at: location)
+            .onAppear {
+                panelSize = geo.size
+                NotificationCenter.default.addObserver(forName: .createNodeFromMenu, object: nil, queue: .main) { notif in
+                    if let type = notif.object as? NodeType {
+                        let center = CGPoint(x: geo.size.width / 2, y: geo.size.height / 2)
+                        createNode(ofType: type, at: center)
+                    }
+                }
             }
-            .allowsHitTesting(true)
-            .background(Color.clear)
+            .onDisappear {
+                NotificationCenter.default.removeObserver(self, name: .createNodeFromMenu, object: nil)
+            }
         }
         .gesture(
             DragGesture(minimumDistance: 5)
@@ -110,6 +179,9 @@ struct NodeGraphPanel: View {
         case .input:
             let inputNode = InputNode(position: position)
             nodeGraph.addNode(inputNode)
+        case .corrector:
+            let correctorNode = CorrectorNode(position: position)
+            nodeGraph.addNode(correctorNode)
         }
     }
 
@@ -118,6 +190,15 @@ struct NodeGraphPanel: View {
         if selectedNode?.id == node.id {
             selectedNode = nil
         }
+    }
+
+    private func deleteSelectedNodes() {
+        let nodesToDelete = nodeGraph.nodes.filter { selectedNodes.contains($0.id) }
+        for node in nodesToDelete {
+            nodeGraph.removeNode(node)
+        }
+        selectedNodes.removeAll()
+        selectedNode = nil
     }
 }
 
@@ -171,5 +252,36 @@ struct NodePanelMouseView: NSViewRepresentable {
         }
 
         static var menuLocationKey: UInt8 = 0
+    }
+}
+
+// NSViewRepresentable to intercept keyDown events
+struct NodePanelKeyHandler: NSViewRepresentable {
+    var onDelete: () -> Void
+
+    func makeNSView(context: Context) -> NSView {
+        let view = KeyCatcherView()
+        view.onDelete = onDelete
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {}
+
+    class KeyCatcherView: NSView {
+        var onDelete: (() -> Void)?
+
+        override var acceptsFirstResponder: Bool { true }
+
+        override func keyDown(with event: NSEvent) {
+            if event.keyCode == 51 || event.keyCode == 117 { // 51 = delete, 117 = forward delete
+                onDelete?()
+            } else {
+                super.keyDown(with: event)
+            }
+        }
+
+        override func viewDidMoveToWindow() {
+            window?.makeFirstResponder(self)
+        }
     }
 }
