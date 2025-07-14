@@ -57,6 +57,8 @@ struct NodeView: View {
         switch node.type {
         case .view:
             return "eye"
+        case .input:
+            return "arrow"
         }
     }
     
