@@ -1,1 +1,1 @@
-An application for video compositing like Nuke or Fusion.
+It is a free and open source video compositing application like Nuke or Fusion.
