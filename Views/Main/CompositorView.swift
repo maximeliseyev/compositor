@@ -56,7 +56,6 @@ struct InspectorPanel: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Заголовок
             HStack {
                 Text("Inspector")
                     .font(.headline)
@@ -69,11 +68,9 @@ struct InspectorPanel: View {
             
             Divider()
             
-            // Содержимое
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     if let nodeName = selectedNode {
-                        // Информация о выбранной ноде
                         VStack(alignment: .leading, spacing: 8) {
                             Text("Selected Node")
                                 .font(.subheadline)

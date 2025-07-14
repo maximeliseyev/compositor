@@ -57,12 +57,73 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		BFB5ACE82E251DD60063763C /* Nodes */ = {
+			isa = PBXGroup;
+			children = (
+				BFB5ACD62E245B8C0063763C /* ViewNode.swift */,
+				BFB5ACE62E25165C0063763C /* InputNode.swift */,
+				BFB5ACD42E245AE90063763C /* BaseNode.swift */,
+				BFB5ACDC2E245C720063763C /* NodeType.swift */,
+			);
+			path = Nodes;
+			sourceTree = "<group>";
+		};
+		BFB5ACE92E251DF10063763C /* Graph */ = {
+			isa = PBXGroup;
+			children = (
+				BFD2D9402E20128600BFAC11 /* NodeGraph.swift */,
+			);
+			path = Graph;
+			sourceTree = "<group>";
+		};
+		BFB5ACEA2E251E0F0063763C /* NodeGraph */ = {
+			isa = PBXGroup;
+			children = (
+				BFB5ACE02E247F980063763C /* NodeView.swift */,
+				BFB5ACDE2E247F3B0063763C /* NodeGraphPanel.swift */,
+			);
+			path = NodeGraph;
+			sourceTree = "<group>";
+		};
+		BFB5ACEB2E251E2A0063763C /* Viewer */ = {
+			isa = PBXGroup;
+			children = (
+				BFB5ACDA2E245BBF0063763C /* ViewerPanel.swift */,
+				BFB5ACD82E245B9F0063763C /* ViewerPanelController.swift */,
+			);
+			path = Viewer;
+			sourceTree = "<group>";
+		};
+		BFB5ACEC2E251E420063763C /* Inspector */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Inspector;
+			sourceTree = "<group>";
+		};
+		BFB5ACED2E251E540063763C /* Main */ = {
+			isa = PBXGroup;
+			children = (
+				BFD2D8DE2E1F2C8600BFAC11 /* ContentView.swift */,
+				BFB5ACD02E2437010063763C /* CompositorView.swift */,
+			);
+			path = Main;
+			sourceTree = "<group>";
+		};
+		BFB5ACEE2E251E750063763C /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
 		BFD2D8D02E1F2C8600BFAC11 = {
 			isa = PBXGroup;
 			children = (
 				BFD2D8EF2E1F2E5100BFAC11 /* App */,
 				BFD2D93D2E20123400BFAC11 /* Core */,
 				BFD2D8F22E1F2E7F00BFAC11 /* Views */,
+				BFB5ACEE2E251E750063763C /* ViewModels */,
 				BFD2D8F42E1F2EA000BFAC11 /* Resources */,
 				BFD2D8ED2E1F2E1400BFAC11 /* README.md */,
 				BFD2D8E72E1F2C8900BFAC11 /* Compositor.entitlements */,
@@ -91,12 +152,10 @@
 		BFD2D8F22E1F2E7F00BFAC11 /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				BFB5ACE02E247F980063763C /* NodeView.swift */,
-				BFB5ACDE2E247F3B0063763C /* NodeGraphPanel.swift */,
-				BFB5ACDA2E245BBF0063763C /* ViewerPanel.swift */,
-				BFB5ACD82E245B9F0063763C /* ViewerPanelController.swift */,
-				BFD2D8DE2E1F2C8600BFAC11 /* ContentView.swift */,
-				BFB5ACD02E2437010063763C /* CompositorView.swift */,
+				BFB5ACED2E251E540063763C /* Main */,
+				BFB5ACEB2E251E2A0063763C /* Viewer */,
+				BFB5ACEA2E251E0F0063763C /* NodeGraph */,
+				BFB5ACEC2E251E420063763C /* Inspector */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -112,11 +171,8 @@
 		BFD2D93D2E20123400BFAC11 /* Core */ = {
 			isa = PBXGroup;
 			children = (
-				BFB5ACDC2E245C720063763C /* NodeType.swift */,
-				BFB5ACD62E245B8C0063763C /* ViewNode.swift */,
-				BFB5ACE62E25165C0063763C /* InputNode.swift */,
-				BFB5ACD42E245AE90063763C /* BaseNode.swift */,
-				BFD2D9402E20128600BFAC11 /* NodeGraph.swift */,
+				BFB5ACE82E251DD60063763C /* Nodes */,
+				BFB5ACE92E251DF10063763C /* Graph */,
 			);
 			path = Core;
 			sourceTree = "<group>";

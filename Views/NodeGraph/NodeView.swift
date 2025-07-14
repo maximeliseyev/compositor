@@ -11,20 +11,11 @@ import SwiftUI
 struct NodeView: View {
     let node: BaseNode
     let isSelected: Bool
+    let onSelect: () -> Void
+    let onDelete: () -> Void
     
     var body: some View {
         VStack(spacing: 8) {
-            // Заголовок ноды
-            Text(node.title)
-                .font(.caption)
-                .fontWeight(.medium)
-                .foregroundColor(.white)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(Color.blue)
-                .cornerRadius(4)
-            
-            // Тело ноды
             RoundedRectangle(cornerRadius: 8)
                 .fill(Color.gray.opacity(0.8))
                 .frame(width: 120, height: 80)
@@ -44,9 +35,12 @@ struct NodeView: View {
                         .stroke(isSelected ? Color.yellow : Color.clear, lineWidth: 2)
                 )
         }
+        .onTapGesture {
+            onSelect()
+        }
         .contextMenu {
             Button(action: {
-                deleteNode()
+                onDelete()
             }) {
                 Label("Delete Node", systemImage: "trash")
             }
@@ -57,13 +51,8 @@ struct NodeView: View {
         switch node.type {
         case .view:
             return "eye"
-        case .input:
-            return "arrow"
+        default:
+            return "square"
         }
-    }
-    
-    private func deleteNode() {
-        // Логика удаления ноды - реализуется позже
-        print("Delete node: \(node.id)")
     }
 }
