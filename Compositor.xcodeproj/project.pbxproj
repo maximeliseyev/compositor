@@ -7,19 +7,32 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		BFB5ACD12E2437010063763C /* CompositorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB5ACD02E2437010063763C /* CompositorView.swift */; };
+		BFB5ACD52E245AF30063763C /* BaseNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB5ACD42E245AE90063763C /* BaseNode.swift */; };
+		BFB5ACD72E245B8C0063763C /* ViewNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB5ACD62E245B8C0063763C /* ViewNode.swift */; };
+		BFB5ACD92E245B9F0063763C /* ViewerPanelController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB5ACD82E245B9F0063763C /* ViewerPanelController.swift */; };
+		BFB5ACDB2E245BC00063763C /* ViewerPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB5ACDA2E245BBF0063763C /* ViewerPanel.swift */; };
+		BFB5ACDD2E245C720063763C /* NodeType.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB5ACDC2E245C720063763C /* NodeType.swift */; };
+		BFB5ACDF2E247F3C0063763C /* NodeGraphPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB5ACDE2E247F3B0063763C /* NodeGraphPanel.swift */; };
+		BFB5ACE12E247F980063763C /* NodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB5ACE02E247F980063763C /* NodeView.swift */; };
 		BFD2D8DD2E1F2C8600BFAC11 /* CompositorApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFD2D8DC2E1F2C8600BFAC11 /* CompositorApp.swift */; };
 		BFD2D8DF2E1F2C8600BFAC11 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFD2D8DE2E1F2C8600BFAC11 /* ContentView.swift */; };
 		BFD2D8E12E1F2C8900BFAC11 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BFD2D8E02E1F2C8900BFAC11 /* Assets.xcassets */; };
 		BFD2D8E62E1F2C8900BFAC11 /* Compositor.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = BFD2D8E42E1F2C8900BFAC11 /* Compositor.xcdatamodeld */; };
 		BFD2D8EE2E1F2E1A00BFAC11 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = BFD2D8ED2E1F2E1400BFAC11 /* README.md */; };
-		BFD2D9382E1FED5500BFAC11 /* CompositorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFD2D9372E1FED5500BFAC11 /* CompositorView.swift */; };
 		BFD2D93B2E200DF900BFAC11 /* LICENSE.md in Resources */ = {isa = PBXBuildFile; fileRef = BFD2D93A2E200DF500BFAC11 /* LICENSE.md */; };
-		BFD2D93F2E20126800BFAC11 /* ImageProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFD2D93E2E20125F00BFAC11 /* ImageProcessor.swift */; };
 		BFD2D9412E20128600BFAC11 /* NodeGraph.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFD2D9402E20128600BFAC11 /* NodeGraph.swift */; };
-		BFD2D9432E201EDB00BFAC11 /* NodeGraphView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFD2D9422E201EDB00BFAC11 /* NodeGraphView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		BFB5ACD02E2437010063763C /* CompositorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompositorView.swift; sourceTree = "<group>"; };
+		BFB5ACD42E245AE90063763C /* BaseNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseNode.swift; sourceTree = "<group>"; };
+		BFB5ACD62E245B8C0063763C /* ViewNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewNode.swift; sourceTree = "<group>"; };
+		BFB5ACD82E245B9F0063763C /* ViewerPanelController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewerPanelController.swift; sourceTree = "<group>"; };
+		BFB5ACDA2E245BBF0063763C /* ViewerPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewerPanel.swift; sourceTree = "<group>"; };
+		BFB5ACDC2E245C720063763C /* NodeType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeType.swift; sourceTree = "<group>"; };
+		BFB5ACDE2E247F3B0063763C /* NodeGraphPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeGraphPanel.swift; sourceTree = "<group>"; };
+		BFB5ACE02E247F980063763C /* NodeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeView.swift; sourceTree = "<group>"; };
 		BFD2D8D92E1F2C8600BFAC11 /* Compositor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Compositor.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BFD2D8DC2E1F2C8600BFAC11 /* CompositorApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompositorApp.swift; sourceTree = "<group>"; };
 		BFD2D8DE2E1F2C8600BFAC11 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -27,11 +40,8 @@
 		BFD2D8E52E1F2C8900BFAC11 /* Compositor.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Compositor.xcdatamodel; sourceTree = "<group>"; };
 		BFD2D8E72E1F2C8900BFAC11 /* Compositor.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Compositor.entitlements; sourceTree = "<group>"; };
 		BFD2D8ED2E1F2E1400BFAC11 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
-		BFD2D9372E1FED5500BFAC11 /* CompositorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompositorView.swift; sourceTree = "<group>"; };
 		BFD2D93A2E200DF500BFAC11 /* LICENSE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = LICENSE.md; sourceTree = "<group>"; };
-		BFD2D93E2E20125F00BFAC11 /* ImageProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageProcessor.swift; sourceTree = "<group>"; };
 		BFD2D9402E20128600BFAC11 /* NodeGraph.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeGraph.swift; sourceTree = "<group>"; };
-		BFD2D9422E201EDB00BFAC11 /* NodeGraphView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeGraphView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -72,7 +82,6 @@
 			isa = PBXGroup;
 			children = (
 				BFD2D8DC2E1F2C8600BFAC11 /* CompositorApp.swift */,
-				BFD2D8DE2E1F2C8600BFAC11 /* ContentView.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -80,8 +89,12 @@
 		BFD2D8F22E1F2E7F00BFAC11 /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				BFD2D9422E201EDB00BFAC11 /* NodeGraphView.swift */,
-				BFD2D9372E1FED5500BFAC11 /* CompositorView.swift */,
+				BFB5ACE02E247F980063763C /* NodeView.swift */,
+				BFB5ACDE2E247F3B0063763C /* NodeGraphPanel.swift */,
+				BFB5ACDA2E245BBF0063763C /* ViewerPanel.swift */,
+				BFB5ACD82E245B9F0063763C /* ViewerPanelController.swift */,
+				BFD2D8DE2E1F2C8600BFAC11 /* ContentView.swift */,
+				BFB5ACD02E2437010063763C /* CompositorView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -97,8 +110,10 @@
 		BFD2D93D2E20123400BFAC11 /* Core */ = {
 			isa = PBXGroup;
 			children = (
+				BFB5ACDC2E245C720063763C /* NodeType.swift */,
+				BFB5ACD62E245B8C0063763C /* ViewNode.swift */,
+				BFB5ACD42E245AE90063763C /* BaseNode.swift */,
 				BFD2D9402E20128600BFAC11 /* NodeGraph.swift */,
-				BFD2D93E2E20125F00BFAC11 /* ImageProcessor.swift */,
 			);
 			path = Core;
 			sourceTree = "<group>";
@@ -178,12 +193,17 @@
 			buildActionMask = 2147483647;
 			files = (
 				BFD2D8DF2E1F2C8600BFAC11 /* ContentView.swift in Sources */,
+				BFB5ACDB2E245BC00063763C /* ViewerPanel.swift in Sources */,
+				BFB5ACE12E247F980063763C /* NodeView.swift in Sources */,
 				BFD2D8E62E1F2C8900BFAC11 /* Compositor.xcdatamodeld in Sources */,
-				BFD2D93F2E20126800BFAC11 /* ImageProcessor.swift in Sources */,
+				BFB5ACDD2E245C720063763C /* NodeType.swift in Sources */,
+				BFB5ACD52E245AF30063763C /* BaseNode.swift in Sources */,
+				BFB5ACD12E2437010063763C /* CompositorView.swift in Sources */,
+				BFB5ACD92E245B9F0063763C /* ViewerPanelController.swift in Sources */,
 				BFD2D8DD2E1F2C8600BFAC11 /* CompositorApp.swift in Sources */,
 				BFD2D9412E20128600BFAC11 /* NodeGraph.swift in Sources */,
-				BFD2D9382E1FED5500BFAC11 /* CompositorView.swift in Sources */,
-				BFD2D9432E201EDB00BFAC11 /* NodeGraphView.swift in Sources */,
+				BFB5ACD72E245B8C0063763C /* ViewNode.swift in Sources */,
+				BFB5ACDF2E247F3C0063763C /* NodeGraphPanel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
