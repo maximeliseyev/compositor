@@ -10,7 +10,7 @@ import SwiftUI
 // import Core.Nodes.BaseNode // If using modulemaps, otherwise ensure BaseNode.swift is in the target
 
 struct NodeView: View {
-    let node: BaseNode
+    @ObservedObject var node: BaseNode
     let isSelected: Bool
     let onSelect: () -> Void
     let onDelete: () -> Void
@@ -19,9 +19,8 @@ struct NodeView: View {
     let onEndConnection: ((UUID) -> Void)?
     let onConnectionDrag: ((CGPoint) -> Void)?
     let onMove: ((CGPoint) -> Void)?
-    
-    @State private var dragOffset: CGSize = .zero
-    @State private var isDragging: Bool = false
+
+    @State private var dragStartPosition: CGPoint? = nil
     
     var body: some View {
         ZStack {
@@ -58,18 +57,19 @@ struct NodeView: View {
                             RoundedRectangle(cornerRadius: 8)
                                 .stroke(isSelected ? Color.yellow : Color.clear, lineWidth: 2)
                         )
-                        .offset(dragOffset)
                         .gesture(
                             DragGesture()
                                 .onChanged { value in
-                                    isDragging = true
-                                    dragOffset = value.translation
+                                    if dragStartPosition == nil {
+                                        dragStartPosition = node.position
+                                    }
+                                    if let start = dragStartPosition {
+                                        let newPosition = CGPoint(x: start.x + value.translation.width, y: start.y + value.translation.height)
+                                        onMove?(newPosition)
+                                    }
                                 }
-                                .onEnded { value in
-                                    isDragging = false
-                                    dragOffset = .zero
-                                    let newPosition = CGPoint(x: node.position.x + value.translation.width, y: node.position.y + value.translation.height)
-                                    onMove?(newPosition)
+                                .onEnded { _ in
+                                    dragStartPosition = nil
                                 }
                         )
                 }

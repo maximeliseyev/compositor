@@ -15,7 +15,6 @@ struct NodeGraphPanel: View {
     @State private var selectedNodes: Set<UUID> = []
     @State private var selectionRect: CGRect? = nil
     @State private var isSelecting: Bool = false
-    // Connection drag state
     @State private var connectionDragFromNodeID: UUID? = nil
     @State private var connectionDragFromPosition: CGPoint? = nil
     @State private var connectionDragCurrentPosition: CGPoint? = nil
@@ -24,6 +23,16 @@ struct NodeGraphPanel: View {
     var body: some View {
         GeometryReader { geo in
             ZStack {
+                // NodePanelMouseView at the bottom for right-click context menu
+                NodePanelMouseView { nodeType, location in
+                    createNode(ofType: nodeType, at: location)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .allowsHitTesting(true)
+                .background(Color.clear)
+                
+                NodePanelKeyHandler(onDelete: deleteSelectedNodes)
+                
                 // Grid background
                 Canvas { context, size in
                     let gridSpacing: CGFloat = 40
@@ -51,6 +60,10 @@ struct NodeGraphPanel: View {
                 Rectangle()
                     .fill(Color.gray.opacity(0.1))
                     .contentShape(Rectangle())
+                    .onTapGesture {
+                        selectedNodes.removeAll()
+                        selectedNode = nil
+                    }
                 
                 ForEach(nodeGraph.nodes, id: \.id) { node in
                     NodeView(
@@ -122,13 +135,6 @@ struct NodeGraphPanel: View {
                         .position(x: rect.midX, y: rect.midY)
                         .allowsHitTesting(false)
                 }
-                
-                NodePanelMouseView { nodeType, location in
-                    createNode(ofType: nodeType, at: location)
-                }
-                .allowsHitTesting(true)
-                .background(Color.clear)
-                NodePanelKeyHandler(onDelete: deleteSelectedNodes)
             }
             .onAppear {
                 panelSize = geo.size

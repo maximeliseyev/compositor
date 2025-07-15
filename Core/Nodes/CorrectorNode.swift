@@ -14,7 +14,6 @@ class CorrectorNode: BaseNode {
     }
     
     override func process(inputs: [CIImage?]) -> CIImage? {
-        // For now, just pass through the first input
         return inputs.first ?? nil
     }
     
