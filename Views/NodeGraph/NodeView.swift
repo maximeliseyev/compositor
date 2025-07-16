@@ -19,6 +19,7 @@ struct NodeView: View {
     let onMove: ((CGPoint) -> Void)?
     
     @GestureState private var dragOffset: CGSize = .zero
+    @State private var scale: CGFloat = 1.0
     
     var body: some View {
         ZStack {
@@ -26,6 +27,7 @@ struct NodeView: View {
             inputPortsView
             outputPortsView
         }
+        .scaleEffect(scale)
         .gesture(
             DragGesture(coordinateSpace: .named("NodeGraphPanel"))
                 .updating($dragOffset) { value, state, _ in
@@ -43,6 +45,13 @@ struct NodeView: View {
             x: node.position.x + dragOffset.width,
             y: node.position.y + dragOffset.height
         )
+        .onAppear {
+            // Add creation animation
+            scale = 0.8
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                scale = 1.0
+            }
+        }
     }
     
     private var nodeBodyView: some View {

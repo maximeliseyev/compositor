@@ -101,7 +101,6 @@
 		BFB5ACEB2E251E2A0063763C /* Viewer */ = {
 			isa = PBXGroup;
 			children = (
-				BFB2814B2E25B9F000BD1B79 /* InspectorPanel.swift */,
 				BFB5ACDA2E245BBF0063763C /* ViewerPanel.swift */,
 				BFB5ACD82E245B9F0063763C /* ViewerPanelController.swift */,
 			);
@@ -111,6 +110,7 @@
 		BFB5ACEC2E251E420063763C /* Inspector */ = {
 			isa = PBXGroup;
 			children = (
+				BFB2814B2E25B9F000BD1B79 /* InspectorPanel.swift */,
 			);
 			path = Inspector;
 			sourceTree = "<group>";

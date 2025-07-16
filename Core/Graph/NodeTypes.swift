@@ -12,6 +12,61 @@ enum NodeType: String, CaseIterable {
     case view = "View"
     case input = "Input"
     case corrector = "Corrector"
+    
+    // MARK: - UI Properties
+    var displayName: String {
+        switch self {
+        case .view:
+            return "View Node"
+        case .input:
+            return "Input Node"
+        case .corrector:
+            return "Corrector Node"
+        }
+    }
+    
+    var description: String {
+        switch self {
+        case .view:
+            return "Display processed image"
+        case .input:
+            return "Input source image"
+        case .corrector:
+            return "Apply image corrections"
+        }
+    }
+    
+    var iconName: String {
+        switch self {
+        case .view:
+            return "eye"
+        case .input:
+            return "photo"
+        case .corrector:
+            return "slider.horizontal.3"
+        }
+    }
+    
+    var category: NodeCategory {
+        switch self {
+        case .input:
+            return .input_output
+        case .corrector:
+            return .processing
+        case .view:
+            return .input_output
+        }
+    }
+}
+
+// MARK: - Node Categories
+enum NodeCategory: String, CaseIterable {
+    case input_output = "Input/Output"
+    case processing = "Processing"
+    
+    var displayName: String {
+        return rawValue
+    }
 }
 
 // MARK: - NodePort Structure

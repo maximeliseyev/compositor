@@ -54,16 +54,6 @@ struct NodeGraphPanel: View {
     
     private var backgroundLayers: some View {
         ZStack {
-            // NodePanelMouseView at the bottom for right-click context menu
-            NodePanelMouseView { nodeType, location in
-                createNode(ofType: nodeType, at: location)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .allowsHitTesting(true)
-            .background(Color.clear)
-            
-            NodePanelKeyHandler(onDelete: deleteSelectedNodes)
-            
             // Grid background
             gridBackground
             
@@ -76,6 +66,18 @@ struct NodeGraphPanel: View {
                     selectedNode = nil
                     resetConnectionDrag()
                 }
+                .allowsHitTesting(true)
+            
+            // Combined mouse and key handler
+            NodePanelEventHandler(
+                onCreateNode: { nodeType, location in
+                    createNode(ofType: nodeType, at: location)
+                },
+                onDelete: deleteSelectedNodes
+            )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .allowsHitTesting(true)
+            .background(Color.clear)
         }
     }
     
@@ -417,16 +419,26 @@ struct NodeGraphPanel: View {
     }
     
     private func createNode(ofType type: NodeType, at position: CGPoint) {
-        switch type {
-        case .view:
-            let viewerNode = ViewNode(position: position, viewerPanel: viewerController)
-            nodeGraph.addNode(viewerNode)
-        case .input:
-            let inputNode = InputNode(position: position)
-            nodeGraph.addNode(inputNode)
-        case .corrector:
-            let correctorNode = CorrectorNode(position: position)
-            nodeGraph.addNode(correctorNode)
+        // Add small animation effect
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+            switch type {
+            case .view:
+                let viewerNode = ViewNode(position: position, viewerPanel: viewerController)
+                nodeGraph.addNode(viewerNode)
+                // Auto-select the newly created node
+                selectedNode = viewerNode
+                selectedNodes = [viewerNode.id]
+            case .input:
+                let inputNode = InputNode(position: position)
+                nodeGraph.addNode(inputNode)
+                selectedNode = inputNode
+                selectedNodes = [inputNode.id]
+            case .corrector:
+                let correctorNode = CorrectorNode(position: position)
+                nodeGraph.addNode(correctorNode)
+                selectedNode = correctorNode
+                selectedNodes = [correctorNode.id]
+            }
         }
     }
 
@@ -447,101 +459,147 @@ struct NodeGraphPanel: View {
     }
 }
 
-// MARK: - Supporting Views (unchanged)
+// MARK: - Supporting Views
 
-struct NodePanelMouseView: NSViewRepresentable {
+struct NodePanelEventHandler: NSViewRepresentable {
     var onCreateNode: (NodeType, CGPoint) -> Void
+    var onDelete: () -> Void
 
     func makeNSView(context: Context) -> NSView {
-        let view = RightClickOnlyView()
-        let gesture = NSClickGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleClick(_:)))
-        gesture.buttonMask = 0x2 // Right mouse button
-        view.addGestureRecognizer(gesture)
+        let view = EventHandlerView()
+        view.coordinator = context.coordinator
         return view
     }
 
-    func updateNSView(_ nsView: NSView, context: Context) {}
+    func updateNSView(_ nsView: NSView, context: Context) {
+        let view = nsView as! EventHandlerView
+        view.coordinator = context.coordinator
+    }
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(onCreateNode: onCreateNode)
+        Coordinator(
+            onCreateNode: onCreateNode,
+            onDelete: onDelete
+        )
     }
 
     class Coordinator: NSObject, NSMenuDelegate {
         var onCreateNode: (NodeType, CGPoint) -> Void
+        var onDelete: () -> Void
 
-        init(onCreateNode: @escaping (NodeType, CGPoint) -> Void) {
+        init(onCreateNode: @escaping (NodeType, CGPoint) -> Void, onDelete: @escaping () -> Void) {
             self.onCreateNode = onCreateNode
+            self.onDelete = onDelete
         }
 
-        @objc func handleClick(_ sender: NSClickGestureRecognizer) {
-            guard let view = sender.view else { return }
-            let location = sender.location(in: view)
+        func showContextMenu(at point: NSPoint, with event: NSEvent, in view: NSView) {
             let menu = NSMenu()
             
-            for type in NodeType.allCases {
-                let item = NSMenuItem(title: "Create \(type.rawValue) Node", action: #selector(menuItemSelected(_:)), keyEquivalent: "")
-                item.representedObject = type.rawValue
-                item.target = self
-                menu.addItem(item)
+            // Add search field (placeholder for now)
+            let searchItem = NSMenuItem()
+            let searchField = NSSearchField()
+            searchField.frame = NSRect(x: 0, y: 0, width: 200, height: 20)
+            searchField.placeholderString = "Search nodes..."
+            searchField.isEnabled = false // Disable for now, will implement search later
+            searchItem.view = searchField
+            menu.addItem(searchItem)
+            menu.addItem(NSMenuItem.separator())
+            
+            // Group nodes by category
+            let categories = NodeCategory.allCases
+            for (index, category) in categories.enumerated() {
+                let nodesInCategory = NodeType.allCases.filter { $0.category == category }
+                
+                if !nodesInCategory.isEmpty {
+                    // Add category header
+                    let categoryItem = NSMenuItem(title: category.displayName, action: nil, keyEquivalent: "")
+                    categoryItem.isEnabled = false
+                    let font = NSFont.systemFont(ofSize: 10, weight: .medium)
+                    categoryItem.attributedTitle = NSAttributedString(
+                        string: category.displayName,
+                        attributes: [
+                            .font: font,
+                            .foregroundColor: NSColor.secondaryLabelColor
+                        ]
+                    )
+                    menu.addItem(categoryItem)
+                    
+                    for nodeType in nodesInCategory {
+                        let item = NSMenuItem(
+                            title: nodeType.displayName,
+                            action: #selector(menuItemSelected(_:)),
+                            keyEquivalent: ""
+                        )
+                        item.representedObject = nodeType.rawValue
+                        item.target = self
+                        
+                        let attributedTitle = NSAttributedString(
+                            string: nodeType.displayName,
+                            attributes: [
+                                .font: NSFont.systemFont(ofSize: 12, weight: .regular)
+                            ]
+                        )
+                        item.attributedTitle = attributedTitle
+                        menu.addItem(item)
+                    }
+                    
+                    if index < categories.count - 1 {
+                        menu.addItem(NSMenuItem.separator())
+                    }
+                }
             }
             
             menu.delegate = self
-            objc_setAssociatedObject(menu, &Coordinator.menuLocationKey, NSValue(point: location), .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
-            NSMenu.popUpContextMenu(menu, with: NSApp.currentEvent!, for: view)
+            objc_setAssociatedObject(menu, &Coordinator.menuLocationKey, NSValue(point: point), .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+            NSMenu.popUpContextMenu(menu, with: event, for: view)
         }
 
-        @objc func menuItemSelected(_ sender: NSMenuItem) {
+                 @objc func menuItemSelected(_ sender: NSMenuItem) {
             guard let menu = sender.menu,
                   let value = objc_getAssociatedObject(menu, &Coordinator.menuLocationKey) as? NSValue,
                   let typeRaw = sender.representedObject as? String,
                   let type = NodeType(rawValue: typeRaw) else { return }
             
             let location = value.pointValue
-            onCreateNode(type, location)
+            let swiftUIPoint = CGPoint(x: location.x, y: location.y)
+            onCreateNode(type, swiftUIPoint)
         }
 
         static var menuLocationKey: UInt8 = 0
     }
     
-    class RightClickOnlyView: NSView {
-        override func hitTest(_ point: NSPoint) -> NSView? {
-            // Only respond to right-clicks, let everything else pass through
-            if let event = NSApp.currentEvent {
-                if event.type == .rightMouseDown || (event.type == .otherMouseDown && event.buttonNumber == 2) {
-                    return super.hitTest(point)
-                }
-            }
-            return nil
+    class EventHandlerView: NSView {
+        var coordinator: Coordinator?
+        
+        override func rightMouseDown(with event: NSEvent) {
+            let point = convert(event.locationInWindow, from: nil)
+            
+            coordinator?.showContextMenu(at: point, with: event, in: self)
         }
-    }
-}
-
-struct NodePanelKeyHandler: NSViewRepresentable {
-    var onDelete: () -> Void
-
-    func makeNSView(context: Context) -> NSView {
-        let view = KeyCatcherView()
-        view.onDelete = onDelete
-        return view
-    }
-
-    func updateNSView(_ nsView: NSView, context: Context) {}
-
-    class KeyCatcherView: NSView {
-        var onDelete: (() -> Void)?
-
-        override var acceptsFirstResponder: Bool { true }
-
+        
+        override func mouseDown(with event: NSEvent) {
+            super.mouseDown(with: event)
+        }
+        
         override func keyDown(with event: NSEvent) {
+            // Delete keys
             if event.keyCode == 51 || event.keyCode == 117 { // 51 = delete, 117 = forward delete
-                onDelete?()
-            } else {
-                super.keyDown(with: event)
+                coordinator?.onDelete()
+                return
             }
+            
+            // Pass all other key events to the next responder
+            super.keyDown(with: event)
         }
-
+        
+        override var acceptsFirstResponder: Bool {
+            return true
+        }
+        
         override func viewDidMoveToWindow() {
             window?.makeFirstResponder(self)
         }
     }
 }
+
+
