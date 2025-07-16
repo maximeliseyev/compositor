@@ -7,14 +7,15 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		BF7253252E270E15009E80E0 /* NodeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF7253242E270E15009E80E0 /* NodeTypes.swift */; };
 		BFB2814C2E25B9F500BD1B79 /* InspectorPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB2814B2E25B9F000BD1B79 /* InspectorPanel.swift */; };
 		BFB2814E2E26901C00BD1B79 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = BFB2814D2E26901C00BD1B79 /* Info.plist */; };
+		BFB281502E26D1F700BD1B79 /* NodeConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB2814F2E26D1F700BD1B79 /* NodeConnection.swift */; };
 		BFB5ACD12E2437010063763C /* CompositorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB5ACD02E2437010063763C /* CompositorView.swift */; };
 		BFB5ACD52E245AF30063763C /* BaseNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB5ACD42E245AE90063763C /* BaseNode.swift */; };
 		BFB5ACD72E245B8C0063763C /* ViewNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB5ACD62E245B8C0063763C /* ViewNode.swift */; };
 		BFB5ACD92E245B9F0063763C /* ViewerPanelController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB5ACD82E245B9F0063763C /* ViewerPanelController.swift */; };
 		BFB5ACDB2E245BC00063763C /* ViewerPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB5ACDA2E245BBF0063763C /* ViewerPanel.swift */; };
-		BFB5ACDD2E245C720063763C /* NodeType.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB5ACDC2E245C720063763C /* NodeType.swift */; };
 		BFB5ACDF2E247F3C0063763C /* NodeGraphPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB5ACDE2E247F3B0063763C /* NodeGraphPanel.swift */; };
 		BFB5ACE12E247F980063763C /* NodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB5ACE02E247F980063763C /* NodeView.swift */; };
 		BFB5ACE72E25165C0063763C /* InputNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB5ACE62E25165C0063763C /* InputNode.swift */; };
@@ -26,17 +27,19 @@
 		BFD2D8EE2E1F2E1A00BFAC11 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = BFD2D8ED2E1F2E1400BFAC11 /* README.md */; };
 		BFD2D93B2E200DF900BFAC11 /* LICENSE.md in Resources */ = {isa = PBXBuildFile; fileRef = BFD2D93A2E200DF500BFAC11 /* LICENSE.md */; };
 		BFD2D9412E20128600BFAC11 /* NodeGraph.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFD2D9402E20128600BFAC11 /* NodeGraph.swift */; };
+		BFF4F3AC2E27ED10004224AC /* NodeConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF4F3AB2E27ED0F004224AC /* NodeConstants.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		BF7253242E270E15009E80E0 /* NodeTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeTypes.swift; sourceTree = "<group>"; };
 		BFB2814B2E25B9F000BD1B79 /* InspectorPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InspectorPanel.swift; sourceTree = "<group>"; };
 		BFB2814D2E26901C00BD1B79 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		BFB2814F2E26D1F700BD1B79 /* NodeConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeConnection.swift; sourceTree = "<group>"; };
 		BFB5ACD02E2437010063763C /* CompositorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompositorView.swift; sourceTree = "<group>"; };
 		BFB5ACD42E245AE90063763C /* BaseNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseNode.swift; sourceTree = "<group>"; };
 		BFB5ACD62E245B8C0063763C /* ViewNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewNode.swift; sourceTree = "<group>"; };
 		BFB5ACD82E245B9F0063763C /* ViewerPanelController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewerPanelController.swift; sourceTree = "<group>"; };
 		BFB5ACDA2E245BBF0063763C /* ViewerPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewerPanel.swift; sourceTree = "<group>"; };
-		BFB5ACDC2E245C720063763C /* NodeType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeType.swift; sourceTree = "<group>"; };
 		BFB5ACDE2E247F3B0063763C /* NodeGraphPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeGraphPanel.swift; sourceTree = "<group>"; };
 		BFB5ACE02E247F980063763C /* NodeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeView.swift; sourceTree = "<group>"; };
 		BFB5ACE62E25165C0063763C /* InputNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputNode.swift; sourceTree = "<group>"; };
@@ -50,6 +53,7 @@
 		BFD2D8ED2E1F2E1400BFAC11 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		BFD2D93A2E200DF500BFAC11 /* LICENSE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = LICENSE.md; sourceTree = "<group>"; };
 		BFD2D9402E20128600BFAC11 /* NodeGraph.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeGraph.swift; sourceTree = "<group>"; };
+		BFF4F3AB2E27ED0F004224AC /* NodeConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeConstants.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -70,7 +74,6 @@
 				BFB5ACE62E25165C0063763C /* InputNode.swift */,
 				BFB5ACEF2E2524E50063763C /* CorrectorNode.swift */,
 				BFB5ACD42E245AE90063763C /* BaseNode.swift */,
-				BFB5ACDC2E245C720063763C /* NodeType.swift */,
 			);
 			path = Nodes;
 			sourceTree = "<group>";
@@ -78,7 +81,10 @@
 		BFB5ACE92E251DF10063763C /* Graph */ = {
 			isa = PBXGroup;
 			children = (
+				BFB2814F2E26D1F700BD1B79 /* NodeConnection.swift */,
+				BFF4F3AB2E27ED0F004224AC /* NodeConstants.swift */,
 				BFD2D9402E20128600BFAC11 /* NodeGraph.swift */,
+				BF7253242E270E15009E80E0 /* NodeTypes.swift */,
 			);
 			path = Graph;
 			sourceTree = "<group>";
@@ -265,9 +271,11 @@
 				BFB5ACF02E2524E50063763C /* CorrectorNode.swift in Sources */,
 				BFB5ACDB2E245BC00063763C /* ViewerPanel.swift in Sources */,
 				BFB5ACE72E25165C0063763C /* InputNode.swift in Sources */,
+				BFF4F3AC2E27ED10004224AC /* NodeConstants.swift in Sources */,
 				BFB5ACE12E247F980063763C /* NodeView.swift in Sources */,
+				BF7253252E270E15009E80E0 /* NodeTypes.swift in Sources */,
+				BFB281502E26D1F700BD1B79 /* NodeConnection.swift in Sources */,
 				BFD2D8E62E1F2C8900BFAC11 /* Compositor.xcdatamodeld in Sources */,
-				BFB5ACDD2E245C720063763C /* NodeType.swift in Sources */,
 				BFB5ACD52E245AF30063763C /* BaseNode.swift in Sources */,
 				BFB5ACD12E2437010063763C /* CompositorView.swift in Sources */,
 				BFB5ACD92E245B9F0063763C /* ViewerPanelController.swift in Sources */,
@@ -426,8 +434,11 @@
 				PRODUCT_BUNDLE_IDENTIFIER = MaxEliseyev.Compositor;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 2;
 			};
 			name = Debug;
 		};
@@ -455,8 +466,11 @@
 				PRODUCT_BUNDLE_IDENTIFIER = MaxEliseyev.Compositor;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 2;
 			};
 			name = Release;
 		};

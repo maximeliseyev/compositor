@@ -5,10 +5,10 @@
 //  Created by Maxim Eliseyev on 14.07.2025.
 //
 
-
 import SwiftUI
 import CoreImage
 
+// MARK: - Node Protocol
 protocol NodeProtocol: ObservableObject, Identifiable {
     var id: UUID { get }
     var type: NodeType { get }
@@ -16,6 +16,8 @@ protocol NodeProtocol: ObservableObject, Identifiable {
     var title: String { get }
     var inputConnections: [NodeConnection] { get set }
     var outputConnections: [NodeConnection] { get set }
+    var inputPorts: [NodePort] { get }
+    var outputPorts: [NodePort] { get }
     
     func process(inputs: [CIImage?]) -> CIImage?
     func getParameterKeys() -> [String]
@@ -32,6 +34,29 @@ class BaseNode: NodeProtocol {
     
     var title: String {
         return type.rawValue
+    }
+    
+    // Default ports - can be overridden by subclasses
+    var inputPorts: [NodePort] {
+        switch type {
+        case .view:
+            return [NodePort(name: "Input", type: .input, dataType: .image)]
+        case .corrector:
+            return [NodePort(name: "Input", type: .input, dataType: .image)]
+        case .input:
+            return []
+        }
+    }
+    
+    var outputPorts: [NodePort] {
+        switch type {
+        case .view:
+            return [] // View node не имеет выходных портов, только отображает результат
+        case .corrector:
+            return [NodePort(name: "Output", type: .output, dataType: .image)]
+        case .input:
+            return [NodePort(name: "Output", type: .output, dataType: .image)]
+        }
     }
     
     @Published var parameters: [String: Any] = [:]
@@ -81,8 +106,8 @@ class BaseNode: NodeProtocol {
     }
     
     func addInputConnection(_ connection: NodeConnection) {
-            inputConnections.append(connection)
-        }
+        inputConnections.append(connection)
+    }
         
     func removeInputConnection(_ connection: NodeConnection) {
         inputConnections.removeAll { $0.id == connection.id }

@@ -5,143 +5,191 @@
 //  Created by Maxim Eliseyev on 14.07.2025.
 //
 
-
 import SwiftUI
-// import Core.Nodes.BaseNode // If using modulemaps, otherwise ensure BaseNode.swift is in the target
 
 struct NodeView: View {
     @ObservedObject var node: BaseNode
     let isSelected: Bool
     let onSelect: () -> Void
     let onDelete: () -> Void
-    // Connection gestures
+    
     let onStartConnection: ((UUID, CGPoint) -> Void)?
     let onEndConnection: ((UUID) -> Void)?
     let onConnectionDrag: ((CGPoint) -> Void)?
     let onMove: ((CGPoint) -> Void)?
-
-    @State private var dragStartPosition: CGPoint? = nil
+    
+    @GestureState private var dragOffset: CGSize = .zero
     
     var body: some View {
         ZStack {
-            VStack(spacing: 0) {
-                if nodeHasInput {
-                    Rectangle()
-                        .fill(Color.green)
-                        .frame(width: 14, height: 14)
-                        .cornerRadius(2)
-                        .offset(y: -2)
-                        .zIndex(2)
-                        .contentShape(Rectangle())
-                        .gesture(
-                            DragGesture(minimumDistance: 0)
-                                .onEnded { _ in
-                                    onEndConnection?(node.id)
-                                }
-                        )
-                } else {
-                    Spacer().frame(height: 7)
-                }
-                ZStack {
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(Color.gray.opacity(0.8))
-                        .frame(width: 90, height: 30)
-                        .overlay(
-                            VStack(spacing: 4) {
-                                Text(node.type.rawValue)
-                                    .font(.caption2)
-                                    .foregroundColor(.white.opacity(0.8))
-                            }
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(isSelected ? Color.yellow : Color.clear, lineWidth: 2)
-                        )
-                        .gesture(
-                            DragGesture()
-                                .onChanged { value in
-                                    if dragStartPosition == nil {
-                                        dragStartPosition = node.position
-                                    }
-                                    if let start = dragStartPosition {
-                                        let newPosition = CGPoint(x: start.x + value.translation.width, y: start.y + value.translation.height)
-                                        onMove?(newPosition)
-                                    }
-                                }
-                                .onEnded { _ in
-                                    dragStartPosition = nil
-                                }
-                        )
-                }
-                if nodeHasOutput {
-                    Triangle()
-                        .fill(Color.orange)
-                        .frame(width: 18, height: 12)
-                        .rotationEffect(.degrees(180))
-                        .offset(y: 2)
-                        .zIndex(2)
-                        .contentShape(Rectangle())
-                        .gesture(
-                            DragGesture(minimumDistance: 0)
-                                .onChanged { value in
-                                    // Output port drag: start or update connection
-                                    let portPosition = CGPoint(x: 60, y: 60 + 12) // Node center bottom
-                                    onStartConnection?(node.id, portPosition)
-                                    onConnectionDrag?(value.location)
-                                }
-                                .onEnded { _ in }
-                        )
-                } else {
-                    Spacer().frame(height: 7)
-                }
-            }
+            nodeBodyView
+            inputPortsView
+            outputPortsView
         }
-        .onTapGesture {
-            onSelect()
+        .gesture(
+            DragGesture(coordinateSpace: .named("NodeGraphPanel"))
+                .updating($dragOffset) { value, state, _ in
+                    state = value.translation
+                }
+                .onEnded { value in
+                    let newPosition = CGPoint(
+                        x: node.position.x + value.translation.width,
+                        y: node.position.y + value.translation.height
+                    )
+                    onMove?(newPosition)
+                }
+        )
+        .position(
+            x: node.position.x + dragOffset.width,
+            y: node.position.y + dragOffset.height
+        )
+    }
+    
+    private var nodeBodyView: some View {
+        HStack {
+            RoundedRectangle(cornerRadius: NodeConstants.nodeCornerRadius)
+                .fill(nodeBackgroundColor)
+                .frame(width: NodeConstants.nodeWidth, height: NodeConstants.nodeHeight)
+                .overlay(
+                    VStack(spacing: 4) {
+                        Text(node.title)
+                            .font(.caption)
+                            .foregroundColor(.white)
+                            .fontWeight(.medium)
+                    }
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: NodeConstants.nodeCornerRadius)
+                        .stroke(isSelected ? Color.yellow : Color.clear, lineWidth: NodeConstants.selectionBorderWidth)
+                )
+                .onTapGesture {
+                    onSelect()
+                }
         }
-        .contextMenu {
-            Button(action: {
-                onDelete()
-            }) {
-                Label("Delete Node", systemImage: "trash")
+    }
+    
+    private var nodeBackgroundColor: Color {
+        return Color.gray.opacity(0.8)
+    }
+    
+    private var inputPortsView: some View {
+        HStack(spacing: 8) {
+            ForEach(Array(node.inputPorts.enumerated()), id: \.element.id) { index, port in
+                GeometryReader { geometry in
+                    NodePortView(
+                        port: port,
+                        isConnected: node.inputConnections.contains { $0.toNode == node.id },
+                        onStartConnection: { panelPos in
+                            // Position is in NodeGraphPanel coordinate space
+                            onStartConnection?(node.id, panelPos)
+                        },
+                        onEndConnection: {
+                            onEndConnection?(node.id)
+                        },
+                        onConnectionDrag: { panelPos in
+                            // Position is in NodeGraphPanel coordinate space
+                            onConnectionDrag?(panelPos)
+                        }
+                    )
+                }
+                .frame(width: NodeConstants.portSize, height: NodeConstants.portSize)
+                .offset(x: CGFloat(index - node.inputPorts.count/2) * NodeConstants.portOffset, y: -NodeConstants.nodeHeight/2 - NodeConstants.portSize/2)
             }
         }
     }
     
-    // Helper: which nodes have input/output
-    private var nodeHasInput: Bool {
-        switch node.type {
-        case .view: return true
-        case .corrector: return true
-        default: return false
-        }
-    }
-    private var nodeHasOutput: Bool {
-        switch node.type {
-        case .input: return true
-        case .corrector: return true
-        default: return false
-        }
-    }
-    
-    private var nodeIcon: String {
-        switch node.type {
-        case .view:
-            return "eye"
-        default:
-            return "square"
+    private var outputPortsView: some View {
+        HStack(spacing: 8) {
+            ForEach(Array(node.outputPorts.enumerated()), id: \.element.id) { index, port in
+                GeometryReader { geometry in
+                    NodePortView(
+                        port: port,
+                        isConnected: node.outputConnections.contains { $0.fromNode == node.id },
+                        onStartConnection: { panelPos in
+                            // Position is in NodeGraphPanel coordinate space
+                            onStartConnection?(node.id, panelPos)
+                        },
+                        onEndConnection: {
+                            onEndConnection?(node.id)
+                        },
+                        onConnectionDrag: { panelPos in
+                            // Position is in NodeGraphPanel coordinate space
+                            onConnectionDrag?(panelPos)
+                        }
+                    )
+                }
+                .frame(width: NodeConstants.portSize, height: NodeConstants.portSize)
+                .offset(x: CGFloat(index - node.outputPorts.count/2) * NodeConstants.portOffset, y: NodeConstants.nodeHeight/2 + NodeConstants.portSize/2)
+            }
         }
     }
 }
 
-// Triangle shape for output port
-struct Triangle: Shape {
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        path.move(to: CGPoint(x: rect.midX, y: rect.minY))
-        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
-        path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
-        path.closeSubpath()
-        return path
+struct NodePortView: View {
+    let port: NodePort
+    let isConnected: Bool
+    
+    let onStartConnection: ((CGPoint) -> Void)?
+    let onEndConnection: (() -> Void)?
+    let onConnectionDrag: ((CGPoint) -> Void)?
+    
+    var body: some View {
+        Circle()
+            .fill(portColor)
+            .frame(width: 10, height: 10)
+            .onTapGesture {
+                if port.type == .input {
+                    onEndConnection?()
+                }
+            }
+            .gesture(
+                DragGesture(coordinateSpace: .named("NodeGraphPanel"))
+                    .onChanged { value in
+                        if port.type == .output {
+                            onConnectionDrag?(value.location)
+                        }
+                    }
+                    .onEnded { value in
+                        if port.type == .output {
+                            onEndConnection?()
+                        }
+                    }
+            )
     }
+    
+    private var portBorderColor: Color {
+        return portDataTypeColor
+    }
+    
+    private var portDataTypeColor: Color {
+        switch port.dataType {
+        case .image:
+            return .blue
+        case .mask:
+            return .red
+        case .value:
+            return .green
+        }
+    }
+    
+    private var portColor: Color {
+        if isConnected {
+            return portDataTypeColor.opacity(0.8)
+        } else {
+            return portDataTypeColor.opacity(0.4)
+        }
+    }
+}
+
+#Preview {
+    NodeView(
+        node: CorrectorNode(position: CGPoint(x: 100, y: 100)),
+        isSelected: false,
+        onSelect: {},
+        onDelete: {},
+        onStartConnection: nil,
+        onEndConnection: nil,
+        onConnectionDrag: nil,
+        onMove: nil
+    )
 }
