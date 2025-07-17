@@ -13,13 +13,17 @@ struct NodeView: View {
     let onSelect: () -> Void
     let onDelete: () -> Void
     
-    let onStartConnection: ((UUID, CGPoint) -> Void)?
-    let onEndConnection: ((UUID) -> Void)?
-    let onConnectionDrag: ((CGPoint) -> Void)?
+    let onStartConnection: ((UUID, UUID, CGPoint) -> Void)?
+    let onEndConnection: ((UUID, UUID) -> Void)?
+    let onConnectionDrag: ((UUID, UUID, CGPoint) -> Void)?
     let onMove: ((CGPoint) -> Void)?
     
     @GestureState private var dragOffset: CGSize = .zero
     @State private var scale: CGFloat = 1.0
+    
+    // Блокировка перетаскивания ноды во время создания соединения
+    @State private var isConnecting: Bool = false
+    @State private var connectionTimeoutTimer: Timer?
     
     var body: some View {
         ZStack {
@@ -27,18 +31,24 @@ struct NodeView: View {
             inputPortsView
             outputPortsView
         }
-        .scaleEffect(scale)
+        .scaleEffect(1.0)
         .gesture(
             DragGesture(coordinateSpace: .named("NodeGraphPanel"))
                 .updating($dragOffset) { value, state, _ in
-                    state = value.translation
+                    // Блокируем перетаскивание ноды во время создания соединения
+                    if !isConnecting {
+                        state = value.translation
+                    }
                 }
                 .onEnded { value in
-                    let newPosition = CGPoint(
-                        x: node.position.x + value.translation.width,
-                        y: node.position.y + value.translation.height
-                    )
-                    onMove?(newPosition)
+                    // Перемещаем ноду только если не было создания соединения
+                    if !isConnecting {
+                        let newPosition = CGPoint(
+                            x: node.position.x + value.translation.width,
+                            y: node.position.y + value.translation.height
+                        )
+                        onMove?(newPosition)
+                    }
                 }
         )
         .position(
@@ -46,11 +56,37 @@ struct NodeView: View {
             y: node.position.y + dragOffset.height
         )
         .onAppear {
-            // Add creation animation
-            scale = 0.8
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                scale = 1.0
+            // Подписываемся на уведомления об отмене операций подключения
+            NotificationCenter.default.addObserver(
+                forName: .cancelAllConnections,
+                object: nil,
+                queue: .main
+            ) { _ in
+                resetConnectionState()
             }
+        }
+        .onDisappear {
+            // Отписываемся от уведомлений и сбрасываем состояние
+            NotificationCenter.default.removeObserver(self, name: .cancelAllConnections, object: nil)
+            resetConnectionState()
+        }
+        // Убрана анимация появления
+    }
+    
+    // Функция для принудительного сброса состояния подключения
+    private func resetConnectionState() {
+        isConnecting = false
+        connectionTimeoutTimer?.invalidate()
+        connectionTimeoutTimer = nil
+    }
+    
+    // Функция для установки таймаута на операцию подключения
+    private func startConnectionTimeout() {
+        connectionTimeoutTimer?.invalidate()
+        connectionTimeoutTimer = Timer.scheduledTimer(withTimeInterval: 10.0, repeats: false) { _ in
+            // Принудительно сбрасываем состояние через 10 секунд
+            print("Connection timeout - resetting isConnecting state")
+            resetConnectionState()
         }
     }
     
@@ -88,17 +124,17 @@ struct NodeView: View {
                     NodePortView(
                         port: port,
                         isConnected: node.inputConnections.contains { $0.toNode == node.id },
-                        onStartConnection: { panelPos in
-                            // Position is in NodeGraphPanel coordinate space
-                            onStartConnection?(node.id, panelPos)
+                            nodeID: node.id,
+                        onStartConnection: { nodeID, portID, pos in
+                            isConnecting = true
+                            startConnectionTimeout()
+                            onStartConnection?(nodeID, portID, pos)
                         },
-                        onEndConnection: {
-                            onEndConnection?(node.id)
+                        onEndConnection: { nodeID, portID in
+                            resetConnectionState()
+                            onEndConnection?(nodeID, portID)
                         },
-                        onConnectionDrag: { panelPos in
-                            // Position is in NodeGraphPanel coordinate space
-                            onConnectionDrag?(panelPos)
-                        }
+                        onConnectionDrag: onConnectionDrag
                     )
                 }
                 .frame(width: NodeConstants.portSize, height: NodeConstants.portSize)
@@ -114,17 +150,17 @@ struct NodeView: View {
                     NodePortView(
                         port: port,
                         isConnected: node.outputConnections.contains { $0.fromNode == node.id },
-                        onStartConnection: { panelPos in
-                            // Position is in NodeGraphPanel coordinate space
-                            onStartConnection?(node.id, panelPos)
+                        nodeID: node.id,
+                        onStartConnection: { nodeID, portID, pos in
+                            isConnecting = true
+                            startConnectionTimeout()
+                            onStartConnection?(nodeID, portID, pos)
                         },
-                        onEndConnection: {
-                            onEndConnection?(node.id)
+                        onEndConnection: { nodeID, portID in
+                            resetConnectionState()
+                            onEndConnection?(nodeID, portID)
                         },
-                        onConnectionDrag: { panelPos in
-                            // Position is in NodeGraphPanel coordinate space
-                            onConnectionDrag?(panelPos)
-                        }
+                        onConnectionDrag: onConnectionDrag
                     )
                 }
                 .frame(width: NodeConstants.portSize, height: NodeConstants.portSize)
@@ -137,33 +173,43 @@ struct NodeView: View {
 struct NodePortView: View {
     let port: NodePort
     let isConnected: Bool
+    let nodeID: UUID
+    let onStartConnection: ((UUID, UUID, CGPoint) -> Void)? // nodeID, portID, pos
+    let onEndConnection: ((UUID, UUID) -> Void)? // nodeID, portID
+    let onConnectionDrag: ((UUID, UUID, CGPoint) -> Void)? // nodeID, portID, pos
     
-    let onStartConnection: ((CGPoint) -> Void)?
-    let onEndConnection: (() -> Void)?
-    let onConnectionDrag: ((CGPoint) -> Void)?
+    @GestureState private var isDragging = false
+    @State private var hasStarted = false // Предотвращает множественные вызовы onStartConnection
     
     var body: some View {
         Circle()
             .fill(portColor)
             .frame(width: 10, height: 10)
-            .onTapGesture {
-                if port.type == .input {
-                    onEndConnection?()
-                }
-            }
-            .gesture(
+            .highPriorityGesture(
                 DragGesture(coordinateSpace: .named("NodeGraphPanel"))
+                    .updating($isDragging) { value, state, _ in
+                        state = true
+                    }
                     .onChanged { value in
-                        if port.type == .output {
-                            onConnectionDrag?(value.location)
+                        if !hasStarted {
+                            hasStarted = true
+                            onStartConnection?(nodeID, port.id, value.startLocation)
                         }
+                        onConnectionDrag?(nodeID, port.id, value.location)
                     }
                     .onEnded { value in
-                        if port.type == .output {
-                            onEndConnection?()
-                        }
+                        // Всегда сбрасываем состояние при завершении gesture
+                        hasStarted = false
+                        onEndConnection?(nodeID, port.id)
                     }
             )
+            .onChange(of: isDragging) { newValue in
+                // Дополнительная защита: если dragging прекратился, но hasStarted все еще true
+                if !newValue && hasStarted {
+                    hasStarted = false
+                    onEndConnection?(nodeID, port.id)
+                }
+            }
     }
     
     private var portBorderColor: Color {

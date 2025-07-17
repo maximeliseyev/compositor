@@ -3,6 +3,7 @@
 //  Compositor
 //
 
+import Foundation
 import SwiftUI
 import CoreImage
 
@@ -10,10 +11,14 @@ class NodeGraph: ObservableObject {
     @Published var nodes: [BaseNode] = []
     @Published var connections: [NodeConnection] = []
     
+    // Быстрый доступ к нодам по id
+    private var nodesById: [UUID: BaseNode] = [:]
+    
     // MARK: - Node Management
     
     func addNode(_ node: BaseNode) {
         nodes.append(node)
+        nodesById[node.id] = node
     }
     
     func removeNode(_ node: BaseNode) {
@@ -24,11 +29,13 @@ class NodeGraph: ObservableObject {
         
         // Remove the node itself
         nodes.removeAll { $0.id == node.id }
+        nodesById.removeValue(forKey: node.id)
     }
     
     func moveNode(_ node: BaseNode, to position: CGPoint) {
         if let index = nodes.firstIndex(where: { $0.id == node.id }) {
             nodes[index].position = position
+            nodesById[node.id]?.position = position
         }
     }
     

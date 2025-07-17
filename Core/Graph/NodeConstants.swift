@@ -51,14 +51,14 @@ struct NodeConstants {
     static func inputPortPosition(at nodePosition: CGPoint) -> CGPoint {
         return CGPoint(
             x: nodePosition.x,
-            y: nodePosition.y - portVerticalOffset
+            y: nodePosition.y - nodeHeight/2 - portSize/2
         )
     }
     
     static func outputPortPosition(at nodePosition: CGPoint) -> CGPoint {
         return CGPoint(
             x: nodePosition.x,
-            y: nodePosition.y + portVerticalOffset
+            y: nodePosition.y + nodeHeight/2 + portSize/2
         )
     }
 } 

@@ -29,8 +29,8 @@ class BaseNode: NodeProtocol {
     let id = UUID()
     let type: NodeType
     @Published var position: CGPoint
-    @Published var inputConnections: [NodeConnection] = []
-    @Published var outputConnections: [NodeConnection] = []
+    var inputConnections: [NodeConnection] = []
+    var outputConnections: [NodeConnection] = []
     
     var title: String {
         return type.rawValue
@@ -59,7 +59,7 @@ class BaseNode: NodeProtocol {
         }
     }
     
-    @Published var parameters: [String: Any] = [:]
+    var parameters: [String: Any] = [:]
     
     private var cachedOutput: CIImage?
     private var lastInputHash: Int = 0

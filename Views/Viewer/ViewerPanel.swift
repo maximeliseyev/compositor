@@ -23,11 +23,7 @@ struct ViewerPanel: View {
                     .aspectRatio(contentMode: .fit)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                // Placeholder когда нет изображения
                 VStack(spacing: 16) {
-                    Image(systemName: "photo")
-                        .font(.system(size: 48))
-                        .foregroundColor(.gray)
                     Text("Viewer")
                         .font(.title2)
                         .foregroundColor(.gray)

@@ -7,6 +7,48 @@
 
 import SwiftUI
 import AppKit
+import Foundation
+
+// MARK: - Imports для Core типов
+// Эти импорты позволят использовать все типы из Core модуля
+// В будущем можно будет заменить на @import Core при модулярной архитектуре
+
+// MARK: - Extensions
+// createNodeFromMenu определён в CompositorApp.swift
+
+extension Notification.Name {
+    static let cancelAllConnections = Notification.Name("cancelAllConnections")
+}
+
+// MARK: - Node Graph Renderer Protocol
+// Архитектура готова для Metal интеграции:
+// 1. Протокол NodeGraphRenderer позволяет легко заменить Canvas на Metal
+// 2. Все типы определены явно для эффективного GPU рендеринга
+// 3. Модульная структура позволяет создать MetalNodeGraphRenderer
+protocol NodeGraphRenderer {
+    func renderConnections(connections: [NodeConnection], nodes: [BaseNode], getConnectionPoints: @escaping (NodeConnection, BaseNode, BaseNode) -> (CGPoint, CGPoint)) -> AnyView
+}
+
+// MARK: - Canvas Implementation (Временное решение)
+// Для больших графов (10к+ нод) будет заменено на MetalNodeGraphRenderer
+struct CanvasNodeGraphRenderer: NodeGraphRenderer {
+    func renderConnections(connections: [NodeConnection], nodes: [BaseNode], getConnectionPoints: @escaping (NodeConnection, BaseNode, BaseNode) -> (CGPoint, CGPoint)) -> AnyView {
+        AnyView(
+            Canvas { context, size in
+                for connection in connections {
+                    guard let fromNode = nodes.first(where: { $0.id == connection.fromNode }),
+                          let toNode = nodes.first(where: { $0.id == connection.toNode }) else { continue }
+                    let (fromPoint, toPoint) = getConnectionPoints(connection, fromNode, toNode)
+                    var path = Path()
+                    path.move(to: fromPoint)
+                    path.addLine(to: toPoint)
+                    context.stroke(path, with: .color(.white), lineWidth: 1)
+                }
+            }
+            .allowsHitTesting(false)
+        )
+    }
+}
 
 struct NodeGraphPanel: View {
     @StateObject private var nodeGraph = NodeGraph()
@@ -23,9 +65,13 @@ struct NodeGraphPanel: View {
     @State private var connectionDragCurrentPosition: CGPoint? = nil
     @State private var connectionDragToNodeID: UUID? = nil
     @State private var connectionDragToPortID: UUID? = nil
-    @State private var connectionValidationResult: ConnectionValidationResult = .valid
     
     @State private var panelSize: CGSize = .zero
+    @State private var lastPreviewUpdateTime: TimeInterval = 0
+    
+    // Renderer для связей - можно переключить на Metal для производительности
+    // TODO: Добавить логику выбора рендерера в зависимости от количества нод
+    private let renderer: NodeGraphRenderer = CanvasNodeGraphRenderer()
     
     var body: some View {
         GeometryReader { geo in
@@ -37,6 +83,7 @@ struct NodeGraphPanel: View {
                 selectionRectangleLayer
                 connectionFeedbackLayer
             }
+            .background(Color.clear)
             .coordinateSpace(name: "NodeGraphPanel")
             .onAppear {
                 setupNotifications(geometry: geo)
@@ -60,22 +107,23 @@ struct NodeGraphPanel: View {
             // Panel background
             Rectangle()
                 .fill(Color.gray.opacity(0.1))
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    selectedNodes.removeAll()
-                    selectedNode = nil
-                    resetConnectionDrag()
-                }
-                .allowsHitTesting(true)
+                .allowsHitTesting(false)
             
             // Combined mouse and key handler
             NodePanelEventHandler(
                 onCreateNode: { nodeType, location in
                     createNode(ofType: nodeType, at: location)
                 },
-                onDelete: deleteSelectedNodes
+                onDelete: deleteSelectedNodes,
+                onDeselectAll: {
+                    selectedNodes.removeAll()
+                    selectedNode = nil
+                    resetConnectionDrag()
+                    // Уведомляем все ноды о необходимости сброса состояния подключения
+                    NotificationCenter.default.post(name: .cancelAllConnections, object: nil)
+                }
             )
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .frame(maxWidth: CGFloat.infinity, maxHeight: CGFloat.infinity)
             .allowsHitTesting(true)
             .background(Color.clear)
         }
@@ -88,18 +136,19 @@ struct NodeGraphPanel: View {
     }
     
     private func nodeViewsLayer(geometry: GeometryProxy) -> some View {
-        ForEach(nodeGraph.nodes, id: \.id) { node in
+        ForEach(nodeGraph.nodes, id: \.id) { (node: BaseNode) in
             createNodeView(for: node, geometry: geometry)
         }
     }
     
     private var connectionsLayer: some View {
-        ZStack {
-            // Render all connections
-            ForEach(nodeGraph.connections, id: \.id) { connection in
-                createConnectionPath(for: connection)
+        renderer.renderConnections(
+            connections: nodeGraph.connections,
+            nodes: nodeGraph.nodes,
+            getConnectionPoints: { connection, fromNode, toNode in
+                getConnectionPoints(for: connection, fromNode: fromNode, toNode: toNode)
             }
-        }
+        )
     }
     
     private var previewConnectionLayer: some View {
@@ -121,10 +170,7 @@ struct NodeGraphPanel: View {
     
     private var connectionFeedbackLayer: some View {
         Group {
-            if connectionValidationResult != .valid,
-               let currentPos = connectionDragCurrentPosition {
-                createConnectionFeedback(at: currentPos)
-            }
+            // Убираем отображение ошибок соединения
         }
     }
     
@@ -152,15 +198,13 @@ struct NodeGraphPanel: View {
                 resetConnectionDrag()
             },
             onDelete: { deleteNode(node) },
-            onStartConnection: { fromNodeID, portPosition in
-                // Port position is in NodeGraphPanel coordinate space
-                startPortConnection(fromNodeID: fromNodeID, portPosition: portPosition)
+            onStartConnection: { fromNodeID, fromPortID, panelPos in
+                startPortConnection(fromNodeID: fromNodeID, fromPortID: fromPortID, portPosition: panelPos)
             },
-            onEndConnection: { toNodeID in
-                endPortConnection(toNodeID: toNodeID)
+            onEndConnection: { toNodeID, toPortID in
+                endPortConnection(toNodeID: toNodeID, toPortID: toPortID)
             },
-            onConnectionDrag: { pos in
-                // Position is in NodeGraphPanel coordinate space
+            onConnectionDrag: { _, _, pos in
                 updateConnectionDrag(to: pos)
             },
             onMove: { newPosition in
@@ -173,36 +217,25 @@ struct NodeGraphPanel: View {
         Group {
             if let fromNode = nodeGraph.nodes.first(where: { $0.id == connection.fromNode }),
                let toNode = nodeGraph.nodes.first(where: { $0.id == connection.toNode }) {
-                
                 let (fromPoint, toPoint) = getConnectionPoints(for: connection, fromNode: fromNode, toNode: toNode)
-                
-                createBezierConnection(from: fromPoint, to: toPoint, isValid: true)
+                Path { path in
+                    path.move(to: fromPoint)
+                    path.addLine(to: toPoint)
+                }
+                .stroke(Color.white, lineWidth: 1)
             } else {
                 // Return an invisible connection instead of EmptyView
-                createBezierConnection(from: CGPoint.zero, to: CGPoint.zero, isValid: false)
-                    .opacity(0)
+                EmptyView()
             }
         }
     }
     
     private func createPreviewConnection(from: CGPoint, to: CGPoint) -> some View {
-        createBezierConnection(from: from, to: to, isValid: connectionValidationResult == .valid)
-    }
-    
-    private func createBezierConnection(from: CGPoint, to: CGPoint, isValid: Bool) -> some View {
-        // Use vertical control points for top-to-bottom flow
-        let controlPoint1 = CGPoint(x: from.x, y: from.y + 50)
-        let controlPoint2 = CGPoint(x: to.x, y: to.y - 50)
-        
-        return Path { path in
+        Path { path in
             path.move(to: from)
-            path.addCurve(to: to, control1: controlPoint1, control2: controlPoint2)
+            path.addLine(to: to)
         }
-        .stroke(
-            isValid ? Color.orange : Color.red,
-            style: StrokeStyle(lineWidth: NodeConstants.connectionLineWidth, lineCap: .round)
-        )
-        .opacity(isValid ? 1.0 : 0.6)
+        .stroke(Color.white, lineWidth: 2)
     }
     
     private func createSelectionRectangle(rect: CGRect) -> some View {
@@ -214,55 +247,32 @@ struct NodeGraphPanel: View {
             .allowsHitTesting(false)
     }
     
-    private func createConnectionFeedback(at position: CGPoint) -> some View {
-        VStack {
-            Text("⚠️")
-                .font(.title2)
-            Text(connectionValidationResult.errorMessage)
-                .font(.caption)
-                .foregroundColor(.red)
-                .multilineTextAlignment(.center)
-        }
-        .padding(8)
-        .background(Color.black.opacity(0.8))
-        .cornerRadius(8)
-        .position(position)
-    }
+
     
     // MARK: - Connection Management
     
-    private func startPortConnection(fromNodeID: UUID, portPosition: CGPoint) {
-        guard let fromNode = nodeGraph.nodes.first(where: { $0.id == fromNodeID }) else { return }
-        guard let fromPort = fromNode.outputPorts.first else { return }
-        
+    private func startPortConnection(fromNodeID: UUID, fromPortID: UUID, portPosition: CGPoint) {
+        print("Starting connection from node: \(fromNodeID), port: \(fromPortID), position: \(portPosition)")
         connectionDragFromNodeID = fromNodeID
-        connectionDragFromPortID = fromPort.id
+        connectionDragFromPortID = fromPortID
         connectionDragFromPosition = portPosition
         connectionDragCurrentPosition = portPosition
         connectionDragToNodeID = nil
         connectionDragToPortID = nil
-        connectionValidationResult = .valid
     }
     
     private func updateConnectionDrag(to position: CGPoint) {
+        let now = CACurrentMediaTime()
+        if now - lastPreviewUpdateTime < 0.016 { return }
+        lastPreviewUpdateTime = now
+        
+        // Всегда следуем за курсором
         connectionDragCurrentPosition = position
         
-        // Check if we're over a valid target
+        // Check if we're over a valid target for potential connection
         let (targetNode, targetPort) = findTargetAtPosition(position)
-        if let targetNode = targetNode, let targetPort = targetPort {
-            connectionDragToNodeID = targetNode.id
-            connectionDragToPortID = targetPort.id
-            
-            // Validate the connection
-            if let fromNode = nodeGraph.nodes.first(where: { $0.id == connectionDragFromNodeID }),
-               let fromPort = fromNode.outputPorts.first(where: { $0.id == connectionDragFromPortID }) {
-                connectionValidationResult = nodeGraph.validateConnection(fromNode: fromNode, fromPort: fromPort, toNode: targetNode, toPort: targetPort)
-            }
-        } else {
-            connectionDragToNodeID = nil
-            connectionDragToPortID = nil
-            connectionValidationResult = .valid
-        }
+        connectionDragToNodeID = targetNode?.id
+        connectionDragToPortID = targetPort?.id
     }
     
     private func resetConnectionDrag() {
@@ -272,30 +282,37 @@ struct NodeGraphPanel: View {
         connectionDragCurrentPosition = nil
         connectionDragToNodeID = nil
         connectionDragToPortID = nil
-        connectionValidationResult = .valid
     }
     
-    private func endPortConnection(toNodeID: UUID) {
-        guard let fromNodeID = connectionDragFromNodeID,
-              let fromNode = nodeGraph.nodes.first(where: { $0.id == fromNodeID }),
-              let toNode = nodeGraph.nodes.first(where: { $0.id == toNodeID }) else {
-            resetConnectionDrag()
-            return
-        }
+    private func endPortConnection(toNodeID: UUID, toPortID: UUID) {
+        print("Ending connection at node: \(toNodeID), port: \(toPortID)")
+        print("Target found: node=\(connectionDragToNodeID?.uuidString ?? "nil"), port=\(connectionDragToPortID?.uuidString ?? "nil")")
         
-        // Find the first available input port on the target node
-        guard let toPort = toNode.inputPorts.first else {
-            resetConnectionDrag()
-            return
+        // Завершаем соединение - проверяем есть ли валидная цель
+        if let targetNodeID = connectionDragToNodeID,
+           let targetPortID = connectionDragToPortID,
+           let fromNodeID = connectionDragFromNodeID,
+           let fromPortID = connectionDragFromPortID,
+           let fromNode = nodeGraph.nodes.first(where: { $0.id == fromNodeID }),
+           let toNode = nodeGraph.nodes.first(where: { $0.id == targetNodeID }),
+           let fromPort = (fromNode.inputPorts + fromNode.outputPorts).first(where: { $0.id == fromPortID }),
+           let toPort = (toNode.inputPorts + toNode.outputPorts).first(where: { $0.id == targetPortID }) {
+            
+            print("Creating connection: \(fromNode.title).\(fromPort.name) -> \(toNode.title).\(toPort.name)")
+            
+            // Создаем соединение только если типы портов совместимы
+            if fromPort.type == NodePortType.output && toPort.type == NodePortType.input {
+                let success = nodeGraph.connectPorts(fromNode: fromNode, fromPort: fromPort, toNode: toNode, toPort: toPort)
+                print("Connection result: \(success)")
+            } else if fromPort.type == NodePortType.input && toPort.type == NodePortType.output {
+                let success = nodeGraph.connectPorts(fromNode: toNode, fromPort: toPort, toNode: fromNode, toPort: fromPort)
+                print("Connection result: \(success)")
+            } else {
+                print("Port types incompatible: \(fromPort.type) -> \(toPort.type)")
+            }
+        } else {
+            print("Failed to create connection - missing components")
         }
-        
-        guard let fromPort = fromNode.outputPorts.first else {
-            resetConnectionDrag()
-            return
-        }
-        
-        // Attempt to connect
-        _ = nodeGraph.connectPorts(fromNode: fromNode, fromPort: fromPort, toNode: toNode, toPort: toPort)
         
         resetConnectionDrag()
     }
@@ -303,11 +320,30 @@ struct NodeGraphPanel: View {
     // MARK: - Helper Methods for Port Finding
     
     private func findTargetAtPosition(_ position: CGPoint) -> (BaseNode?, NodePort?) {
+        let snapDistance: CGFloat = 20 // Расстояние для "прилипания" к порту
+        
         for node in nodeGraph.nodes {
-            if isPointInNode(position, node: node) {
-                return (node, node.inputPorts.first)
+            // Проверяем input ports
+            for port in node.inputPorts {
+                let portPosition = getPortWorldPosition(node: node, port: port)
+                let distance = sqrt(pow(position.x - portPosition.x, 2) + pow(position.y - portPosition.y, 2))
+                
+                if distance <= snapDistance {
+                    return (node, port)
+                }
+            }
+            
+            // Проверяем output ports
+            for port in node.outputPorts {
+                let portPosition = getPortWorldPosition(node: node, port: port)
+                let distance = sqrt(pow(position.x - portPosition.x, 2) + pow(position.y - portPosition.y, 2))
+                
+                if distance <= snapDistance {
+                    return (node, port)
+                }
             }
         }
+        
         return (nil, nil)
     }
     
@@ -317,7 +353,7 @@ struct NodeGraphPanel: View {
     }
     
     private func getPortWorldPosition(node: BaseNode, port: NodePort) -> CGPoint {
-        return port.type == .input ? 
+        return port.type == NodePortType.input ? 
             NodeConstants.inputPortPosition(at: node.position) :
             NodeConstants.outputPortPosition(at: node.position)
     }
@@ -419,26 +455,23 @@ struct NodeGraphPanel: View {
     }
     
     private func createNode(ofType type: NodeType, at position: CGPoint) {
-        // Add small animation effect
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-            switch type {
-            case .view:
-                let viewerNode = ViewNode(position: position, viewerPanel: viewerController)
-                nodeGraph.addNode(viewerNode)
-                // Auto-select the newly created node
-                selectedNode = viewerNode
-                selectedNodes = [viewerNode.id]
-            case .input:
-                let inputNode = InputNode(position: position)
-                nodeGraph.addNode(inputNode)
-                selectedNode = inputNode
-                selectedNodes = [inputNode.id]
-            case .corrector:
-                let correctorNode = CorrectorNode(position: position)
-                nodeGraph.addNode(correctorNode)
-                selectedNode = correctorNode
-                selectedNodes = [correctorNode.id]
-            }
+        switch type {
+        case .view:
+            let viewerNode = ViewNode(position: position, viewerPanel: viewerController)
+            nodeGraph.addNode(viewerNode)
+            // Auto-select the newly created node
+            selectedNode = viewerNode
+            selectedNodes = [viewerNode.id]
+        case .input:
+            let inputNode = InputNode(position: position)
+            nodeGraph.addNode(inputNode)
+            selectedNode = inputNode
+            selectedNodes = [inputNode.id]
+        case .corrector:
+            let correctorNode = CorrectorNode(position: position)
+            nodeGraph.addNode(correctorNode)
+            selectedNode = correctorNode
+            selectedNodes = [correctorNode.id]
         }
     }
 
@@ -464,6 +497,7 @@ struct NodeGraphPanel: View {
 struct NodePanelEventHandler: NSViewRepresentable {
     var onCreateNode: (NodeType, CGPoint) -> Void
     var onDelete: () -> Void
+    var onDeselectAll: () -> Void
 
     func makeNSView(context: Context) -> NSView {
         let view = EventHandlerView()
@@ -479,17 +513,20 @@ struct NodePanelEventHandler: NSViewRepresentable {
     func makeCoordinator() -> Coordinator {
         Coordinator(
             onCreateNode: onCreateNode,
-            onDelete: onDelete
+            onDelete: onDelete,
+            onDeselectAll: onDeselectAll
         )
     }
 
     class Coordinator: NSObject, NSMenuDelegate {
         var onCreateNode: (NodeType, CGPoint) -> Void
         var onDelete: () -> Void
+        var onDeselectAll: () -> Void
 
-        init(onCreateNode: @escaping (NodeType, CGPoint) -> Void, onDelete: @escaping () -> Void) {
+        init(onCreateNode: @escaping (NodeType, CGPoint) -> Void, onDelete: @escaping () -> Void, onDeselectAll: @escaping () -> Void) {
             self.onCreateNode = onCreateNode
             self.onDelete = onDelete
+            self.onDeselectAll = onDeselectAll
         }
 
         func showContextMenu(at point: NSPoint, with event: NSEvent, in view: NSView) {
@@ -578,6 +615,8 @@ struct NodePanelEventHandler: NSViewRepresentable {
         }
         
         override func mouseDown(with event: NSEvent) {
+            // Handle left click for deselection
+            coordinator?.onDeselectAll()
             super.mouseDown(with: event)
         }
         
