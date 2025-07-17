@@ -226,7 +226,7 @@ struct NodeGraphPanel: View {
     
     private func startPortConnection(fromNodeID: UUID, fromPortID: UUID, portPosition: CGPoint) {
         guard let fromNode = nodeGraph.nodes.first(where: { $0.id == fromNodeID }),
-              let fromPort = (fromNode.inputPorts + fromNode.outputPorts).first(where: { $0.id == fromPortID }) else {
+              let _ = (fromNode.inputPorts + fromNode.outputPorts).first(where: { $0.id == fromPortID }) else {
             return
         }
         
@@ -263,7 +263,7 @@ struct NodeGraphPanel: View {
     
     private func endPortConnection(toNodeID: UUID, toPortID: UUID) {
         guard let toNode = nodeGraph.nodes.first(where: { $0.id == toNodeID }),
-              let toPort = (toNode.inputPorts + toNode.outputPorts).first(where: { $0.id == toPortID }) else {
+              let _ = (toNode.inputPorts + toNode.outputPorts).first(where: { $0.id == toPortID }) else {
             resetConnectionDrag()
             return
         }
@@ -278,9 +278,9 @@ struct NodeGraphPanel: View {
            let toPort = (toNode.inputPorts + toNode.outputPorts).first(where: { $0.id == targetPortID }) {
             
             if fromPort.type == NodePortType.output && toPort.type == NodePortType.input {
-                let success = nodeGraph.connectPorts(fromNode: fromNode, fromPort: fromPort, toNode: toNode, toPort: toPort)
+                let _ = nodeGraph.connectPorts(fromNode: fromNode, fromPort: fromPort, toNode: toNode, toPort: toPort)
             } else if fromPort.type == NodePortType.input && toPort.type == NodePortType.output {
-                let success = nodeGraph.connectPorts(fromNode: toNode, fromPort: toPort, toNode: fromNode, toPort: fromPort)
+                let _ = nodeGraph.connectPorts(fromNode: toNode, fromPort: toPort, toNode: fromNode, toPort: fromPort)
             }
         }
         
