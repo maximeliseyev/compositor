@@ -7,16 +7,15 @@
 
 import SwiftUI
 
-// MARK: - Node Visual Constants
-struct NodeConstants {
+struct NodeViewConstants {
     // Node dimensions
     static let nodeWidth: CGFloat = 80
     static let nodeHeight: CGFloat = 40
     
     // Port dimensions
     static let portSize: CGFloat = 10
-    static let portSpacing: CGFloat = 20 // Расстояние между портами
-    static let portVerticalOffset: CGFloat = 10 // Расстояние от края ноды до порта
+    static let portSpacing: CGFloat = 20 // Distance between the ports
+    static let portVerticalOffset: CGFloat = 10 // Distance from the edge of the node to the port
     
     // Node spacing and padding
     static let nodeSelectionPadding: CGFloat = 20

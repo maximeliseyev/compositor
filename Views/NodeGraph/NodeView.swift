@@ -98,9 +98,9 @@ struct NodeView: View {
     
     private var nodeBodyView: some View {
         HStack {
-            RoundedRectangle(cornerRadius: NodeConstants.nodeCornerRadius)
+            RoundedRectangle(cornerRadius: NodeViewConstants.nodeCornerRadius)
                 .fill(nodeBackgroundColor)
-                .frame(width: NodeConstants.nodeWidth, height: NodeConstants.nodeHeight)
+                .frame(width: NodeViewConstants.nodeWidth, height: NodeViewConstants.nodeHeight)
                 .overlay(
                     VStack(spacing: 4) {
                         Text(node.title)
@@ -110,8 +110,8 @@ struct NodeView: View {
                     }
                 )
                 .overlay(
-                    RoundedRectangle(cornerRadius: NodeConstants.nodeCornerRadius)
-                        .stroke(isSelected ? Color.yellow : Color.clear, lineWidth: NodeConstants.selectionBorderWidth)
+                    RoundedRectangle(cornerRadius: NodeViewConstants.nodeCornerRadius)
+                        .stroke(isSelected ? Color.yellow : Color.clear, lineWidth: NodeViewConstants.selectionBorderWidth)
                 )
                 .onTapGesture {
                     onSelect()
@@ -125,7 +125,7 @@ struct NodeView: View {
     
     private var inputPortsView: some View {
         ForEach(Array(node.inputPorts.enumerated()), id: \.element.id) { index, port in
-            let portPosition = NodeConstants.inputPortPosition(
+            let portPosition = NodeViewConstants.inputPortPosition(
                 at: CGPoint.zero, // Relative to node center
                 portIndex: index,
                 totalPorts: node.inputPorts.count
@@ -146,14 +146,14 @@ struct NodeView: View {
                 },
                 onConnectionDrag: onConnectionDrag
             )
-            .frame(width: NodeConstants.portSize, height: NodeConstants.portSize)
+            .frame(width: NodeViewConstants.portSize, height: NodeViewConstants.portSize)
             .offset(x: portPosition.x, y: portPosition.y)
         }
     }
     
     private var outputPortsView: some View {
         ForEach(Array(node.outputPorts.enumerated()), id: \.element.id) { index, port in
-            let portPosition = NodeConstants.outputPortPosition(
+            let portPosition = NodeViewConstants.outputPortPosition(
                 at: CGPoint.zero, // Relative to node center
                 portIndex: index,
                 totalPorts: node.outputPorts.count
@@ -174,7 +174,7 @@ struct NodeView: View {
                 },
                 onConnectionDrag: onConnectionDrag
             )
-            .frame(width: NodeConstants.portSize, height: NodeConstants.portSize)
+            .frame(width: NodeViewConstants.portSize, height: NodeViewConstants.portSize)
             .offset(x: portPosition.x, y: portPosition.y)
         }
     }
