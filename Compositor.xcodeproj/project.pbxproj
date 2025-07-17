@@ -28,6 +28,7 @@
 		BFD2D93B2E200DF900BFAC11 /* LICENSE.md in Resources */ = {isa = PBXBuildFile; fileRef = BFD2D93A2E200DF500BFAC11 /* LICENSE.md */; };
 		BFD2D9412E20128600BFAC11 /* NodeGraph.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFD2D9402E20128600BFAC11 /* NodeGraph.swift */; };
 		BFF4F3AC2E27ED10004224AC /* NodeConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF4F3AB2E27ED0F004224AC /* NodeConstants.swift */; };
+		BFF4F3AE2E29005C004224AC /* NotificationNames.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF4F3AD2E29005C004224AC /* NotificationNames.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -54,6 +55,7 @@
 		BFD2D93A2E200DF500BFAC11 /* LICENSE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = LICENSE.md; sourceTree = "<group>"; };
 		BFD2D9402E20128600BFAC11 /* NodeGraph.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeGraph.swift; sourceTree = "<group>"; };
 		BFF4F3AB2E27ED0F004224AC /* NodeConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeConstants.swift; sourceTree = "<group>"; };
+		BFF4F3AD2E29005C004224AC /* NotificationNames.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationNames.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -82,7 +84,6 @@
 			isa = PBXGroup;
 			children = (
 				BFB2814F2E26D1F700BD1B79 /* NodeConnection.swift */,
-				BFF4F3AB2E27ED0F004224AC /* NodeConstants.swift */,
 				BFD2D9402E20128600BFAC11 /* NodeGraph.swift */,
 				BF7253242E270E15009E80E0 /* NodeTypes.swift */,
 			);
@@ -186,10 +187,20 @@
 		BFD2D93D2E20123400BFAC11 /* Core */ = {
 			isa = PBXGroup;
 			children = (
+				BFF4F3AF2E290063004224AC /* Constants */,
 				BFB5ACE82E251DD60063763C /* Nodes */,
 				BFB5ACE92E251DF10063763C /* Graph */,
 			);
 			path = Core;
+			sourceTree = "<group>";
+		};
+		BFF4F3AF2E290063004224AC /* Constants */ = {
+			isa = PBXGroup;
+			children = (
+				BFF4F3AD2E29005C004224AC /* NotificationNames.swift */,
+				BFF4F3AB2E27ED0F004224AC /* NodeConstants.swift */,
+			);
+			path = Constants;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -280,6 +291,7 @@
 				BFB5ACD12E2437010063763C /* CompositorView.swift in Sources */,
 				BFB5ACD92E245B9F0063763C /* ViewerPanelController.swift in Sources */,
 				BFD2D8DD2E1F2C8600BFAC11 /* CompositorApp.swift in Sources */,
+				BFF4F3AE2E29005C004224AC /* NotificationNames.swift in Sources */,
 				BFD2D9412E20128600BFAC11 /* NodeGraph.swift in Sources */,
 				BFB5ACD72E245B8C0063763C /* ViewNode.swift in Sources */,
 				BFB2814C2E25B9F500BD1B79 /* InspectorPanel.swift in Sources */,

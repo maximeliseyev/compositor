@@ -24,10 +24,30 @@ struct SwiftCompositorApp: App {
                     }
                 }
             }
+            
+            CommandMenu("View") {
+                Button("Viewer") {
+                    NotificationCenter.default.post(name: .toggleViewerPanel, object: nil)
+                }
+                .keyboardShortcut("1", modifiers: [.command])
+                
+                Button("Node Graph") {
+                    NotificationCenter.default.post(name: .toggleNodeGraphPanel, object: nil)
+                }
+                .keyboardShortcut("2", modifiers: [.command])
+                
+                Button("Inspector") {
+                    NotificationCenter.default.post(name: .toggleInspectorPanel, object: nil)
+                }
+                .keyboardShortcut("3", modifiers: [.command])
+                
+                Divider()
+                
+                Button("Show All") {
+                    NotificationCenter.default.post(name: .showAllPanels, object: nil)
+                }
+                .keyboardShortcut("0", modifiers: [.command, .shift])
+            }
         }
     }
-}
-
-extension Notification.Name {
-    static let createNodeFromMenu = Notification.Name("createNodeFromMenu")
 }

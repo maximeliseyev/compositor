@@ -14,11 +14,7 @@ import Foundation
 // В будущем можно будет заменить на @import Core при модулярной архитектуре
 
 // MARK: - Extensions
-// createNodeFromMenu определён в CompositorApp.swift
-
-extension Notification.Name {
-    static let cancelAllConnections = Notification.Name("cancelAllConnections")
-}
+// Notification names определены в Core/Graph/NotificationNames.swift
 
 // MARK: - Node Graph Renderer Protocol
 // Архитектура готова для Metal интеграции:
