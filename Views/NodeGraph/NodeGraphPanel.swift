@@ -129,13 +129,20 @@ struct NodeGraphPanel: View {
     }
     
     private var connectionsLayer: some View {
-        renderer.renderConnections(
-            connections: nodeGraph.connections,
-            nodes: nodeGraph.nodes,
-            getConnectionPoints: { connection, fromNode, toNode in
-                getConnectionPoints(for: connection, fromNode: fromNode, toNode: toNode)
+        ZStack {
+            ForEach(nodeGraph.connections) { connection in
+                if let fromNode = nodeGraph.nodes.first(where: { $0.id == connection.fromNode }),
+                   let toNode = nodeGraph.nodes.first(where: { $0.id == connection.toNode }) {
+                    let (fromPoint, toPoint) = getConnectionPoints(for: connection, fromNode: fromNode, toNode: toNode)
+                    Path { path in
+                        path.move(to: fromPoint)
+                        path.addLine(to: toPoint)
+                    }
+                    .stroke(Color.white, lineWidth: 1)
+                }
             }
-        )
+        }
+        .allowsHitTesting(false)
     }
     
     private var previewConnectionLayer: some View {

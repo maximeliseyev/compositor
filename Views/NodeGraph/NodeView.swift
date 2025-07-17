@@ -18,12 +18,14 @@ struct NodeView: View {
     let onConnectionDrag: ((UUID, UUID, CGPoint) -> Void)?
     let onMove: ((CGPoint) -> Void)?
     
-    @GestureState private var dragOffset: CGSize = .zero
     @State private var scale: CGFloat = 1.0
     
     // Блокировка перетаскивания ноды во время создания соединения
     @State private var isConnecting: Bool = false
     @State private var connectionTimeoutTimer: Timer?
+    
+    // Add state for drag start position
+    @State private var dragStartPosition: CGPoint?
     
     var body: some View {
         ZStack {
@@ -34,27 +36,32 @@ struct NodeView: View {
         .scaleEffect(1.0)
         .gesture(
             DragGesture(coordinateSpace: .named("NodeGraphPanel"))
-                .updating($dragOffset) { value, state, _ in
+                .onChanged { value in
                     // Блокируем перетаскивание ноды во время создания соединения
                     if !isConnecting {
-                        state = value.translation
+                        if dragStartPosition == nil {
+                            dragStartPosition = node.position
+                        }
+                        let newPosition = CGPoint(
+                            x: dragStartPosition!.x + value.translation.width,
+                            y: dragStartPosition!.y + value.translation.height
+                        )
+                        node.position = newPosition
                     }
                 }
                 .onEnded { value in
                     // Перемещаем ноду только если не было создания соединения
                     if !isConnecting {
                         let newPosition = CGPoint(
-                            x: node.position.x + value.translation.width,
-                            y: node.position.y + value.translation.height
+                            x: dragStartPosition!.x + value.translation.width,
+                            y: dragStartPosition!.y + value.translation.height
                         )
                         onMove?(newPosition)
                     }
+                    dragStartPosition = nil
                 }
         )
-        .position(
-            x: node.position.x + dragOffset.width,
-            y: node.position.y + dragOffset.height
-        )
+        .position(node.position)
         .onAppear {
             // Подписываемся на уведомления об отмене операций подключения
             NotificationCenter.default.addObserver(
