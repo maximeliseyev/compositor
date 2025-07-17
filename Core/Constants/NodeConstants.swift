@@ -61,7 +61,9 @@ struct NodeConstants {
         let portX = startX + CGFloat(portIndex) * portSpacing
         let portY = nodePosition.y - nodeHeight/2 - portVerticalOffset
         
-        return CGPoint(x: portX, y: portY)
+        let result = CGPoint(x: portX, y: portY)
+        print("DEBUG: NodeConstants.inputPortPosition - nodePos: (\(nodePosition.x), \(nodePosition.y)), portIndex: \(portIndex)/\(totalPorts), startX: \(startX), portX: \(portX), portY: \(portY) -> result: (\(result.x), \(result.y))")
+        return result
     }
     
     /// Возвращает позицию конкретного output порта
@@ -74,7 +76,9 @@ struct NodeConstants {
         let portX = startX + CGFloat(portIndex) * portSpacing
         let portY = nodePosition.y + nodeHeight/2 + portVerticalOffset
         
-        return CGPoint(x: portX, y: portY)
+        let result = CGPoint(x: portX, y: portY)
+        print("DEBUG: NodeConstants.outputPortPosition - nodePos: (\(nodePosition.x), \(nodePosition.y)), portIndex: \(portIndex)/\(totalPorts), startX: \(startX), portX: \(portX), portY: \(portY) -> result: (\(result.x), \(result.y))")
+        return result
     }
     
     // MARK: - Legacy methods (для совместимости)

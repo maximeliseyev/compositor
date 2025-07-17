@@ -29,37 +29,18 @@ class BaseNode: NodeProtocol {
     let id = UUID()
     let type: NodeType
     @Published var position: CGPoint
-    var inputConnections: [NodeConnection] = []
-    var outputConnections: [NodeConnection] = []
+    @Published var inputConnections: [NodeConnection] = []
+    @Published var outputConnections: [NodeConnection] = []
+    
+    // Stored ports with consistent IDs
+    let inputPorts: [NodePort]
+    let outputPorts: [NodePort]
     
     var title: String {
         return type.rawValue
     }
     
-    // Default ports - can be overridden by subclasses
-    var inputPorts: [NodePort] {
-        switch type {
-        case .view:
-            return [NodePort(name: "Input", type: .input, dataType: .image)]
-        case .corrector:
-            return [NodePort(name: "Input", type: .input, dataType: .image)]
-        case .input:
-            return []
-        }
-    }
-    
-    var outputPorts: [NodePort] {
-        switch type {
-        case .view:
-            return [] // View node не имеет выходных портов, только отображает результат
-        case .corrector:
-            return [NodePort(name: "Output", type: .output, dataType: .image)]
-        case .input:
-            return [NodePort(name: "Output", type: .output, dataType: .image)]
-        }
-    }
-    
-    var parameters: [String: Any] = [:]
+    @Published var parameters: [String: Any] = [:]
     
     private var cachedOutput: CIImage?
     private var lastInputHash: Int = 0
@@ -67,6 +48,19 @@ class BaseNode: NodeProtocol {
     init(type: NodeType, position: CGPoint) {
         self.type = type
         self.position = position
+        
+        // Initialize ports based on type
+        switch type {
+        case .view:
+            self.inputPorts = [NodePort(name: "Input", type: .input, dataType: .image)]
+            self.outputPorts = []
+        case .corrector:
+            self.inputPorts = [NodePort(name: "Input", type: .input, dataType: .image)]
+            self.outputPorts = [NodePort(name: "Output", type: .output, dataType: .image)]
+        case .input:
+            self.inputPorts = []
+            self.outputPorts = [NodePort(name: "Output", type: .output, dataType: .image)]
+        }
     }
     
     func process(inputs: [CIImage?]) -> CIImage? {
