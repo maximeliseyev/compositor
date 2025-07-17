@@ -227,11 +227,9 @@ struct NodeGraphPanel: View {
     private func startPortConnection(fromNodeID: UUID, fromPortID: UUID, portPosition: CGPoint) {
         guard let fromNode = nodeGraph.nodes.first(where: { $0.id == fromNodeID }),
               let fromPort = (fromNode.inputPorts + fromNode.outputPorts).first(where: { $0.id == fromPortID }) else {
-            print("DEBUG: Could not find source node or port for connection start")
             return
         }
         
-        print("DEBUG: Starting connection from node '\(fromNode.title)' port '\(fromPort.name)' (\(fromPort.type)) at position (\(portPosition.x), \(portPosition.y))")
         connectionDragFromNodeID = fromNodeID
         connectionDragFromPortID = fromPortID
         connectionDragFromPosition = portPosition
@@ -266,15 +264,10 @@ struct NodeGraphPanel: View {
     private func endPortConnection(toNodeID: UUID, toPortID: UUID) {
         guard let toNode = nodeGraph.nodes.first(where: { $0.id == toNodeID }),
               let toPort = (toNode.inputPorts + toNode.outputPorts).first(where: { $0.id == toPortID }) else {
-            print("DEBUG: Could not find target node or port for connection end")
             resetConnectionDrag()
             return
         }
-        
-        print("DEBUG: Ending connection at node '\(toNode.title)' port '\(toPort.name)' (\(toPort.type))")
-        print("DEBUG: Target found: node=\(connectionDragToNodeID?.uuidString ?? "nil"), port=\(connectionDragToPortID?.uuidString ?? "nil")")
-        
-        // Завершаем соединение - проверяем есть ли валидная цель
+                
         if let targetNodeID = connectionDragToNodeID,
            let targetPortID = connectionDragToPortID,
            let fromNodeID = connectionDragFromNodeID,
@@ -284,20 +277,11 @@ struct NodeGraphPanel: View {
            let fromPort = (fromNode.inputPorts + fromNode.outputPorts).first(where: { $0.id == fromPortID }),
            let toPort = (toNode.inputPorts + toNode.outputPorts).first(where: { $0.id == targetPortID }) {
             
-            print("DEBUG: Creating connection: \(fromNode.title).\(fromPort.name) (\(fromPort.type)) -> \(toNode.title).\(toPort.name) (\(toPort.type))")
-            
-            // Создаем соединение только если типы портов совместимы
             if fromPort.type == NodePortType.output && toPort.type == NodePortType.input {
                 let success = nodeGraph.connectPorts(fromNode: fromNode, fromPort: fromPort, toNode: toNode, toPort: toPort)
-                print("DEBUG: Connection result (output->input): \(success)")
             } else if fromPort.type == NodePortType.input && toPort.type == NodePortType.output {
                 let success = nodeGraph.connectPorts(fromNode: toNode, fromPort: toPort, toNode: fromNode, toPort: fromPort)
-                print("DEBUG: Connection result (input->output reversed): \(success)")
-            } else {
-                print("DEBUG: Port types incompatible: \(fromPort.type) -> \(toPort.type)")
             }
-        } else {
-            print("DEBUG: Failed to create connection - missing components")
         }
         
         resetConnectionDrag()
@@ -312,7 +296,6 @@ struct NodeGraphPanel: View {
         var closestDistance: CGFloat = snapDistance
         
         for node in nodeGraph.nodes {
-            // Проверяем input ports
             for port in node.inputPorts {
                 let portPosition = getPortPanelPosition(node: node, port: port)
                 let distance = sqrt(pow(position.x - portPosition.x, 2) + pow(position.y - portPosition.y, 2))
@@ -324,7 +307,6 @@ struct NodeGraphPanel: View {
                 }
             }
             
-            // Проверяем output ports
             for port in node.outputPorts {
                 let portPosition = getPortPanelPosition(node: node, port: port)
                 let distance = sqrt(pow(position.x - portPosition.x, 2) + pow(position.y - portPosition.y, 2))
@@ -335,12 +317,6 @@ struct NodeGraphPanel: View {
                     closestPort = port
                 }
             }
-        }
-        
-        if let targetNode = closestNode, let targetPort = closestPort {
-            print("DEBUG: Found target port '\(targetPort.name)' (\(targetPort.type)) on node '\(targetNode.title)' at distance \(closestDistance)")
-        } else {
-            print("DEBUG: No target port found at position (\(position.x), \(position.y)) within snap distance \(snapDistance)")
         }
         
         return (closestNode, closestPort)
@@ -356,7 +332,6 @@ struct NodeGraphPanel: View {
         
         if port.type == NodePortType.input {
             guard let portIndex = node.inputPorts.firstIndex(where: { $0.id == port.id }) else {
-                print("DEBUG: Port index not found for input port '\(port.name)' on node '\(node.title)', using fallback position")
                 return NodeConstants.inputPortPosition(at: node.position)
             }
             position = NodeConstants.inputPortPosition(
@@ -364,10 +339,8 @@ struct NodeGraphPanel: View {
                 portIndex: portIndex,
                 totalPorts: node.inputPorts.count
             )
-            print("DEBUG: Input port '\(port.name)' on node '\(node.title)' at index \(portIndex)/\(node.inputPorts.count) -> position: (\(position.x), \(position.y))")
         } else {
             guard let portIndex = node.outputPorts.firstIndex(where: { $0.id == port.id }) else {
-                print("DEBUG: Port index not found for output port '\(port.name)' on node '\(node.title)', using fallback position")
                 return NodeConstants.outputPortPosition(at: node.position)
             }
             position = NodeConstants.outputPortPosition(
@@ -375,7 +348,6 @@ struct NodeGraphPanel: View {
                 portIndex: portIndex,
                 totalPorts: node.outputPorts.count
             )
-            print("DEBUG: Output port '\(port.name)' on node '\(node.title)' at index \(portIndex)/\(node.outputPorts.count) -> position: (\(position.x), \(position.y))")
         }
         
         return position
@@ -389,17 +361,14 @@ struct NodeGraphPanel: View {
             fromPoint = getPortPanelPosition(node: fromNode, port: fromPort)
         } else {
             fromPoint = CGPoint(x: fromNode.position.x, y: fromNode.position.y + 30)
-            print("DEBUG: Connection from port ID not found, using fallback position for node '\(fromNode.title)' at (\(fromPoint.x), \(fromPoint.y))")
         }
         
         if let toPort = toNode.inputPorts.first(where: { $0.id == connection.toPort }) {
             toPoint = getPortPanelPosition(node: toNode, port: toPort)
         } else {
             toPoint = CGPoint(x: toNode.position.x, y: toNode.position.y - 30)
-            print("DEBUG: Connection to port ID not found, using fallback position for node '\(toNode.title)' at (\(toPoint.x), \(toPoint.y))")
         }
         
-        print("DEBUG: Connection line from '\(fromNode.title)' at (\(fromPoint.x), \(fromPoint.y)) to '\(toNode.title)' at (\(toPoint.x), \(toPoint.y))")
         return (fromPoint, toPoint)
     }
     

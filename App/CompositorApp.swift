@@ -25,7 +25,9 @@ struct SwiftCompositorApp: App {
                 }
             }
             
-            CommandMenu("View") {
+            CommandGroup(after: .sidebar) {
+                Divider()
+                
                 Button("Viewer") {
                     NotificationCenter.default.post(name: .toggleViewerPanel, object: nil)
                 }

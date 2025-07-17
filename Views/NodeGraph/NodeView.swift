@@ -92,7 +92,6 @@ struct NodeView: View {
         connectionTimeoutTimer?.invalidate()
         connectionTimeoutTimer = Timer.scheduledTimer(withTimeInterval: 10.0, repeats: false) { _ in
             // Принудительно сбрасываем состояние через 10 секунд
-            print("Connection timeout - resetting isConnecting state")
             resetConnectionState()
         }
     }

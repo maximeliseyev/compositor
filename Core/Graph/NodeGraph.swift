@@ -45,7 +45,6 @@ class NodeGraph: ObservableObject {
         let validation = validateConnection(fromNode: fromNode, fromPort: fromPort, toNode: toNode, toPort: toPort)
         
         guard validation == .valid else {
-            print("Connection validation failed: \(validation.errorMessage)")
             return false
         }
         
@@ -62,7 +61,6 @@ class NodeGraph: ObservableObject {
         fromNode.addOutputConnection(connection)
         toNode.addInputConnection(connection)
         
-        print("✅ Connection created: \(fromNode.title).\(fromPort.name) -> \(toNode.title).\(toPort.name)")
         return true
     }
     
