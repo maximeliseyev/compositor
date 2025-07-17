@@ -209,22 +209,7 @@ struct NodeGraphPanel: View {
         )
     }
     
-    private func createConnectionPath(for connection: NodeConnection) -> some View {
-        Group {
-            if let fromNode = nodeGraph.nodes.first(where: { $0.id == connection.fromNode }),
-               let toNode = nodeGraph.nodes.first(where: { $0.id == connection.toNode }) {
-                let (fromPoint, toPoint) = getConnectionPoints(for: connection, fromNode: fromNode, toNode: toNode)
-                Path { path in
-                    path.move(to: fromPoint)
-                    path.addLine(to: toPoint)
-                }
-                .stroke(Color.white, lineWidth: 1)
-            } else {
-                // Return an invisible connection instead of EmptyView
-                EmptyView()
-            }
-        }
-    }
+    // MARK: - Connection path creation removed - using renderer.renderConnections instead
     
     private func createPreviewConnection(from: CGPoint, to: CGPoint) -> some View {
         Path { path in
@@ -317,6 +302,9 @@ struct NodeGraphPanel: View {
     
     private func findTargetAtPosition(_ position: CGPoint) -> (BaseNode?, NodePort?) {
         let snapDistance: CGFloat = 20 // Расстояние для "прилипания" к порту
+        var closestNode: BaseNode? = nil
+        var closestPort: NodePort? = nil
+        var closestDistance: CGFloat = snapDistance
         
         for node in nodeGraph.nodes {
             // Проверяем input ports
@@ -324,8 +312,10 @@ struct NodeGraphPanel: View {
                 let portPosition = getPortWorldPosition(node: node, port: port)
                 let distance = sqrt(pow(position.x - portPosition.x, 2) + pow(position.y - portPosition.y, 2))
                 
-                if distance <= snapDistance {
-                    return (node, port)
+                if distance < closestDistance {
+                    closestDistance = distance
+                    closestNode = node
+                    closestPort = port
                 }
             }
             
@@ -334,13 +324,15 @@ struct NodeGraphPanel: View {
                 let portPosition = getPortWorldPosition(node: node, port: port)
                 let distance = sqrt(pow(position.x - portPosition.x, 2) + pow(position.y - portPosition.y, 2))
                 
-                if distance <= snapDistance {
-                    return (node, port)
+                if distance < closestDistance {
+                    closestDistance = distance
+                    closestNode = node
+                    closestPort = port
                 }
             }
         }
         
-        return (nil, nil)
+        return (closestNode, closestPort)
     }
     
     private func isPointInNode(_ point: CGPoint, node: BaseNode) -> Bool {
@@ -349,9 +341,25 @@ struct NodeGraphPanel: View {
     }
     
     private func getPortWorldPosition(node: BaseNode, port: NodePort) -> CGPoint {
-        return port.type == NodePortType.input ? 
-            NodeConstants.inputPortPosition(at: node.position) :
-            NodeConstants.outputPortPosition(at: node.position)
+        if port.type == NodePortType.input {
+            guard let portIndex = node.inputPorts.firstIndex(where: { $0.id == port.id }) else {
+                return NodeConstants.inputPortPosition(at: node.position)
+            }
+            return NodeConstants.inputPortPosition(
+                at: node.position,
+                portIndex: portIndex,
+                totalPorts: node.inputPorts.count
+            )
+        } else {
+            guard let portIndex = node.outputPorts.firstIndex(where: { $0.id == port.id }) else {
+                return NodeConstants.outputPortPosition(at: node.position)
+            }
+            return NodeConstants.outputPortPosition(
+                at: node.position,
+                portIndex: portIndex,
+                totalPorts: node.outputPorts.count
+            )
+        }
     }
     
     private func getConnectionPoints(for connection: NodeConnection, fromNode: BaseNode, toNode: BaseNode) -> (CGPoint, CGPoint) {

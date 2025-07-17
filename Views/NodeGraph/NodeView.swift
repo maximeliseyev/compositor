@@ -118,54 +118,58 @@ struct NodeView: View {
     }
     
     private var inputPortsView: some View {
-        HStack(spacing: 8) {
-            ForEach(Array(node.inputPorts.enumerated()), id: \.element.id) { index, port in
-                GeometryReader { geometry in
-                    NodePortView(
-                        port: port,
-                        isConnected: node.inputConnections.contains { $0.toNode == node.id },
-                            nodeID: node.id,
-                        onStartConnection: { nodeID, portID, pos in
-                            isConnecting = true
-                            startConnectionTimeout()
-                            onStartConnection?(nodeID, portID, pos)
-                        },
-                        onEndConnection: { nodeID, portID in
-                            resetConnectionState()
-                            onEndConnection?(nodeID, portID)
-                        },
-                        onConnectionDrag: onConnectionDrag
-                    )
-                }
-                .frame(width: NodeConstants.portSize, height: NodeConstants.portSize)
-                .offset(x: CGFloat(index - node.inputPorts.count/2) * NodeConstants.portOffset, y: -NodeConstants.nodeHeight/2 - NodeConstants.portSize/2)
-            }
+        ForEach(Array(node.inputPorts.enumerated()), id: \.element.id) { index, port in
+            let portPosition = NodeConstants.inputPortPosition(
+                at: CGPoint.zero, // Relative to node center
+                portIndex: index,
+                totalPorts: node.inputPorts.count
+            )
+            
+            NodePortView(
+                port: port,
+                isConnected: node.inputConnections.contains { $0.toNode == node.id && $0.toPort == port.id },
+                nodeID: node.id,
+                onStartConnection: { nodeID, portID, pos in
+                    isConnecting = true
+                    startConnectionTimeout()
+                    onStartConnection?(nodeID, portID, pos)
+                },
+                onEndConnection: { nodeID, portID in
+                    resetConnectionState()
+                    onEndConnection?(nodeID, portID)
+                },
+                onConnectionDrag: onConnectionDrag
+            )
+            .frame(width: NodeConstants.portSize, height: NodeConstants.portSize)
+            .offset(x: portPosition.x, y: portPosition.y)
         }
     }
     
     private var outputPortsView: some View {
-        HStack(spacing: 8) {
-            ForEach(Array(node.outputPorts.enumerated()), id: \.element.id) { index, port in
-                GeometryReader { geometry in
-                    NodePortView(
-                        port: port,
-                        isConnected: node.outputConnections.contains { $0.fromNode == node.id },
-                        nodeID: node.id,
-                        onStartConnection: { nodeID, portID, pos in
-                            isConnecting = true
-                            startConnectionTimeout()
-                            onStartConnection?(nodeID, portID, pos)
-                        },
-                        onEndConnection: { nodeID, portID in
-                            resetConnectionState()
-                            onEndConnection?(nodeID, portID)
-                        },
-                        onConnectionDrag: onConnectionDrag
-                    )
-                }
-                .frame(width: NodeConstants.portSize, height: NodeConstants.portSize)
-                .offset(x: CGFloat(index - node.outputPorts.count/2) * NodeConstants.portOffset, y: NodeConstants.nodeHeight/2 + NodeConstants.portSize/2)
-            }
+        ForEach(Array(node.outputPorts.enumerated()), id: \.element.id) { index, port in
+            let portPosition = NodeConstants.outputPortPosition(
+                at: CGPoint.zero, // Relative to node center
+                portIndex: index,
+                totalPorts: node.outputPorts.count
+            )
+            
+            NodePortView(
+                port: port,
+                isConnected: node.outputConnections.contains { $0.fromNode == node.id && $0.fromPort == port.id },
+                nodeID: node.id,
+                onStartConnection: { nodeID, portID, pos in
+                    isConnecting = true
+                    startConnectionTimeout()
+                    onStartConnection?(nodeID, portID, pos)
+                },
+                onEndConnection: { nodeID, portID in
+                    resetConnectionState()
+                    onEndConnection?(nodeID, portID)
+                },
+                onConnectionDrag: onConnectionDrag
+            )
+            .frame(width: NodeConstants.portSize, height: NodeConstants.portSize)
+            .offset(x: portPosition.x, y: portPosition.y)
         }
     }
 }
@@ -182,8 +186,7 @@ struct NodePortView: View {
     @State private var hasStarted = false // Предотвращает множественные вызовы onStartConnection
     
     var body: some View {
-        Circle()
-            .fill(portColor)
+        portShape
             .frame(width: 10, height: 10)
             .highPriorityGesture(
                 DragGesture(coordinateSpace: .named("NodeGraphPanel"))
@@ -233,6 +236,35 @@ struct NodePortView: View {
         } else {
             return portDataTypeColor.opacity(0.4)
         }
+    }
+    
+    @ViewBuilder
+    private var portShape: some View {
+        switch port.type {
+        case .input:
+            Rectangle()
+                .fill(portColor)
+        case .output:
+            TriangleDownShape()
+                .fill(portColor)
+                .frame(width: 12, height: 12)
+        }
+    }
+}
+
+// MARK: - Custom Port Shapes
+
+struct TriangleDownShape: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        
+        // Треугольник направленный вниз
+        path.move(to: CGPoint(x: rect.midX, y: rect.maxY))      // Нижняя вершина
+        path.addLine(to: CGPoint(x: rect.minX, y: rect.minY))   // Левый верхний угол
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))   // Правый верхний угол
+        path.closeSubpath()
+        
+        return path
     }
 }
 

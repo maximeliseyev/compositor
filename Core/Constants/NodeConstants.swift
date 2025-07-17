@@ -15,11 +15,11 @@ struct NodeConstants {
     
     // Port dimensions
     static let portSize: CGFloat = 10
-    static let portOffset: CGFloat = 15 // Distance between ports
+    static let portSpacing: CGFloat = 20 // Расстояние между портами
+    static let portVerticalOffset: CGFloat = 10 // Расстояние от края ноды до порта
     
     // Node spacing and padding
     static let nodeSelectionPadding: CGFloat = 20
-    static let portVerticalOffset: CGFloat = 30 // Distance from node center to port
     
     // Visual elements
     static let nodeCornerRadius: CGFloat = 8
@@ -29,7 +29,8 @@ struct NodeConstants {
     // Grid
     static let gridSpacing: CGFloat = 40
     
-    // Node frame calculations
+    // MARK: - Node frame calculations
+    
     static func nodeFrame(at position: CGPoint) -> CGRect {
         return CGRect(
             x: position.x - nodeWidth/2,
@@ -48,17 +49,65 @@ struct NodeConstants {
         )
     }
     
-    static func inputPortPosition(at nodePosition: CGPoint) -> CGPoint {
-        return CGPoint(
-            x: nodePosition.x,
-            y: nodePosition.y - nodeHeight/2 - portSize/2
-        )
+    // MARK: - Port positioning methods (improved for multiple ports)
+    
+    /// Возвращает позицию конкретного input порта
+    /// - Parameters:
+    ///   - nodePosition: Позиция ноды
+    ///   - portIndex: Индекс порта (0-based)
+    ///   - totalPorts: Общее количество портов
+    static func inputPortPosition(at nodePosition: CGPoint, portIndex: Int, totalPorts: Int) -> CGPoint {
+        let startX = nodePosition.x - (CGFloat(totalPorts - 1) * portSpacing) / 2
+        let portX = startX + CGFloat(portIndex) * portSpacing
+        let portY = nodePosition.y - nodeHeight/2 - portVerticalOffset
+        
+        return CGPoint(x: portX, y: portY)
     }
     
+    /// Возвращает позицию конкретного output порта
+    /// - Parameters:
+    ///   - nodePosition: Позиция ноды
+    ///   - portIndex: Индекс порта (0-based)
+    ///   - totalPorts: Общее количество портов
+    static func outputPortPosition(at nodePosition: CGPoint, portIndex: Int, totalPorts: Int) -> CGPoint {
+        let startX = nodePosition.x - (CGFloat(totalPorts - 1) * portSpacing) / 2
+        let portX = startX + CGFloat(portIndex) * portSpacing
+        let portY = nodePosition.y + nodeHeight/2 + portVerticalOffset
+        
+        return CGPoint(x: portX, y: portY)
+    }
+    
+    // MARK: - Legacy methods (для совместимости)
+    
+    /// Возвращает позицию единственного input порта (для совместимости)
+    static func inputPortPosition(at nodePosition: CGPoint) -> CGPoint {
+        return inputPortPosition(at: nodePosition, portIndex: 0, totalPorts: 1)
+    }
+    
+    /// Возвращает позицию единственного output порта (для совместимости)
     static func outputPortPosition(at nodePosition: CGPoint) -> CGPoint {
-        return CGPoint(
-            x: nodePosition.x,
-            y: nodePosition.y + nodeHeight/2 + portSize/2
-        )
+        return outputPortPosition(at: nodePosition, portIndex: 0, totalPorts: 1)
+    }
+    
+    // MARK: - Port area calculations
+    
+    /// Возвращает область, где могут находиться input порты
+    static func inputPortsArea(at nodePosition: CGPoint, portCount: Int) -> CGRect {
+        let width = max(portSize, CGFloat(portCount - 1) * portSpacing + portSize)
+        let height = portSize
+        let x = nodePosition.x - width/2
+        let y = nodePosition.y - nodeHeight/2 - portVerticalOffset - height/2
+        
+        return CGRect(x: x, y: y, width: width, height: height)
+    }
+    
+    /// Возвращает область, где могут находиться output порты
+    static func outputPortsArea(at nodePosition: CGPoint, portCount: Int) -> CGRect {
+        let width = max(portSize, CGFloat(portCount - 1) * portSpacing + portSize)
+        let height = portSize
+        let x = nodePosition.x - width/2
+        let y = nodePosition.y + nodeHeight/2 + portVerticalOffset - height/2
+        
+        return CGRect(x: x, y: y, width: width, height: height)
     }
 } 

@@ -106,7 +106,10 @@ class BaseNode: NodeProtocol {
     }
     
     func addInputConnection(_ connection: NodeConnection) {
-        inputConnections.append(connection)
+        // Prevent duplicate connections
+        if !inputConnections.contains(where: { $0.id == connection.id }) {
+            inputConnections.append(connection)
+        }
     }
         
     func removeInputConnection(_ connection: NodeConnection) {
@@ -114,7 +117,10 @@ class BaseNode: NodeProtocol {
     }
         
     func addOutputConnection(_ connection: NodeConnection) {
-        outputConnections.append(connection)
+        // Prevent duplicate connections
+        if !outputConnections.contains(where: { $0.id == connection.id }) {
+            outputConnections.append(connection)
+        }
     }
         
     func removeOutputConnection(_ connection: NodeConnection) {

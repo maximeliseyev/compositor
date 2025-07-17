@@ -45,6 +45,7 @@ class NodeGraph: ObservableObject {
         let validation = validateConnection(fromNode: fromNode, fromPort: fromPort, toNode: toNode, toPort: toPort)
         
         guard validation == .valid else {
+            print("Connection validation failed: \(validation.errorMessage)")
             return false
         }
         
@@ -57,15 +58,11 @@ class NodeGraph: ObservableObject {
         
         connections.append(connection)
         
-        // Update node connections
-        if !fromNode.outputConnections.contains(where: { $0.id == connection.id }) {
-            fromNode.outputConnections.append(connection)
-        }
+        // Update node connections using proper methods
+        fromNode.addOutputConnection(connection)
+        toNode.addInputConnection(connection)
         
-        if !toNode.inputConnections.contains(where: { $0.id == connection.id }) {
-            toNode.inputConnections.append(connection)
-        }
-        
+        print("✅ Connection created: \(fromNode.title).\(fromPort.name) -> \(toNode.title).\(toPort.name)")
         return true
     }
     
@@ -85,20 +82,24 @@ class NodeGraph: ObservableObject {
             return .invalidDataType
         }
         
+        // Check if input port already has a connection (prevent multiple connections to same input)
+        let existingInputConnections = connections.filter { connection in
+            connection.toNode == toNode.id && connection.toPort == toPort.id
+        }
+        
+        if !existingInputConnections.isEmpty && !toPort.isMultiInput {
+            return .inputAlreadyConnected
+        }
+        
+        // Check for cycle detection
+        if wouldCreateCycle(from: fromNode, to: toNode) {
+            return .wouldCreateCycle
+        }
+        
         return .valid
     }
     
-    // MARK: - Legacy Node Connection Methods (for backward compatibility)
-    
-    func connectNodes(from: BaseNode, to: BaseNode) {
-        // Use the first available output port to first available input port
-        guard let outputPort = from.outputPorts.first,
-              let inputPort = to.inputPorts.first else {
-            return
-        }
-        
-        let _ = connectPorts(fromNode: from, fromPort: outputPort, toNode: to, toPort: inputPort)
-    }
+    // MARK: - Legacy methods removed - use connectPorts instead for precise control
     
     // MARK: - Connection Management
     
