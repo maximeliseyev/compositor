@@ -78,29 +78,11 @@ struct ConnectionLineView: View {
     var body: some View {
         Path { path in
             path.move(to: from)
-            
-            // Можно добавить кривые Безье для более красивых соединений
-            if shouldUseBezierCurves {
-                let controlPoint1 = CGPoint(x: from.x + curveOffset, y: from.y)
-                let controlPoint2 = CGPoint(x: to.x - curveOffset, y: to.y)
-                path.addCurve(to: to, control1: controlPoint1, control2: controlPoint2)
-            } else {
-                path.addLine(to: to)
-            }
+            // Используем только прямые линии для максимальной производительности
+            path.addLine(to: to)
         }
         .stroke(connectionColor, lineWidth: connectionLineWidth)
         .id(connectionId) // Помогает SwiftUI оптимизировать обновления
-    }
-    
-    private var shouldUseBezierCurves: Bool {
-        // Используем кривые только для длинных соединений
-        let distance = sqrt(pow(to.x - from.x, 2) + pow(to.y - from.y, 2))
-        return distance > 100
-    }
-    
-    private var curveOffset: CGFloat {
-        let distance = abs(to.x - from.x)
-        return min(distance * 0.5, 50) // Максимальный отступ 50 пикселей
     }
     
     private var connectionColor: Color {

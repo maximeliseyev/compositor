@@ -107,6 +107,8 @@ struct NodeGraphPanel: View {
             }
         }
         .allowsHitTesting(false)
+        // Добавляем зависимость от изменений позиций для обновления связей
+        .id(nodeGraph.nodePositionsChanged)
     }
     
     private var previewConnectionLayer: some View {
@@ -189,7 +191,13 @@ struct NodeGraphPanel: View {
             },
             onMove: { newPosition in
                 nodeGraph.moveNode(node, to: newPosition)
-                // Очищаем кэш позиций после перемещения ноды
+                // Немедленная очистка кэша позиций после окончательного перемещения ноды
+                cache.clearPositionCacheForNodeImmediate(node.id)
+                cache.clearConnectionCacheForNodeImmediate(node.id, connections: nodeGraph.connections)
+            },
+            onMoveRealtime: { newPosition in
+                nodeGraph.updateNodePositionRealtime(node, to: newPosition)
+                // Throttled очистка кэша позиций для обновления связей в реальном времени
                 cache.clearPositionCacheForNode(node.id)
                 cache.clearConnectionCacheForNode(node.id, connections: nodeGraph.connections)
             }

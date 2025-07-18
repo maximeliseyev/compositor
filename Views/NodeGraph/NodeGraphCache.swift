@@ -20,6 +20,8 @@ class NodeGraphCache: ObservableObject {
     // Throttling для обновлений
     private let maxUpdateFrequency: TimeInterval = 1.0 / 60.0 // 60 FPS
     private var lastCacheUpdateTime: TimeInterval = 0
+    private var lastConnectionClearTime: TimeInterval = 0
+    private var lastPositionClearTime: TimeInterval = 0
     
     // MARK: - Node Cache Management
     
@@ -90,6 +92,19 @@ class NodeGraphCache: ObservableObject {
     }
     
     func clearPositionCacheForNode(_ nodeId: UUID) {
+        // Throttling для предотвращения слишком частых обновлений при перетаскивании
+        let now = CACurrentMediaTime()
+        if now - lastPositionClearTime < maxUpdateFrequency / 2 { return } // Позволяем обновления в 2 раза чаще
+        lastPositionClearTime = now
+        
+        let nodePortKeys = portPositionCache.keys.filter { $0.hasPrefix("\(nodeId)_") }
+        for key in nodePortKeys {
+            portPositionCache.removeValue(forKey: key)
+        }
+    }
+    
+    // Немедленная очистка кэша позиций без throttling (для финальных обновлений)
+    func clearPositionCacheForNodeImmediate(_ nodeId: UUID) {
         let nodePortKeys = portPositionCache.keys.filter { $0.hasPrefix("\(nodeId)_") }
         for key in nodePortKeys {
             portPositionCache.removeValue(forKey: key)
@@ -128,6 +143,21 @@ class NodeGraphCache: ObservableObject {
     }
     
     func clearConnectionCacheForNode(_ nodeId: UUID, connections: [NodeConnection]) {
+        // Throttling для предотвращения слишком частых обновлений при перетаскивании
+        let now = CACurrentMediaTime()
+        if now - lastConnectionClearTime < maxUpdateFrequency / 2 { return } // Позволяем обновления в 2 раза чаще
+        lastConnectionClearTime = now
+        
+        let connectionsToUpdate = connections.filter { 
+            $0.fromNode == nodeId || $0.toNode == nodeId 
+        }
+        for connection in connectionsToUpdate {
+            connectionCache.removeValue(forKey: connection.id)
+        }
+    }
+    
+    // Немедленная очистка кэша связей без throttling (для финальных обновлений)
+    func clearConnectionCacheForNodeImmediate(_ nodeId: UUID, connections: [NodeConnection]) {
         let connectionsToUpdate = connections.filter { 
             $0.fromNode == nodeId || $0.toNode == nodeId 
         }

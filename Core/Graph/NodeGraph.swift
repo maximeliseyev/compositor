@@ -11,6 +11,9 @@ class NodeGraph: ObservableObject {
     @Published var nodes: [BaseNode] = []
     @Published var connections: [NodeConnection] = []
     
+    // Добавляем Published свойство для отслеживания изменений позиций
+    @Published var nodePositionsChanged: Bool = false
+    
     // Быстрый доступ к нодам по id
     private var nodesById: [UUID: BaseNode] = [:]
     
@@ -36,6 +39,20 @@ class NodeGraph: ObservableObject {
         if let index = nodes.firstIndex(where: { $0.id == node.id }) {
             nodes[index].position = position
             nodesById[node.id]?.position = position
+            
+            // Уведомляем об изменении позиции для обновления связей
+            nodePositionsChanged.toggle()
+        }
+    }
+    
+    // Новый метод для обновления позиции в реальном времени
+    func updateNodePositionRealtime(_ node: BaseNode, to position: CGPoint) {
+        if let index = nodes.firstIndex(where: { $0.id == node.id }) {
+            nodes[index].position = position
+            nodesById[node.id]?.position = position
+            
+            // Уведомляем об изменении позиции для обновления связей
+            nodePositionsChanged.toggle()
         }
     }
     

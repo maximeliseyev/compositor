@@ -17,6 +17,7 @@ struct NodeView: View {
     let onEndConnection: ((UUID, UUID) -> Void)?
     let onConnectionDrag: ((UUID, UUID, CGPoint) -> Void)?
     let onMove: ((CGPoint) -> Void)?
+    let onMoveRealtime: ((CGPoint) -> Void)?
     
     @State private var scale: CGFloat = 1.0
     
@@ -47,6 +48,9 @@ struct NodeView: View {
                             y: dragStartPosition!.y + value.translation.height
                         )
                         node.position = newPosition
+                        
+                        // Обновляем позицию в реальном времени для связей
+                        onMoveRealtime?(newPosition)
                     }
                 }
                 .onEnded { value in
@@ -283,6 +287,7 @@ struct TriangleDownShape: Shape {
         onStartConnection: nil,
         onEndConnection: nil,
         onConnectionDrag: nil,
-        onMove: nil
+        onMove: nil,
+        onMoveRealtime: nil
     )
 }
