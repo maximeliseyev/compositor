@@ -1,1 +1,1 @@
-It is a free and open source video compositing application like Nuke or Fusion.
+This is a free, open-source video compositing application based on a Node framework in the spirit of Nuke or Fusion. Specifically for macOS and iPad, in an attempt to bring out the advantages of this platform for working with multimedia. The app is currently under development and not yet ready for full use. If you are a developer, you can join the project.
