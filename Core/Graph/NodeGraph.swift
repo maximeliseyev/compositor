@@ -65,6 +65,12 @@ class NodeGraph: ObservableObject {
             return false
         }
         
+        // Удаляем все существующие соединения к output порту (одно соединение на порт)
+        removeConnectionsToPort(nodeId: fromNode.id, portId: fromPort.id)
+        
+        // Удаляем все существующие соединения к input порту (одно соединение на порт)
+        removeConnectionsToPort(nodeId: toNode.id, portId: toPort.id)
+        
         let connection = NodeConnection(
             fromNode: fromNode.id,
             toNode: toNode.id,
@@ -79,6 +85,18 @@ class NodeGraph: ObservableObject {
         toNode.addInputConnection(connection)
         
         return true
+    }
+    
+    // Новый метод для удаления соединений к определенному порту
+    private func removeConnectionsToPort(nodeId: UUID, portId: UUID) {
+        let connectionsToRemove = connections.filter { connection in
+            (connection.fromNode == nodeId && connection.fromPort == portId) ||
+            (connection.toNode == nodeId && connection.toPort == portId)
+        }
+        
+        for connection in connectionsToRemove {
+            removeConnection(connection)
+        }
     }
     
     func validateConnection(fromNode: BaseNode, fromPort: NodePort, toNode: BaseNode, toPort: NodePort) -> ConnectionValidationResult {
@@ -97,14 +115,7 @@ class NodeGraph: ObservableObject {
             return .invalidDataType
         }
         
-        // Check if input port already has a connection (prevent multiple connections to same input)
-        let existingInputConnections = connections.filter { connection in
-            connection.toNode == toNode.id && connection.toPort == toPort.id
-        }
-        
-        if !existingInputConnections.isEmpty && !toPort.isMultiInput {
-            return .inputAlreadyConnected
-        }
+        // Не проверяем существующие соединения здесь, так как мы их автоматически удаляем в connectPorts
         
         // Check for cycle detection
         if wouldCreateCycle(from: fromNode, to: toNode) {

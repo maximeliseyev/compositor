@@ -29,7 +29,7 @@ struct CompositorView: View {
     @State private var selectedNode: String?
     @State private var leftPanelWidth: CGFloat = 0.75
     @State private var viewerHeight: CGFloat = 0.6
-    
+        
     var body: some View {
         GeometryReader { geometry in
             HStack(spacing: 0) {

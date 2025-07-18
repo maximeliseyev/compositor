@@ -29,12 +29,17 @@
 		BFD2D9412E20128600BFAC11 /* NodeGraph.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFD2D9402E20128600BFAC11 /* NodeGraph.swift */; };
 		BFF4F3AC2E27ED10004224AC /* NodeViewConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF4F3AB2E27ED0F004224AC /* NodeViewConstants.swift */; };
 		BFF4F3AE2E29005C004224AC /* NotificationNames.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF4F3AD2E29005C004224AC /* NotificationNames.swift */; };
-		BFF4F3B22E2934E7004224AC /* NodeGraphRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF4F3B12E2934E7004224AC /* NodeGraphRenderer.swift */; };
 		BFF4F3B62E29A6EC004224AC /* NodeGraphCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF4F3B52E29A6EC004224AC /* NodeGraphCache.swift */; };
 		BFF4F3B82E29A6F8004224AC /* NodeGraphConnectionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF4F3B72E29A6F8004224AC /* NodeGraphConnectionManager.swift */; };
-		BFF4F3BA2E29A708004224AC /* NodeGraphOptimizedRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF4F3B92E29A708004224AC /* NodeGraphOptimizedRenderer.swift */; };
+		BFF4F3BA2E29A708004224AC /* NodeGraphRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF4F3B92E29A708004224AC /* NodeGraphRenderer.swift */; };
 		BFF4F3BC2E29A715004224AC /* NodeGraphSelectionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF4F3BB2E29A715004224AC /* NodeGraphSelectionManager.swift */; };
 		BFF4F3BE2E29A87C004224AC /* NodePanelEventHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF4F3BD2E29A87C004224AC /* NodePanelEventHandler.swift */; };
+		BFF4F3C02E2A32CD004224AC /* MetalRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF4F3BF2E2A32CD004224AC /* MetalRenderer.swift */; };
+		BFFAD0F82E2A7B8F00A00AC6 /* VideoProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFFAD0F72E2A7B8F00A00AC6 /* VideoProcessor.swift */; };
+		BFFAD0FC2E2ABD0900A00AC6 /* CompositorAppIcon_256.png in Resources */ = {isa = PBXBuildFile; fileRef = BFFAD0F92E2ABD0900A00AC6 /* CompositorAppIcon_256.png */; };
+		BFFAD0FD2E2ABD0900A00AC6 /* CompositorAppIcon_1024.png in Resources */ = {isa = PBXBuildFile; fileRef = BFFAD0FB2E2ABD0900A00AC6 /* CompositorAppIcon_1024.png */; };
+		BFFAD0FE2E2ABD0900A00AC6 /* CompositorAppIcon_512.png in Resources */ = {isa = PBXBuildFile; fileRef = BFFAD0FA2E2ABD0900A00AC6 /* CompositorAppIcon_512.png */; };
+		BFFAD1002E2ABE0500A00AC6 /* CompositorAppIcon_128.png in Resources */ = {isa = PBXBuildFile; fileRef = BFFAD0FF2E2ABE0500A00AC6 /* CompositorAppIcon_128.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -62,12 +67,17 @@
 		BFD2D9402E20128600BFAC11 /* NodeGraph.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeGraph.swift; sourceTree = "<group>"; };
 		BFF4F3AB2E27ED0F004224AC /* NodeViewConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeViewConstants.swift; sourceTree = "<group>"; };
 		BFF4F3AD2E29005C004224AC /* NotificationNames.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationNames.swift; sourceTree = "<group>"; };
-		BFF4F3B12E2934E7004224AC /* NodeGraphRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeGraphRenderer.swift; sourceTree = "<group>"; };
 		BFF4F3B52E29A6EC004224AC /* NodeGraphCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeGraphCache.swift; sourceTree = "<group>"; };
 		BFF4F3B72E29A6F8004224AC /* NodeGraphConnectionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeGraphConnectionManager.swift; sourceTree = "<group>"; };
-		BFF4F3B92E29A708004224AC /* NodeGraphOptimizedRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeGraphOptimizedRenderer.swift; sourceTree = "<group>"; };
+		BFF4F3B92E29A708004224AC /* NodeGraphRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeGraphRenderer.swift; sourceTree = "<group>"; };
 		BFF4F3BB2E29A715004224AC /* NodeGraphSelectionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeGraphSelectionManager.swift; sourceTree = "<group>"; };
 		BFF4F3BD2E29A87C004224AC /* NodePanelEventHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodePanelEventHandler.swift; sourceTree = "<group>"; };
+		BFF4F3BF2E2A32CD004224AC /* MetalRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalRenderer.swift; sourceTree = "<group>"; };
+		BFFAD0F72E2A7B8F00A00AC6 /* VideoProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoProcessor.swift; sourceTree = "<group>"; };
+		BFFAD0F92E2ABD0900A00AC6 /* CompositorAppIcon_256.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = CompositorAppIcon_256.png; sourceTree = "<group>"; };
+		BFFAD0FA2E2ABD0900A00AC6 /* CompositorAppIcon_512.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = CompositorAppIcon_512.png; sourceTree = "<group>"; };
+		BFFAD0FB2E2ABD0900A00AC6 /* CompositorAppIcon_1024.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = CompositorAppIcon_1024.png; sourceTree = "<group>"; };
+		BFFAD0FF2E2ABE0500A00AC6 /* CompositorAppIcon_128.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = CompositorAppIcon_128.png; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -84,6 +94,7 @@
 		BFB5ACE82E251DD60063763C /* Nodes */ = {
 			isa = PBXGroup;
 			children = (
+				BFFAD0F72E2A7B8F00A00AC6 /* VideoProcessor.swift */,
 				BFB5ACD62E245B8C0063763C /* ViewNode.swift */,
 				BFB5ACE62E25165C0063763C /* InputNode.swift */,
 				BFB5ACEF2E2524E50063763C /* CorrectorNode.swift */,
@@ -105,12 +116,12 @@
 		BFB5ACEA2E251E0F0063763C /* NodeGraph */ = {
 			isa = PBXGroup;
 			children = (
+				BFF4F3BF2E2A32CD004224AC /* MetalRenderer.swift */,
 				BFF4F3B52E29A6EC004224AC /* NodeGraphCache.swift */,
 				BFF4F3B72E29A6F8004224AC /* NodeGraphConnectionManager.swift */,
 				BFF4F3BB2E29A715004224AC /* NodeGraphSelectionManager.swift */,
-				BFF4F3B92E29A708004224AC /* NodeGraphOptimizedRenderer.swift */,
+				BFF4F3B92E29A708004224AC /* NodeGraphRenderer.swift */,
 				BFF4F3BD2E29A87C004224AC /* NodePanelEventHandler.swift */,
-				BFF4F3B12E2934E7004224AC /* NodeGraphRenderer.swift */,
 				BFB5ACDE2E247F3B0063763C /* NodeGraphPanel.swift */,
 				BFB5ACE02E247F980063763C /* NodeView.swift */,
 			);
@@ -198,6 +209,10 @@
 		BFD2D8F42E1F2EA000BFAC11 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				BFFAD0FF2E2ABE0500A00AC6 /* CompositorAppIcon_128.png */,
+				BFFAD0F92E2ABD0900A00AC6 /* CompositorAppIcon_256.png */,
+				BFFAD0FA2E2ABD0900A00AC6 /* CompositorAppIcon_512.png */,
+				BFFAD0FB2E2ABD0900A00AC6 /* CompositorAppIcon_1024.png */,
 				BFD2D8E02E1F2C8900BFAC11 /* Assets.xcassets */,
 			);
 			path = Resources;
@@ -284,8 +299,12 @@
 			files = (
 				BFB2814E2E26901C00BD1B79 /* Info.plist in Resources */,
 				BFD2D8EE2E1F2E1A00BFAC11 /* README.md in Resources */,
+				BFFAD0FC2E2ABD0900A00AC6 /* CompositorAppIcon_256.png in Resources */,
+				BFFAD0FD2E2ABD0900A00AC6 /* CompositorAppIcon_1024.png in Resources */,
+				BFFAD0FE2E2ABD0900A00AC6 /* CompositorAppIcon_512.png in Resources */,
 				BFD2D93B2E200DF900BFAC11 /* LICENSE.md in Resources */,
 				BFD2D8E12E1F2C8900BFAC11 /* Assets.xcassets in Resources */,
+				BFFAD1002E2ABE0500A00AC6 /* CompositorAppIcon_128.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -296,6 +315,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BFFAD0F82E2A7B8F00A00AC6 /* VideoProcessor.swift in Sources */,
 				BFD2D8DF2E1F2C8600BFAC11 /* ContentView.swift in Sources */,
 				BFB5ACF02E2524E50063763C /* CorrectorNode.swift in Sources */,
 				BFB5ACDB2E245BC00063763C /* ViewerPanel.swift in Sources */,
@@ -304,6 +324,7 @@
 				BFB5ACE12E247F980063763C /* NodeView.swift in Sources */,
 				BF7253252E270E15009E80E0 /* NodeTypes.swift in Sources */,
 				BFB281502E26D1F700BD1B79 /* NodeConnection.swift in Sources */,
+				BFF4F3C02E2A32CD004224AC /* MetalRenderer.swift in Sources */,
 				BFD2D8E62E1F2C8900BFAC11 /* Compositor.xcdatamodeld in Sources */,
 				BFB5ACD52E245AF30063763C /* BaseNode.swift in Sources */,
 				BFB5ACD12E2437010063763C /* CompositorView.swift in Sources */,
@@ -312,9 +333,8 @@
 				BFB5ACD92E245B9F0063763C /* ViewerPanelController.swift in Sources */,
 				BFF4F3B82E29A6F8004224AC /* NodeGraphConnectionManager.swift in Sources */,
 				BFD2D8DD2E1F2C8600BFAC11 /* CompositorApp.swift in Sources */,
-				BFF4F3BA2E29A708004224AC /* NodeGraphOptimizedRenderer.swift in Sources */,
+				BFF4F3BA2E29A708004224AC /* NodeGraphRenderer.swift in Sources */,
 				BFF4F3AE2E29005C004224AC /* NotificationNames.swift in Sources */,
-				BFF4F3B22E2934E7004224AC /* NodeGraphRenderer.swift in Sources */,
 				BFD2D9412E20128600BFAC11 /* NodeGraph.swift in Sources */,
 				BFB5ACD72E245B8C0063763C /* ViewNode.swift in Sources */,
 				BFB2814C2E25B9F500BD1B79 /* InspectorPanel.swift in Sources */,
@@ -451,6 +471,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_ENTITLEMENTS = Compositor.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -459,13 +480,14 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Compositor;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.video";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 13.5;
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				MARKETING_VERSION = CFBundleShortVersionString;
 				PRODUCT_BUNDLE_IDENTIFIER = MaxEliseyev.Compositor;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -483,6 +505,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_ENTITLEMENTS = Compositor.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -491,13 +514,14 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Compositor;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.video";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 13.5;
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				MARKETING_VERSION = CFBundleShortVersionString;
 				PRODUCT_BUNDLE_IDENTIFIER = MaxEliseyev.Compositor;
 				PRODUCT_NAME = "$(TARGET_NAME)";

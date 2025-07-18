@@ -20,6 +20,10 @@ class NodeGraphConnectionManager: ObservableObject {
     @Published var connectionDragToNodeID: UUID? = nil
     @Published var connectionDragToPortID: UUID? = nil
     
+    // Свойства для работы с существующими связями
+    @Published var draggedConnection: NodeConnection? = nil
+    @Published var isDraggingFromInput: Bool = false // true если тянем от input порта, false если от output
+    
     private var lastPreviewUpdateTime: TimeInterval = 0
     private let maxUpdateFrequency: TimeInterval = 1.0 / 60.0 // 60 FPS
     
@@ -35,6 +39,47 @@ class NodeGraphConnectionManager: ObservableObject {
         connectionDragFromPortID = fromPortID
         connectionDragFromPosition = portPosition
         connectionDragCurrentPosition = portPosition
+        connectionDragToNodeID = nil
+        connectionDragToPortID = nil
+        draggedConnection = nil
+        isDraggingFromInput = false
+    }
+    
+    // MARK: - Existing Connection Drag Management
+    
+    func startConnectionDrag(connection: NodeConnection, dragPosition: CGPoint, cache: NodeGraphCache, nodeGraph: NodeGraph) {
+        // Удаляем существующую связь из графа
+        nodeGraph.removeConnection(connection)
+        
+        // Определяем, какой конец ближе к точке клика
+        guard let fromNode = cache.getCachedNode(id: connection.fromNode),
+              let toNode = cache.getCachedNode(id: connection.toNode) else {
+            return
+        }
+        
+        let connectionPoints = cache.getCachedConnectionPoints(for: connection, fromNode: fromNode, toNode: toNode)
+        let distanceToStart = cache.distance(from: dragPosition, to: connectionPoints.0)
+        let distanceToEnd = cache.distance(from: dragPosition, to: connectionPoints.1)
+        
+        // Устанавливаем параметры для перетаскивания
+        draggedConnection = connection
+        
+        if distanceToStart < distanceToEnd {
+            // Тянем от output порта (начало связи) - меняем input порт
+            connectionDragFromNodeID = connection.toNode // Фиксированная сторона (input)
+            connectionDragFromPortID = connection.toPort
+            connectionDragFromPosition = connectionPoints.1 // Фиксированная точка (input)
+            connectionDragCurrentPosition = dragPosition
+            isDraggingFromInput = false // Тянем от output стороны
+        } else {
+            // Тянем от input порта (конец связи) - меняем output порт
+            connectionDragFromNodeID = connection.fromNode // Фиксированная сторона (output)
+            connectionDragFromPortID = connection.fromPort
+            connectionDragFromPosition = connectionPoints.0 // Фиксированная точка (output)
+            connectionDragCurrentPosition = dragPosition
+            isDraggingFromInput = true // Тянем от input стороны
+        }
+        
         connectionDragToNodeID = nil
         connectionDragToPortID = nil
     }
@@ -54,6 +99,10 @@ class NodeGraphConnectionManager: ObservableObject {
     func endPortConnection(toNodeID: UUID, toPortID: UUID, cache: NodeGraphCache, nodeGraph: NodeGraph) {
         guard let toNode = cache.getCachedNode(id: toNodeID),
               let _ = (toNode.inputPorts + toNode.outputPorts).first(where: { $0.id == toPortID }) else {
+            // Если это была существующая связь, восстанавливаем её
+            if let draggedConnection = draggedConnection {
+                nodeGraph.addConnection(draggedConnection)
+            }
             resetConnectionDrag()
             return
         }
@@ -63,15 +112,50 @@ class NodeGraphConnectionManager: ObservableObject {
            let fromNodeID = connectionDragFromNodeID,
            let fromPortID = connectionDragFromPortID,
            let fromNode = cache.getCachedNode(id: fromNodeID),
-           let toNode = cache.getCachedNode(id: targetNodeID),
+           let targetNode = cache.getCachedNode(id: targetNodeID),
            let fromPort = (fromNode.inputPorts + fromNode.outputPorts).first(where: { $0.id == fromPortID }),
-           let toPort = (toNode.inputPorts + toNode.outputPorts).first(where: { $0.id == targetPortID }) {
+           let targetPort = (targetNode.inputPorts + targetNode.outputPorts).first(where: { $0.id == targetPortID }) {
             
-            if fromPort.type == NodePortType.output && toPort.type == NodePortType.input {
-                let _ = nodeGraph.connectPorts(fromNode: fromNode, fromPort: fromPort, toNode: toNode, toPort: toPort)
-            } else if fromPort.type == NodePortType.input && toPort.type == NodePortType.output {
-                let _ = nodeGraph.connectPorts(fromNode: toNode, fromPort: toPort, toNode: fromNode, toPort: fromPort)
+            if draggedConnection != nil {
+                // Переподключаем существующую связь
+                if isDraggingFromInput {
+                    // Тянули от input порта - создаем новое соединение с новым output портом
+                    // Фиксированная сторона: input порт (fromNode, fromPort)
+                    // Новая сторона: output порт (targetNode, targetPort)
+                    if targetPort.type == .output && fromPort.type == .input {
+                        let _ = nodeGraph.connectPorts(fromNode: targetNode, fromPort: targetPort, toNode: fromNode, toPort: fromPort)
+                    }
+                } else {
+                    // Тянули от output порта - создаем новое соединение с новым input портом
+                    // Фиксированная сторона: output порт (fromNode, fromPort)
+                    // Новая сторона: input порт (targetNode, targetPort)
+                    if fromPort.type == .output && targetPort.type == .input {
+                        let _ = nodeGraph.connectPorts(fromNode: fromNode, fromPort: fromPort, toNode: targetNode, toPort: targetPort)
+                    }
+                }
+            } else {
+                // Создаем новую связь (обычный режим)
+                if fromPort.type == NodePortType.output && targetPort.type == NodePortType.input {
+                    let _ = nodeGraph.connectPorts(fromNode: fromNode, fromPort: fromPort, toNode: targetNode, toPort: targetPort)
+                } else if fromPort.type == NodePortType.input && targetPort.type == NodePortType.output {
+                    let _ = nodeGraph.connectPorts(fromNode: targetNode, fromPort: targetPort, toNode: fromNode, toPort: fromPort)
+                }
             }
+        } else {
+            // Если не удалось подключить и это была существующая связь, восстанавливаем её
+            if let draggedConnection = draggedConnection {
+                nodeGraph.addConnection(draggedConnection)
+            }
+        }
+        
+        resetConnectionDrag()
+    }
+    
+    func endConnectionDragWithoutTarget(nodeGraph: NodeGraph) {
+        // Если это была существующая связь, удаляем её
+        if let draggedConnection = draggedConnection {
+            // Связь уже была удалена при начале перетаскивания, просто не восстанавливаем
+            print("Удаляем связь: \(draggedConnection.id)")
         }
         
         resetConnectionDrag()
@@ -84,11 +168,13 @@ class NodeGraphConnectionManager: ObservableObject {
         connectionDragCurrentPosition = nil
         connectionDragToNodeID = nil
         connectionDragToPortID = nil
+        draggedConnection = nil
+        isDraggingFromInput = false
     }
     
     // MARK: - Port Finding
     
-    private func findTargetAtPosition(_ position: CGPoint, cache: NodeGraphCache) -> (BaseNode?, NodePort?) {
+    func findTargetAtPosition(_ position: CGPoint, cache: NodeGraphCache) -> (BaseNode?, NodePort?) {
         let snapDistance: CGFloat = 20
         var closestNode: BaseNode? = nil
         var closestPort: NodePort? = nil

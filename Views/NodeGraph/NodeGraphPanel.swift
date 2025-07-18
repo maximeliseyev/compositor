@@ -23,9 +23,6 @@ struct NodeGraphPanel: View {
     // Cancellables для предотвращения утечек памяти
     @State private var cancellables = Set<AnyCancellable>()
     
-    // TODO: Renderer для связей переключить на Metal
-    private let renderer: NodeGraphRenderer = CanvasNodeGraphRenderer()
-    
     var body: some View {
         GeometryReader { geo in
             ZStack {
@@ -89,7 +86,7 @@ struct NodeGraphPanel: View {
     
     private var connectionsLayer: some View {
         ZStack {
-            ForEach(nodeGraph.connections) { connection in
+            ForEach(nodeGraph.connections, id: \.id) { connection in
                 if let fromNode = cache.getCachedNode(id: connection.fromNode),
                    let toNode = cache.getCachedNode(id: connection.toNode) {
                     let connectionPoints = cache.getCachedConnectionPoints(
@@ -101,12 +98,43 @@ struct NodeGraphPanel: View {
                     ConnectionLineView(
                         from: connectionPoints.0,
                         to: connectionPoints.1,
-                        connectionId: connection.id
+                        connectionId: connection.id,
+                        connection: connection,
+                        onStartConnectionDrag: { connection, dragPosition in
+                            connectionManager.startConnectionDrag(
+                                connection: connection,
+                                dragPosition: dragPosition,
+                                cache: cache,
+                                nodeGraph: nodeGraph
+                            )
+                        },
+                        onConnectionDrag: { position in
+                            connectionManager.updateConnectionDrag(to: position, cache: cache)
+                        },
+                        onEndConnectionDrag: {
+                            // Найдем ближайший порт для подключения
+                            if let currentPosition = connectionManager.connectionDragCurrentPosition {
+                                let (targetNode, targetPort) = connectionManager.findTargetAtPosition(currentPosition, cache: cache)
+                                if let targetNode = targetNode, let targetPort = targetPort {
+                                    connectionManager.endPortConnection(
+                                        toNodeID: targetNode.id,
+                                        toPortID: targetPort.id,
+                                        cache: cache,
+                                        nodeGraph: nodeGraph
+                                    )
+                                } else {
+                                    // Если нет целевого порта, но есть существующая связь - удаляем её
+                                    connectionManager.endConnectionDragWithoutTarget(nodeGraph: nodeGraph)
+                                }
+                            } else {
+                                connectionManager.endConnectionDragWithoutTarget(nodeGraph: nodeGraph)
+                            }
+                        }
                     )
                 }
             }
         }
-        .allowsHitTesting(false)
+        .allowsHitTesting(true)
         // Добавляем зависимость от изменений позиций для обновления связей
         .id(nodeGraph.nodePositionsChanged)
     }
@@ -115,7 +143,7 @@ struct NodeGraphPanel: View {
         Group {
             if connectionManager.hasActiveConnection(),
                let points = connectionManager.getPreviewConnectionPoints() {
-                NodeGraphOptimizedRenderer.renderPreviewConnection(
+                NodeGraphRenderer.renderPreviewConnection(
                     from: points.0,
                     to: points.1
                 )
@@ -126,7 +154,7 @@ struct NodeGraphPanel: View {
     private var selectionRectangleLayer: some View {
         Group {
             if let rect = selectionManager.selectionRect, selectionManager.isSelecting {
-                NodeGraphOptimizedRenderer.renderSelectionRectangle(rect: rect)
+                NodeGraphRenderer.renderSelectionRectangle(rect: rect)
             }
         }
     }
