@@ -40,7 +40,15 @@ struct NodeGraphPanel: View {
                         return nil
                     },
                     previewConnection: connectionManager.hasActiveConnection() ? connectionManager.getPreviewConnectionPoints() : nil,
-                    selectionRect: selectionManager.isSelecting ? selectionManager.selectionRect : nil
+                    selectionRect: selectionManager.isSelecting ? selectionManager.selectionRect : nil,
+                    nodes: nodeGraph.nodes.map { node in
+                        NodeRenderItem(
+                            position: node.position,
+                            size: CGSize(width: NodeViewConstants.nodeWidth, height: NodeViewConstants.nodeHeight),
+                            cornerRadius: NodeViewConstants.nodeCornerRadius,
+                            isSelected: selectionManager.isNodeSelected(node.id)
+                        )
+                    }
                 )
                 .allowsHitTesting(false)
                 nodeViewsLayer(geometry: geo)

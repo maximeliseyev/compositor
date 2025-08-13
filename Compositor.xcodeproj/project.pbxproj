@@ -12,10 +12,16 @@
 		BF0C6D252E4BDC2C00935C53 /* MetalNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0C6D222E4BDC2C00935C53 /* MetalNode.swift */; };
 		BF0C6D262E4BE1A600935C53 /* MetalRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0C6D1B2E4BD56900935C53 /* MetalRenderer.swift */; };
 		BF0C6D272E4BE1AA00935C53 /* TextureManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0C6D1C2E4BD57A00935C53 /* TextureManager.swift */; };
-		BF0C6D282E4BE1AF00935C53 /* Shaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = BF0C6D1D2E4BD59400935C53 /* Shaders.metal */; };
 		BF0C6D2F2E4BE6F700935C53 /* MetalRenderingManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0C6D2E2E4BE6F700935C53 /* MetalRenderingManager.swift */; };
 		BF0C6D322E4BE73E00935C53 /* MetalSettingsPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0C6D302E4BE73E00935C53 /* MetalSettingsPanel.swift */; };
 		BF0C6D342E4BE9F000935C53 /* MetalNodeGraphCanvas.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0C6D332E4BE9F000935C53 /* MetalNodeGraphCanvas.swift */; };
+		BF0C6D372E4CA23A00935C53 /* NodeGraphRenderStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0C6D352E4CA23A00935C53 /* NodeGraphRenderStyle.swift */; };
+		BF0C6D3F2E4CA46D00935C53 /* Merge.metal in Sources */ = {isa = PBXBuildFile; fileRef = BF0C6D3A2E4CA46D00935C53 /* Merge.metal */; };
+		BF0C6D402E4CA46D00935C53 /* Blur.metal in Sources */ = {isa = PBXBuildFile; fileRef = BF0C6D382E4CA46D00935C53 /* Blur.metal */; };
+		BF0C6D412E4CA46D00935C53 /* Edge.metal in Sources */ = {isa = PBXBuildFile; fileRef = BF0C6D392E4CA46D00935C53 /* Edge.metal */; };
+		BF0C6D422E4CA46D00935C53 /* UIPrimitives.metal in Sources */ = {isa = PBXBuildFile; fileRef = BF0C6D3C2E4CA46D00935C53 /* UIPrimitives.metal */; };
+		BF0C6D4B2E4CA65C00935C53 /* Color.metal in Sources */ = {isa = PBXBuildFile; fileRef = BF0C6D482E4CA65C00935C53 /* Color.metal */; };
+		BF0C6D4C2E4CA65C00935C53 /* Types.metal in Sources */ = {isa = PBXBuildFile; fileRef = BF0C6D492E4CA65C00935C53 /* Types.metal */; };
 		BF5922A82E2BA28000D37CA8 /* NodeHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF5922A72E2BA28000D37CA8 /* NodeHeaderView.swift */; };
 		BF5922AA2E2BA2BE00D37CA8 /* VideoScrubber.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF5922A92E2BA2BE00D37CA8 /* VideoScrubber.swift */; };
 		BF5922AC2E2BA2E300D37CA8 /* InputNodeInspector.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF5922AB2E2BA2E300D37CA8 /* InputNodeInspector.swift */; };
@@ -46,7 +52,6 @@
 		BFF4F3AE2E29005C004224AC /* NotificationNames.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF4F3AD2E29005C004224AC /* NotificationNames.swift */; };
 		BFF4F3B62E29A6EC004224AC /* NodeGraphCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF4F3B52E29A6EC004224AC /* NodeGraphCache.swift */; };
 		BFF4F3B82E29A6F8004224AC /* NodeGraphConnectionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF4F3B72E29A6F8004224AC /* NodeGraphConnectionManager.swift */; };
-        /* removed BFF4F3BA2E29A708004224AC NodeGraphRenderer.swift in Sources */
 		BFF4F3BC2E29A715004224AC /* NodeGraphSelectionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF4F3BB2E29A715004224AC /* NodeGraphSelectionManager.swift */; };
 		BFF4F3BE2E29A87C004224AC /* NodePanelEventHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF4F3BD2E29A87C004224AC /* NodePanelEventHandler.swift */; };
 		BFFAD0F82E2A7B8F00A00AC6 /* VideoProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFFAD0F72E2A7B8F00A00AC6 /* VideoProcessor.swift */; };
@@ -55,13 +60,19 @@
 /* Begin PBXFileReference section */
 		BF0C6D1B2E4BD56900935C53 /* MetalRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalRenderer.swift; sourceTree = "<group>"; };
 		BF0C6D1C2E4BD57A00935C53 /* TextureManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextureManager.swift; sourceTree = "<group>"; };
-		BF0C6D1D2E4BD59400935C53 /* Shaders.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Shaders.metal; sourceTree = "<group>"; };
 		BF0C6D202E4BDB7900935C53 /* MetalNodeInspector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalNodeInspector.swift; sourceTree = "<group>"; };
 		BF0C6D222E4BDC2C00935C53 /* MetalNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalNode.swift; sourceTree = "<group>"; };
 		BF0C6D232E4BDC2C00935C53 /* NodeFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeFactory.swift; sourceTree = "<group>"; };
 		BF0C6D2E2E4BE6F700935C53 /* MetalRenderingManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalRenderingManager.swift; sourceTree = "<group>"; };
 		BF0C6D302E4BE73E00935C53 /* MetalSettingsPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalSettingsPanel.swift; sourceTree = "<group>"; };
 		BF0C6D332E4BE9F000935C53 /* MetalNodeGraphCanvas.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalNodeGraphCanvas.swift; sourceTree = "<group>"; };
+		BF0C6D352E4CA23A00935C53 /* NodeGraphRenderStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeGraphRenderStyle.swift; sourceTree = "<group>"; };
+		BF0C6D382E4CA46D00935C53 /* Blur.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Blur.metal; sourceTree = "<group>"; };
+		BF0C6D392E4CA46D00935C53 /* Edge.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Edge.metal; sourceTree = "<group>"; };
+		BF0C6D3A2E4CA46D00935C53 /* Merge.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Merge.metal; sourceTree = "<group>"; };
+		BF0C6D3C2E4CA46D00935C53 /* UIPrimitives.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = UIPrimitives.metal; sourceTree = "<group>"; };
+		BF0C6D482E4CA65C00935C53 /* Color.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Color.metal; sourceTree = "<group>"; };
+		BF0C6D492E4CA65C00935C53 /* Types.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Types.metal; sourceTree = "<group>"; };
 		BF5922A72E2BA28000D37CA8 /* NodeHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeHeaderView.swift; sourceTree = "<group>"; };
 		BF5922A92E2BA2BE00D37CA8 /* VideoScrubber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoScrubber.swift; sourceTree = "<group>"; };
 		BF5922AB2E2BA2E300D37CA8 /* InputNodeInspector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputNodeInspector.swift; sourceTree = "<group>"; };
@@ -94,7 +105,6 @@
 		BFF4F3AD2E29005C004224AC /* NotificationNames.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationNames.swift; sourceTree = "<group>"; };
 		BFF4F3B52E29A6EC004224AC /* NodeGraphCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeGraphCache.swift; sourceTree = "<group>"; };
 		BFF4F3B72E29A6F8004224AC /* NodeGraphConnectionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeGraphConnectionManager.swift; sourceTree = "<group>"; };
-        /* removed BFF4F3B92E29A708004224AC NodeGraphRenderer.swift */
 		BFF4F3BB2E29A715004224AC /* NodeGraphSelectionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeGraphSelectionManager.swift; sourceTree = "<group>"; };
 		BFF4F3BD2E29A87C004224AC /* NodePanelEventHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodePanelEventHandler.swift; sourceTree = "<group>"; };
 		BFFAD0F72E2A7B8F00A00AC6 /* VideoProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoProcessor.swift; sourceTree = "<group>"; };
@@ -114,10 +124,10 @@
 		BF0C6D1A2E4BD54400935C53 /* Metal */ = {
 			isa = PBXGroup;
 			children = (
+				BF0C6D3E2E4CA46D00935C53 /* Shaders */,
 				BF0C6D1B2E4BD56900935C53 /* MetalRenderer.swift */,
 				BF0C6D2E2E4BE6F700935C53 /* MetalRenderingManager.swift */,
 				BF0C6D1C2E4BD57A00935C53 /* TextureManager.swift */,
-				BF0C6D1D2E4BD59400935C53 /* Shaders.metal */,
 			);
 			path = Metal;
 			sourceTree = "<group>";
@@ -135,6 +145,51 @@
 				BF0C6D302E4BE73E00935C53 /* MetalSettingsPanel.swift */,
 			);
 			path = Settings;
+			sourceTree = "<group>";
+		};
+		BF0C6D362E4CA23A00935C53 /* Rendering */ = {
+			isa = PBXGroup;
+			children = (
+				BF0C6D352E4CA23A00935C53 /* NodeGraphRenderStyle.swift */,
+			);
+			path = Rendering;
+			sourceTree = "<group>";
+		};
+		BF0C6D3B2E4CA46D00935C53 /* Compute */ = {
+			isa = PBXGroup;
+			children = (
+				BF0C6D382E4CA46D00935C53 /* Blur.metal */,
+				BF0C6D392E4CA46D00935C53 /* Edge.metal */,
+				BF0C6D3A2E4CA46D00935C53 /* Merge.metal */,
+			);
+			path = Compute;
+			sourceTree = "<group>";
+		};
+		BF0C6D3D2E4CA46D00935C53 /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				BF0C6D3C2E4CA46D00935C53 /* UIPrimitives.metal */,
+			);
+			path = UI;
+			sourceTree = "<group>";
+		};
+		BF0C6D3E2E4CA46D00935C53 /* Shaders */ = {
+			isa = PBXGroup;
+			children = (
+				BF0C6D3D2E4CA46D00935C53 /* UI */,
+				BF0C6D3B2E4CA46D00935C53 /* Compute */,
+				BF0C6D4A2E4CA65C00935C53 /* Utils */,
+			);
+			path = Shaders;
+			sourceTree = "<group>";
+		};
+		BF0C6D4A2E4CA65C00935C53 /* Utils */ = {
+			isa = PBXGroup;
+			children = (
+				BF0C6D482E4CA65C00935C53 /* Color.metal */,
+				BF0C6D492E4CA65C00935C53 /* Types.metal */,
+			);
+			path = Utils;
 			sourceTree = "<group>";
 		};
 		BFB5ACE82E251DD60063763C /* Nodes */ = {
@@ -165,11 +220,11 @@
 		BFB5ACEA2E251E0F0063763C /* NodeGraph */ = {
 			isa = PBXGroup;
 			children = (
+				BF0C6D362E4CA23A00935C53 /* Rendering */,
 				BF0C6D332E4BE9F000935C53 /* MetalNodeGraphCanvas.swift */,
 				BFF4F3B52E29A6EC004224AC /* NodeGraphCache.swift */,
 				BFF4F3B72E29A6F8004224AC /* NodeGraphConnectionManager.swift */,
 				BFF4F3BB2E29A715004224AC /* NodeGraphSelectionManager.swift */,
-                
 				BFF4F3BD2E29A87C004224AC /* NodePanelEventHandler.swift */,
 				BFB5ACDE2E247F3B0063763C /* NodeGraphPanel.swift */,
 				BFB5ACE02E247F980063763C /* NodeView.swift */,
@@ -253,10 +308,10 @@
 		BFD2D8F22E1F2E7F00BFAC11 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				BFB5ACED2E251E540063763C /* Main */,
 				BFB5ACEC2E251E420063763C /* Inspector */,
 				BF0C6D2C2E4BE5EC00935C53 /* Metal */,
 				BFF4F3B02E293428004224AC /* Constants */,
-				BFB5ACED2E251E540063763C /* Main */,
 				BFB5ACEB2E251E2A0063763C /* Viewer */,
 				BFB5ACEA2E251E0F0063763C /* NodeGraph */,
 				BF0C6D312E4BE73E00935C53 /* Settings */,
@@ -373,9 +428,16 @@
 				BF5922AC2E2BA2E300D37CA8 /* InputNodeInspector.swift in Sources */,
 				BF0C6D322E4BE73E00935C53 /* MetalSettingsPanel.swift in Sources */,
 				BFB5ACDB2E245BC00063763C /* ViewerPanel.swift in Sources */,
+				BF0C6D4B2E4CA65C00935C53 /* Color.metal in Sources */,
+				BF0C6D4C2E4CA65C00935C53 /* Types.metal in Sources */,
 				BFB5ACE72E25165C0063763C /* InputNode.swift in Sources */,
+				BF0C6D3F2E4CA46D00935C53 /* Merge.metal in Sources */,
+				BF0C6D402E4CA46D00935C53 /* Blur.metal in Sources */,
+				BF0C6D412E4CA46D00935C53 /* Edge.metal in Sources */,
+				BF0C6D422E4CA46D00935C53 /* UIPrimitives.metal in Sources */,
 				BF0C6D342E4BE9F000935C53 /* MetalNodeGraphCanvas.swift in Sources */,
 				BFF4F3AC2E27ED10004224AC /* NodeViewConstants.swift in Sources */,
+				BF0C6D372E4CA23A00935C53 /* NodeGraphRenderStyle.swift in Sources */,
 				BFB5ACE12E247F980063763C /* NodeView.swift in Sources */,
 				BF7253252E270E15009E80E0 /* NodeTypes.swift in Sources */,
 				BFB281502E26D1F700BD1B79 /* NodeConnection.swift in Sources */,
@@ -392,9 +454,7 @@
 				BF5922AE2E2BA2F800D37CA8 /* NodeInspectors.swift in Sources */,
 				BFB5ACD92E245B9F0063763C /* ViewerPanelController.swift in Sources */,
 				BFF4F3B82E29A6F8004224AC /* NodeGraphConnectionManager.swift in Sources */,
-				BF0C6D282E4BE1AF00935C53 /* Shaders.metal in Sources */,
 				BFD2D8DD2E1F2C8600BFAC11 /* CompositorApp.swift in Sources */,
-                
 				BFF4F3AE2E29005C004224AC /* NotificationNames.swift in Sources */,
 				BF0C6D212E4BDB7900935C53 /* MetalNodeInspector.swift in Sources */,
 				BFD2D9412E20128600BFAC11 /* NodeGraph.swift in Sources */,
