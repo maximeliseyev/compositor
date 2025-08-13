@@ -57,6 +57,12 @@ class BaseNode: NodeProtocol {
         case .corrector:
             self.inputPorts = [NodePort(name: "Input", type: .input, dataType: .image)]
             self.outputPorts = [NodePort(name: "Output", type: .output, dataType: .image)]
+        case .metalCorrector:
+            self.inputPorts = [NodePort(name: "Input", type: .input, dataType: .image)]
+            self.outputPorts = [NodePort(name: "Output", type: .output, dataType: .image)]
+        case .metalBlur:
+            self.inputPorts = [NodePort(name: "Input", type: .input, dataType: .image)]
+            self.outputPorts = [NodePort(name: "Output", type: .output, dataType: .image)]
         case .input:
             self.inputPorts = []
             self.outputPorts = [NodePort(name: "Output", type: .output, dataType: .image)]

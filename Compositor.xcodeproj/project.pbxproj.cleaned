@@ -1,0 +1,11 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {};
+	objectVersion = 56;
+	objects = {
+        // ... (Cleaned up project structure) ...
+        // All swift, xcassets, xcdatamodeld files will be re-added here.
+    };
+	rootObject = BFD2D8D12E1F2C8600BFAC11 /* Project object */;
+} 

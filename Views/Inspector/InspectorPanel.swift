@@ -8,10 +8,11 @@
 import SwiftUI
 
 struct InspectorPanel: View {
-    let selectedNode: String?
+    let selectedNode: BaseNode?
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
+            // Header
             HStack {
                 Text("Inspector")
                     .font(.headline)
@@ -24,37 +25,15 @@ struct InspectorPanel: View {
             
             Divider()
             
+            // Content
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    if let nodeName = selectedNode {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Selected Node")
-                                .font(.subheadline)
-                                .fontWeight(.semibold)
-                            
-                            Text(nodeName)
-                                .font(.title3)
-                                .foregroundColor(.blue)
-                        }
-                        
-                        Divider()
-                                                
+                    if let node = selectedNode {
+                        // Node-specific inspector
+                        NodeInspectorView(node: node)
                     } else {
-                        VStack(spacing: 12) {
-                            Image(systemName: "slider.horizontal.3")
-                                .font(.system(size: 32))
-                                .foregroundColor(.gray)
-                            
-                            Text("No node selected")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                            
-                            Text("Select a node in the graph to see its parameters")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                                .multilineTextAlignment(.center)
-                        }
-                        .padding(.vertical, 40)
+                        // Empty state
+                        EmptyInspectorView()
                     }
                 }
                 .padding(16)
@@ -65,5 +44,55 @@ struct InspectorPanel: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(NSColor.controlBackgroundColor))
         .border(Color.gray.opacity(0.3), width: 1)
+    }
+}
+
+// MARK: - Empty Inspector View
+
+struct EmptyInspectorView: View {
+    var body: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "slider.horizontal.3")
+                .font(.system(size: 32))
+                .foregroundColor(.gray)
+            
+            Text("No node selected")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+            
+            Text("Select a node in the graph to see its properties and controls")
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .padding(.vertical, 40)
+    }
+}
+
+// MARK: - Node Inspector Router
+
+struct NodeInspectorView: View {
+    let node: BaseNode
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            // Node Header
+            NodeHeaderView(node: node)
+            
+            Divider()
+            
+            // Node-specific controls
+            Group {
+                if let inputNode = node as? InputNode {
+                    InputNodeInspector(node: inputNode)
+                } else if let correctorNode = node as? CorrectorNode {
+                    CorrectorNodeInspector(node: correctorNode)
+                } else if let viewNode = node as? ViewNode {
+                    ViewNodeInspector(node: viewNode)
+                } else {
+                    BaseNodeInspector(node: node)
+                }
+            }
+        }
     }
 }

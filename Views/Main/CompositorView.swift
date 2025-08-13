@@ -26,7 +26,7 @@ class PanelVisibilityManager: ObservableObject {
 struct CompositorView: View {
     @StateObject private var viewerController = ViewerPanelController()
     @StateObject private var panelVisibility = PanelVisibilityManager()
-    @State private var selectedNode: String?
+    @StateObject private var selectionManager = NodeGraphSelectionManager()
     @State private var leftPanelWidth: CGFloat = 0.75
     @State private var viewerHeight: CGFloat = 0.6
         
@@ -42,7 +42,7 @@ struct CompositorView: View {
                                 .frame(height: calculateViewerHeight(geometry: geometry))
                         }
                         
-                        // Divider between Viewer and NodeGraph
+                        // Panel divider
                         if panelVisibility.showViewer && panelVisibility.showNodeGraph {
                             ResizableDivider(
                                 orientation: .horizontal,
@@ -50,21 +50,23 @@ struct CompositorView: View {
                                     let sensitivity: CGFloat = 0.5
                                     let adjustedDelta = delta * sensitivity
                                     let newHeight = viewerHeight + adjustedDelta / geometry.size.height
-                                    viewerHeight = max(0.1, min(0.9, newHeight))
+                                    viewerHeight = max(0.3, min(0.7, newHeight))
                                 }
                             )
                         }
                         
                         // NodeGraph Panel
                         if panelVisibility.showNodeGraph {
-                            NodeGraphPanel(viewerController: viewerController)
+                            NodeGraphPanel(
+                                viewerController: viewerController
+                            )
                                 .frame(height: calculateNodeGraphHeight(geometry: geometry))
                         }
                     }
                     .frame(width: calculateLeftPanelWidth(geometry: geometry))
                 }
                 
-                // Divider between left panels and Inspector
+                // Panel divider
                 if (panelVisibility.showViewer || panelVisibility.showNodeGraph) && panelVisibility.showInspector {
                     ResizableDivider(
                         orientation: .vertical,
@@ -79,7 +81,7 @@ struct CompositorView: View {
                 
                 // Inspector Panel
                 if panelVisibility.showInspector {
-                    InspectorPanel(selectedNode: selectedNode)
+                    InspectorPanel(selectedNode: selectionManager.selectedNode)
                         .frame(width: calculateInspectorWidth(geometry: geometry))
                 }
             }

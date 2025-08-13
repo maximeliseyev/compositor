@@ -27,10 +27,23 @@ struct NodeGraphPanel: View {
         GeometryReader { geo in
             ZStack {
                 backgroundLayers(geometry: geo)
+                // Metal canvas draws grid, connections, preview and selection
+                MetalNodeGraphCanvas(
+                    size: geo.size,
+                    gridSpacing: 40,
+                    connections: nodeGraph.connections.compactMap { conn in
+                        if let fromNode = cache.getCachedNode(id: conn.fromNode),
+                           let toNode = cache.getCachedNode(id: conn.toNode) {
+                            let points = cache.getCachedConnectionPoints(for: conn, fromNode: fromNode, toNode: toNode)
+                            return (points.0, points.1)
+                        }
+                        return nil
+                    },
+                    previewConnection: connectionManager.hasActiveConnection() ? connectionManager.getPreviewConnectionPoints() : nil,
+                    selectionRect: selectionManager.isSelecting ? selectionManager.selectionRect : nil
+                )
+                .allowsHitTesting(false)
                 nodeViewsLayer(geometry: geo)
-                connectionsLayer
-                previewConnectionLayer
-                selectionRectangleLayer
             }
             .background(Color.clear)
             .coordinateSpace(name: "NodeGraphPanel")
@@ -40,9 +53,15 @@ struct NodeGraphPanel: View {
             .onDisappear {
                 cleanupPanel()
             }
-            .onChange(of: nodeGraph.nodes.count) { _ in
+            .onChange(of: nodeGraph.nodes.count) { oldValue, newValue in
                 cache.updateNodeCache(nodes: nodeGraph.nodes)
             }
+//            .onChange(of: nodeGraph.connections.count) { _ in
+//                // Обновляем соединения при изменении
+//                DispatchQueue.main.async {
+//                    self.updateVideoNodes()
+//                }
+//            }
         }
         .gesture(selectionGesture)
         .clipped()
@@ -53,8 +72,6 @@ struct NodeGraphPanel: View {
     
     private func backgroundLayers(geometry: GeometryProxy) -> some View {
         ZStack {
-            GridBackgroundView(size: geometry.size)
-            
             Rectangle()
                 .fill(Color.gray.opacity(0.1))
                 .allowsHitTesting(false)
@@ -84,80 +101,7 @@ struct NodeGraphPanel: View {
         }
     }
     
-    private var connectionsLayer: some View {
-        ZStack {
-            ForEach(nodeGraph.connections, id: \.id) { connection in
-                if let fromNode = cache.getCachedNode(id: connection.fromNode),
-                   let toNode = cache.getCachedNode(id: connection.toNode) {
-                    let connectionPoints = cache.getCachedConnectionPoints(
-                        for: connection, 
-                        fromNode: fromNode, 
-                        toNode: toNode
-                    )
-                    
-                    ConnectionLineView(
-                        from: connectionPoints.0,
-                        to: connectionPoints.1,
-                        connectionId: connection.id,
-                        connection: connection,
-                        onStartConnectionDrag: { connection, dragPosition in
-                            connectionManager.startConnectionDrag(
-                                connection: connection,
-                                dragPosition: dragPosition,
-                                cache: cache,
-                                nodeGraph: nodeGraph
-                            )
-                        },
-                        onConnectionDrag: { position in
-                            connectionManager.updateConnectionDrag(to: position, cache: cache)
-                        },
-                        onEndConnectionDrag: {
-                            // Найдем ближайший порт для подключения
-                            if let currentPosition = connectionManager.connectionDragCurrentPosition {
-                                let (targetNode, targetPort) = connectionManager.findTargetAtPosition(currentPosition, cache: cache)
-                                if let targetNode = targetNode, let targetPort = targetPort {
-                                    connectionManager.endPortConnection(
-                                        toNodeID: targetNode.id,
-                                        toPortID: targetPort.id,
-                                        cache: cache,
-                                        nodeGraph: nodeGraph
-                                    )
-                                } else {
-                                    // Если нет целевого порта, но есть существующая связь - удаляем её
-                                    connectionManager.endConnectionDragWithoutTarget(nodeGraph: nodeGraph)
-                                }
-                            } else {
-                                connectionManager.endConnectionDragWithoutTarget(nodeGraph: nodeGraph)
-                            }
-                        }
-                    )
-                }
-            }
-        }
-        .allowsHitTesting(true)
-        // Добавляем зависимость от изменений позиций для обновления связей
-        .id(nodeGraph.nodePositionsChanged)
-    }
-    
-    private var previewConnectionLayer: some View {
-        Group {
-            if connectionManager.hasActiveConnection(),
-               let points = connectionManager.getPreviewConnectionPoints() {
-                NodeGraphRenderer.renderPreviewConnection(
-                    from: points.0,
-                    to: points.1
-                )
-            }
-        }
-    }
-    
-    private var selectionRectangleLayer: some View {
-        Group {
-            if let rect = selectionManager.selectionRect, selectionManager.isSelecting {
-                NodeGraphRenderer.renderSelectionRectangle(rect: rect)
-            }
-        }
-    }
+    // Old SwiftUI rendering layers removed — handled by MetalNodeGraphCanvas
     
     private var selectionGesture: some Gesture {
         DragGesture(minimumDistance: 5)
@@ -267,9 +211,33 @@ struct NodeGraphPanel: View {
             newNode = InputNode(position: position)
         case .corrector:
             newNode = CorrectorNode(position: position)
+        case .metalCorrector:
+            newNode = MetalCorrectorNode(type: type, position: position)
+        case .metalBlur:
+            newNode = MetalBlurNode(type: type, position: position)
         }
         
         nodeGraph.addNode(newNode)
         selectionManager.selectNode(newNode)
+    }
+    
+    // MARK: - Simple Connection Processing
+    
+    private func processConnection(_ connection: NodeConnection) {
+        guard let fromNode = nodeGraph.nodes.first(where: { $0.id == connection.fromNode }),
+              let toNode = nodeGraph.nodes.first(where: { $0.id == connection.toNode }) else {
+            return
+        }
+        
+        // Если это Input -> View соединение
+        if let inputNode = fromNode as? InputNode,
+           let viewNode = toNode as? ViewNode {
+            
+            // Получаем данные от Input ноды
+            let inputData = inputNode.process(inputs: [])
+            
+            // Передаем данные в View ноду
+            let _ = viewNode.process(inputs: [inputData])
+        }
     }
 }

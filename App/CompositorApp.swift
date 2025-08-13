@@ -13,6 +13,8 @@ struct SwiftCompositorApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(MetalRenderingManager.shared)
+                .metalRendering()
         }
         .windowStyle(.titleBar)
         .windowToolbarStyle(.unified)

@@ -12,6 +12,8 @@ enum NodeType: String, CaseIterable {
     case view = "View"
     case input = "Input"
     case corrector = "Corrector"
+    case metalCorrector = "MetalCorrector"
+    case metalBlur = "MetalBlur"
     
     // MARK: - UI Properties
     var displayName: String {
@@ -22,6 +24,10 @@ enum NodeType: String, CaseIterable {
             return "Input Node"
         case .corrector:
             return "Corrector Node"
+        case .metalCorrector:
+            return "Metal Corrector"
+        case .metalBlur:
+            return "Metal Blur"
         }
     }
     
@@ -33,6 +39,10 @@ enum NodeType: String, CaseIterable {
             return "Input source image"
         case .corrector:
             return "Apply image corrections"
+        case .metalCorrector:
+            return "Apply color corrections using Metal"
+        case .metalBlur:
+            return "Apply blur effects using Metal"
         }
     }
     
@@ -44,6 +54,10 @@ enum NodeType: String, CaseIterable {
             return "photo"
         case .corrector:
             return "slider.horizontal.3"
+        case .metalCorrector:
+            return "paintbrush"
+        case .metalBlur:
+            return "camera.filters"
         }
     }
     
@@ -52,6 +66,10 @@ enum NodeType: String, CaseIterable {
         case .input:
             return .input_output
         case .corrector:
+            return .processing
+        case .metalCorrector:
+            return .processing
+        case .metalBlur:
             return .processing
         case .view:
             return .input_output

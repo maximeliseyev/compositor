@@ -30,7 +30,18 @@ struct NodeView: View {
     
     var body: some View {
         ZStack {
-            nodeBodyView
+            // Check if this is an InputNode and show specialized view
+            if let inputNode = node as? InputNode {
+                InputNodeBodyView(
+                    inputNode: inputNode,
+                    isSelected: isSelected,
+                    onSelect: onSelect,
+                    onDelete: onDelete
+                )
+            } else {
+                nodeBodyView
+            }
+            
             inputPortsView
             outputPortsView
         }
@@ -184,6 +195,138 @@ struct NodeView: View {
     }
 }
 
+// MARK: - Specialized Input Node View
+
+struct InputNodeBodyView: View {
+    @ObservedObject var inputNode: InputNode
+    let isSelected: Bool
+    let onSelect: () -> Void
+    let onDelete: () -> Void
+    
+
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // Main node body
+            RoundedRectangle(cornerRadius: NodeViewConstants.nodeCornerRadius)
+                .fill(nodeBackgroundColor)
+                .frame(width: NodeViewConstants.nodeWidth, height: NodeViewConstants.nodeHeight)
+                .overlay(
+                    VStack(spacing: 4) {
+                        // Node title and file info
+                        VStack(spacing: 2) {
+                            Text(inputNode.title)
+                                .font(.caption)
+                                .foregroundColor(.white)
+                                .fontWeight(.medium)
+                                .lineLimit(1)
+                            
+                            if let fileSize = inputNode.fileSize {
+                                Text(fileSize)
+                                    .font(.caption2)
+                                    .foregroundColor(.gray)
+                                    .lineLimit(1)
+                            }
+                        }
+                    }
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: NodeViewConstants.nodeCornerRadius)
+                        .stroke(isSelected ? Color.yellow : Color.clear, lineWidth: NodeViewConstants.selectionBorderWidth)
+                )
+                .onTapGesture {
+                    onSelect()
+                }
+            
+            // Video controls (if applicable)
+            if inputNode.mediaType == .video && inputNode.videoDuration > 0 {
+                videoControlsView
+            }
+        }
+    }
+    
+    private var videoControlsView: some View {
+        VStack(spacing: 2) {
+            // Playback controls
+            HStack(spacing: 4) {
+                Button(action: {
+                    if inputNode.isVideoPlaying {
+                        inputNode.pauseVideo()
+                    } else {
+                        inputNode.playVideo()
+                    }
+                }) {
+                    Image(systemName: inputNode.isVideoPlaying ? "pause.fill" : "play.fill")
+                        .font(.caption2)
+                        .foregroundColor(.white)
+                }
+                .buttonStyle(BorderlessButtonStyle())
+                
+                Spacer()
+                
+                // Time display
+                Text(formatTime(inputNode.videoCurrentTime))
+                    .font(.caption2)
+                    .foregroundColor(.gray)
+                    .monospacedDigit()
+            }
+            
+            // Timeline scrubber (simplified)
+            HStack {
+                Rectangle()
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(height: 2)
+                    .overlay(
+                        GeometryReader { geometry in
+                            let progress = inputNode.videoDuration > 0 ? inputNode.videoCurrentTime / inputNode.videoDuration : 0
+                            HStack {
+                                Rectangle()
+                                    .fill(Color.blue)
+                                    .frame(width: geometry.size.width * CGFloat(progress), height: 2)
+                                Spacer()
+                            }
+                        }
+                    )
+            }
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(
+            RoundedRectangle(cornerRadius: 4)
+                .fill(Color.black.opacity(0.3))
+        )
+        .frame(width: NodeViewConstants.nodeWidth)
+    }
+    
+    // MARK: - Helper Properties
+    
+    private var nodeBackgroundColor: Color {
+        switch inputNode.mediaType {
+        case .image:
+            return Color.blue.opacity(0.6)
+        case .video:
+            return Color.purple.opacity(0.6)
+        }
+    }
+    
+    private var mediaTypeColor: Color {
+        switch inputNode.mediaType {
+        case .image:
+            return .cyan
+        case .video:
+            return .purple
+        }
+    }
+    
+    // MARK: - Helper Methods
+    
+    private func formatTime(_ time: Double) -> String {
+        let minutes = Int(time) / 60
+        let seconds = Int(time) % 60
+        return String(format: "%d:%02d", minutes, seconds)
+    }
+}
+
 struct NodePortView: View {
     let port: NodePort
     let isConnected: Bool
@@ -216,7 +359,7 @@ struct NodePortView: View {
                         onEndConnection?(nodeID, port.id)
                     }
             )
-            .onChange(of: isDragging) { newValue in
+            .onChange(of: isDragging) { oldValue, newValue in
                 // Дополнительная защита: если dragging прекратился, но hasStarted все еще true
                 if !newValue && hasStarted {
                     hasStarted = false
@@ -280,7 +423,7 @@ struct TriangleDownShape: Shape {
 
 #Preview {
     NodeView(
-        node: CorrectorNode(position: CGPoint(x: 100, y: 100)),
+        node: InputNode(position: CGPoint(x: 100, y: 100)),
         isSelected: false,
         onSelect: {},
         onDelete: {},
