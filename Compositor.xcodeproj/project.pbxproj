@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		BF8EDB572E506BBA0040E898 /* DIContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB562E506BBA0040E898 /* DIContainer.swift */; };
-		BF8EDBA02E506E300040E898 /* ViewNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB602E506E300040E898 /* ViewNode.swift */; };
 		BF8EDBA12E506E300040E898 /* CompositorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB8A2E506E300040E898 /* CompositorView.swift */; };
 		BF8EDBA22E506E300040E898 /* Color+NodeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB802E506E300040E898 /* Color+NodeTypes.swift */; };
 		BF8EDBA32E506E300040E898 /* NodeGraphRenderStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB8E2E506E300040E898 /* NodeGraphRenderStyle.swift */; };
@@ -21,9 +20,6 @@
 		BF8EDBAA2E506E300040E898 /* Blur.metal in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB682E506E300040E898 /* Blur.metal */; };
 		BF8EDBAB2E506E300040E898 /* NodeGraphPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB932E506E300040E898 /* NodeGraphPanel.swift */; };
 		BF8EDBAC2E506E300040E898 /* NodeHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB852E506E300040E898 /* NodeHeaderView.swift */; };
-		BF8EDBAD2E506E300040E898 /* NodeConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB5D2E506E300040E898 /* NodeConnection.swift */; };
-		BF8EDBAE2E506E300040E898 /* MetalNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB5C2E506E300040E898 /* MetalNode.swift */; };
-		BF8EDBAF2E506E300040E898 /* NodeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB5E2E506E300040E898 /* NodeTypes.swift */; };
 		BF8EDBB02E506E300040E898 /* Color.metal in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB6E2E506E300040E898 /* Color.metal */; };
 		BF8EDBB12E506E300040E898 /* NodePanelEventHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB952E506E300040E898 /* NodePanelEventHandler.swift */; };
 		BF8EDBB22E506E300040E898 /* NodeFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB622E506E300040E898 /* NodeFactory.swift */; };
@@ -34,11 +30,8 @@
 		BF8EDBB72E506E300040E898 /* InputNodeInspector.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB822E506E300040E898 /* InputNodeInspector.swift */; };
 		BF8EDBB82E506E300040E898 /* NodeViewConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB7D2E506E300040E898 /* NodeViewConstants.swift */; };
 		BF8EDBB92E506E300040E898 /* VideoInspectorControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB872E506E300040E898 /* VideoInspectorControls.swift */; };
-		BF8EDBBA2E506E300040E898 /* CorrectorNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB5A2E506E300040E898 /* CorrectorNode.swift */; };
-		BF8EDBBB2E506E300040E898 /* ColorWheelsNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB592E506E300040E898 /* ColorWheelsNode.swift */; };
 		BF8EDBBC2E506E300040E898 /* Edge.metal in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB692E506E300040E898 /* Edge.metal */; };
 		BF8EDBBD2E506E300040E898 /* NodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB962E506E300040E898 /* NodeView.swift */; };
-		BF8EDBBE2E506E300040E898 /* VideoProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB5F2E506E300040E898 /* VideoProcessor.swift */; };
 		BF8EDBBF2E506E300040E898 /* MetalNodeInspector.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB842E506E300040E898 /* MetalNodeInspector.swift */; };
 		BF8EDBC02E506E300040E898 /* Merge.metal in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB6A2E506E300040E898 /* Merge.metal */; };
 		BF8EDBC12E506E300040E898 /* ViewerPanelController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB9B2E506E300040E898 /* ViewerPanelController.swift */; };
@@ -51,17 +44,26 @@
 		BF8EDBC82E506E300040E898 /* MetalSettingsPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB982E506E300040E898 /* MetalSettingsPanel.swift */; };
 		BF8EDBC92E506E300040E898 /* NodeInspectors.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB862E506E300040E898 /* NodeInspectors.swift */; };
 		BF8EDBCA2E506E300040E898 /* UIPrimitives.metal in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB6C2E506E300040E898 /* UIPrimitives.metal */; };
-		BF8EDBCB2E506E300040E898 /* InputNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB5B2E506E300040E898 /* InputNode.swift */; };
 		BF8EDBCC2E506E300040E898 /* NodeGraphProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB652E506E300040E898 /* NodeGraphProcessor.swift */; };
-		BF8EDBCD2E506E300040E898 /* BaseNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB582E506E300040E898 /* BaseNode.swift */; };
 		BFB2814E2E26901C00BD1B79 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = BFB2814D2E26901C00BD1B79 /* Info.plist */; };
 		BFCD14192E537E6400FE99DD /* MetalFXManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCD140E2E537E6400FE99DD /* MetalFXManager.swift */; };
 		BFCD141A2E537E6400FE99DD /* MPSProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCD140F2E537E6400FE99DD /* MPSProcessor.swift */; };
-		BFCD141B2E537E6400FE99DD /* ProResProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCD14162E537E6400FE99DD /* ProResProtocols.swift */; };
-		BFCD141C2E537E6400FE99DD /* ProResAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCD14142E537E6400FE99DD /* ProResAdapter.swift */; };
-		BFCD141D2E537E6400FE99DD /* ProResProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCD14152E537E6400FE99DD /* ProResProcessor.swift */; };
 		BFCD141E2E537E6400FE99DD /* PerformanceOptimizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCD14102E537E6400FE99DD /* PerformanceOptimizer.swift */; };
 		BFCD141F2E537E6400FE99DD /* ProcessingStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCD14112E537E6400FE99DD /* ProcessingStrategy.swift */; };
+		BFCD142A2E53827D00FE99DD /* NodeConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCD14272E53827D00FE99DD /* NodeConnection.swift */; };
+		BFCD142B2E53827D00FE99DD /* CorrectorNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCD14222E53827D00FE99DD /* CorrectorNode.swift */; };
+		BFCD142C2E53827D00FE99DD /* InputNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCD14232E53827D00FE99DD /* InputNode.swift */; };
+		BFCD142D2E53827D00FE99DD /* ViewNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCD14252E53827D00FE99DD /* ViewNode.swift */; };
+		BFCD142E2E53827D00FE99DD /* BaseNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCD14202E53827D00FE99DD /* BaseNode.swift */; };
+		BFCD142F2E53827D00FE99DD /* ColorWheelsNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCD14212E53827D00FE99DD /* ColorWheelsNode.swift */; };
+		BFCD14302E53827D00FE99DD /* NodeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCD14282E53827D00FE99DD /* NodeTypes.swift */; };
+		BFCD14312E53827D00FE99DD /* MetalNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCD14242E53827D00FE99DD /* MetalNode.swift */; };
+		BFCD14372E5382A800FE99DD /* VideoProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCD14352E5382A800FE99DD /* VideoProcessor.swift */; };
+		BFCD14392E53846000FE99DD /* MediaFormatSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCD14382E53846000FE99DD /* MediaFormatSupport.swift */; };
+		BFCD143B2E53848300FE99DD /* UniversalMediaProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCD143A2E53848300FE99DD /* UniversalMediaProcessor.swift */; };
+		BFCD143F2E5384B400FE99DD /* ProResAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCD143C2E5384B400FE99DD /* ProResAdapter.swift */; };
+		BFCD14402E5384B400FE99DD /* ProResProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCD143E2E5384B400FE99DD /* ProResProtocols.swift */; };
+		BFCD14412E5384B400FE99DD /* ProResProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCD143D2E5384B400FE99DD /* ProResProcessor.swift */; };
 		BFD2D8DD2E1F2C8600BFAC11 /* CompositorApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFD2D8DC2E1F2C8600BFAC11 /* CompositorApp.swift */; };
 		BFD2D8E12E1F2C8900BFAC11 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BFD2D8E02E1F2C8900BFAC11 /* Assets.xcassets */; };
 		BFD2D8EE2E1F2E1A00BFAC11 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = BFD2D8ED2E1F2E1400BFAC11 /* README.md */; };
@@ -70,15 +72,6 @@
 
 /* Begin PBXFileReference section */
 		BF8EDB562E506BBA0040E898 /* DIContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DIContainer.swift; sourceTree = "<group>"; };
-		BF8EDB582E506E300040E898 /* BaseNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseNode.swift; sourceTree = "<group>"; };
-		BF8EDB592E506E300040E898 /* ColorWheelsNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorWheelsNode.swift; sourceTree = "<group>"; };
-		BF8EDB5A2E506E300040E898 /* CorrectorNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CorrectorNode.swift; sourceTree = "<group>"; };
-		BF8EDB5B2E506E300040E898 /* InputNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputNode.swift; sourceTree = "<group>"; };
-		BF8EDB5C2E506E300040E898 /* MetalNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalNode.swift; sourceTree = "<group>"; };
-		BF8EDB5D2E506E300040E898 /* NodeConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeConnection.swift; sourceTree = "<group>"; };
-		BF8EDB5E2E506E300040E898 /* NodeTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeTypes.swift; sourceTree = "<group>"; };
-		BF8EDB5F2E506E300040E898 /* VideoProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoProcessor.swift; sourceTree = "<group>"; };
-		BF8EDB602E506E300040E898 /* ViewNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewNode.swift; sourceTree = "<group>"; };
 		BF8EDB622E506E300040E898 /* NodeFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeFactory.swift; sourceTree = "<group>"; };
 		BF8EDB632E506E300040E898 /* NodeGraph.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeGraph.swift; sourceTree = "<group>"; };
 		BF8EDB652E506E300040E898 /* NodeGraphProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeGraphProcessor.swift; sourceTree = "<group>"; };
@@ -121,9 +114,20 @@
 		BFCD140F2E537E6400FE99DD /* MPSProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MPSProcessor.swift; sourceTree = "<group>"; };
 		BFCD14102E537E6400FE99DD /* PerformanceOptimizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceOptimizer.swift; sourceTree = "<group>"; };
 		BFCD14112E537E6400FE99DD /* ProcessingStrategy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessingStrategy.swift; sourceTree = "<group>"; };
-		BFCD14142E537E6400FE99DD /* ProResAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProResAdapter.swift; sourceTree = "<group>"; };
-		BFCD14152E537E6400FE99DD /* ProResProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProResProcessor.swift; sourceTree = "<group>"; };
-		BFCD14162E537E6400FE99DD /* ProResProtocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProResProtocols.swift; sourceTree = "<group>"; };
+		BFCD14202E53827D00FE99DD /* BaseNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseNode.swift; sourceTree = "<group>"; };
+		BFCD14212E53827D00FE99DD /* ColorWheelsNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorWheelsNode.swift; sourceTree = "<group>"; };
+		BFCD14222E53827D00FE99DD /* CorrectorNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CorrectorNode.swift; sourceTree = "<group>"; };
+		BFCD14232E53827D00FE99DD /* InputNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputNode.swift; sourceTree = "<group>"; };
+		BFCD14242E53827D00FE99DD /* MetalNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalNode.swift; sourceTree = "<group>"; };
+		BFCD14252E53827D00FE99DD /* ViewNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewNode.swift; sourceTree = "<group>"; };
+		BFCD14272E53827D00FE99DD /* NodeConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeConnection.swift; sourceTree = "<group>"; };
+		BFCD14282E53827D00FE99DD /* NodeTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeTypes.swift; sourceTree = "<group>"; };
+		BFCD14352E5382A800FE99DD /* VideoProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoProcessor.swift; sourceTree = "<group>"; };
+		BFCD14382E53846000FE99DD /* MediaFormatSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaFormatSupport.swift; sourceTree = "<group>"; };
+		BFCD143A2E53848300FE99DD /* UniversalMediaProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UniversalMediaProcessor.swift; sourceTree = "<group>"; };
+		BFCD143C2E5384B400FE99DD /* ProResAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProResAdapter.swift; sourceTree = "<group>"; };
+		BFCD143D2E5384B400FE99DD /* ProResProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProResProcessor.swift; sourceTree = "<group>"; };
+		BFCD143E2E5384B400FE99DD /* ProResProtocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProResProtocols.swift; sourceTree = "<group>"; };
 		BFD2D8D92E1F2C8600BFAC11 /* Compositor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Compositor.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BFD2D8DC2E1F2C8600BFAC11 /* CompositorApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompositorApp.swift; sourceTree = "<group>"; };
 		BFD2D8E02E1F2C8900BFAC11 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -146,15 +150,8 @@
 		BF8EDB612E506E300040E898 /* Models */ = {
 			isa = PBXGroup;
 			children = (
-				BF8EDB582E506E300040E898 /* BaseNode.swift */,
-				BF8EDB592E506E300040E898 /* ColorWheelsNode.swift */,
-				BF8EDB5A2E506E300040E898 /* CorrectorNode.swift */,
-				BF8EDB5B2E506E300040E898 /* InputNode.swift */,
-				BF8EDB5C2E506E300040E898 /* MetalNode.swift */,
-				BF8EDB5D2E506E300040E898 /* NodeConnection.swift */,
-				BF8EDB5E2E506E300040E898 /* NodeTypes.swift */,
-				BF8EDB5F2E506E300040E898 /* VideoProcessor.swift */,
-				BF8EDB602E506E300040E898 /* ViewNode.swift */,
+				BFCD14262E53827D00FE99DD /* Nodes */,
+				BFCD14292E53827D00FE99DD /* Support */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -255,6 +252,7 @@
 				BF8EDB752E506E300040E898 /* Metal */,
 				BF8EDB772E506E300040E898 /* Persistence */,
 				BF8EDB782E506E300040E898 /* Plugins */,
+				BFCD14362E5382A800FE99DD /* Video */,
 			);
 			path = Infrastructure;
 			sourceTree = "<group>";
@@ -396,24 +394,48 @@
 			path = ML;
 			sourceTree = "<group>";
 		};
-		BFCD14172E537E6400FE99DD /* ProRes */ = {
-			isa = PBXGroup;
-			children = (
-				BFCD14142E537E6400FE99DD /* ProResAdapter.swift */,
-				BFCD14152E537E6400FE99DD /* ProResProcessor.swift */,
-				BFCD14162E537E6400FE99DD /* ProResProtocols.swift */,
-			);
-			path = ProRes;
-			sourceTree = "<group>";
-		};
 		BFCD14182E537E6400FE99DD /* Future */ = {
 			isa = PBXGroup;
 			children = (
 				BFCD14122E537E6400FE99DD /* AdvancedMetal */,
 				BFCD14132E537E6400FE99DD /* ML */,
-				BFCD14172E537E6400FE99DD /* ProRes */,
 			);
 			path = Future;
+			sourceTree = "<group>";
+		};
+		BFCD14262E53827D00FE99DD /* Nodes */ = {
+			isa = PBXGroup;
+			children = (
+				BFCD14202E53827D00FE99DD /* BaseNode.swift */,
+				BFCD14212E53827D00FE99DD /* ColorWheelsNode.swift */,
+				BFCD14222E53827D00FE99DD /* CorrectorNode.swift */,
+				BFCD14232E53827D00FE99DD /* InputNode.swift */,
+				BFCD14242E53827D00FE99DD /* MetalNode.swift */,
+				BFCD14252E53827D00FE99DD /* ViewNode.swift */,
+			);
+			path = Nodes;
+			sourceTree = "<group>";
+		};
+		BFCD14292E53827D00FE99DD /* Support */ = {
+			isa = PBXGroup;
+			children = (
+				BFCD14382E53846000FE99DD /* MediaFormatSupport.swift */,
+				BFCD14272E53827D00FE99DD /* NodeConnection.swift */,
+				BFCD14282E53827D00FE99DD /* NodeTypes.swift */,
+			);
+			path = Support;
+			sourceTree = "<group>";
+		};
+		BFCD14362E5382A800FE99DD /* Video */ = {
+			isa = PBXGroup;
+			children = (
+				BFCD143C2E5384B400FE99DD /* ProResAdapter.swift */,
+				BFCD143D2E5384B400FE99DD /* ProResProcessor.swift */,
+				BFCD143E2E5384B400FE99DD /* ProResProtocols.swift */,
+				BFCD143A2E53848300FE99DD /* UniversalMediaProcessor.swift */,
+				BFCD14352E5382A800FE99DD /* VideoProcessor.swift */,
+			);
+			path = Video;
 			sourceTree = "<group>";
 		};
 		BFD2D8D02E1F2C8600BFAC11 = {
@@ -534,7 +556,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				BF8EDB572E506BBA0040E898 /* DIContainer.swift in Sources */,
-				BF8EDBA02E506E300040E898 /* ViewNode.swift in Sources */,
 				BF8EDBA12E506E300040E898 /* CompositorView.swift in Sources */,
 				BF8EDBA22E506E300040E898 /* Color+NodeTypes.swift in Sources */,
 				BF8EDBA32E506E300040E898 /* NodeGraphRenderStyle.swift in Sources */,
@@ -544,49 +565,52 @@
 				BF8EDBA72E506E300040E898 /* InspectorPanel.swift in Sources */,
 				BF8EDBA82E506E300040E898 /* NodeGraphConnectionManager.swift in Sources */,
 				BF8EDBA92E506E300040E898 /* TextureManager.swift in Sources */,
+				BFCD142A2E53827D00FE99DD /* NodeConnection.swift in Sources */,
+				BFCD142B2E53827D00FE99DD /* CorrectorNode.swift in Sources */,
+				BFCD142C2E53827D00FE99DD /* InputNode.swift in Sources */,
+				BFCD142D2E53827D00FE99DD /* ViewNode.swift in Sources */,
+				BFCD142E2E53827D00FE99DD /* BaseNode.swift in Sources */,
+				BFCD142F2E53827D00FE99DD /* ColorWheelsNode.swift in Sources */,
+				BFCD14302E53827D00FE99DD /* NodeTypes.swift in Sources */,
+				BFCD14312E53827D00FE99DD /* MetalNode.swift in Sources */,
 				BF8EDBAA2E506E300040E898 /* Blur.metal in Sources */,
 				BF8EDBAB2E506E300040E898 /* NodeGraphPanel.swift in Sources */,
 				BF8EDBAC2E506E300040E898 /* NodeHeaderView.swift in Sources */,
-				BF8EDBAD2E506E300040E898 /* NodeConnection.swift in Sources */,
-				BF8EDBAE2E506E300040E898 /* MetalNode.swift in Sources */,
-				BF8EDBAF2E506E300040E898 /* NodeTypes.swift in Sources */,
 				BF8EDBB02E506E300040E898 /* Color.metal in Sources */,
 				BF8EDBB12E506E300040E898 /* NodePanelEventHandler.swift in Sources */,
 				BF8EDBB22E506E300040E898 /* NodeFactory.swift in Sources */,
 				BFCD14192E537E6400FE99DD /* MetalFXManager.swift in Sources */,
 				BFCD141A2E537E6400FE99DD /* MPSProcessor.swift in Sources */,
-				BFCD141B2E537E6400FE99DD /* ProResProtocols.swift in Sources */,
-				BFCD141C2E537E6400FE99DD /* ProResAdapter.swift in Sources */,
-				BFCD141D2E537E6400FE99DD /* ProResProcessor.swift in Sources */,
 				BFCD141E2E537E6400FE99DD /* PerformanceOptimizer.swift in Sources */,
+				BFCD143B2E53848300FE99DD /* UniversalMediaProcessor.swift in Sources */,
 				BFCD141F2E537E6400FE99DD /* ProcessingStrategy.swift in Sources */,
 				BF8EDBB32E506E300040E898 /* VideoScrubber.swift in Sources */,
 				BF8EDBB42E506E300040E898 /* ContentView.swift in Sources */,
 				BF8EDBB52E506E300040E898 /* NodeGraph.swift in Sources */,
 				BF8EDBB62E506E300040E898 /* MetalNodeGraphCanvas.swift in Sources */,
+				BFCD14372E5382A800FE99DD /* VideoProcessor.swift in Sources */,
 				BF8EDBB72E506E300040E898 /* InputNodeInspector.swift in Sources */,
 				BF8EDBB82E506E300040E898 /* NodeViewConstants.swift in Sources */,
 				BF8EDBB92E506E300040E898 /* VideoInspectorControls.swift in Sources */,
-				BF8EDBBA2E506E300040E898 /* CorrectorNode.swift in Sources */,
-				BF8EDBBB2E506E300040E898 /* ColorWheelsNode.swift in Sources */,
 				BF8EDBBC2E506E300040E898 /* Edge.metal in Sources */,
 				BF8EDBBD2E506E300040E898 /* NodeView.swift in Sources */,
-				BF8EDBBE2E506E300040E898 /* VideoProcessor.swift in Sources */,
+				BFCD14392E53846000FE99DD /* MediaFormatSupport.swift in Sources */,
 				BF8EDBBF2E506E300040E898 /* MetalNodeInspector.swift in Sources */,
 				BF8EDBC02E506E300040E898 /* Merge.metal in Sources */,
 				BF8EDBC12E506E300040E898 /* ViewerPanelController.swift in Sources */,
 				BF8EDBC22E506E300040E898 /* MetalRenderer.swift in Sources */,
 				BF8EDBC32E506E300040E898 /* NotificationNames.swift in Sources */,
 				BF8EDBC42E506E300040E898 /* NodeGraphCache.swift in Sources */,
+				BFCD143F2E5384B400FE99DD /* ProResAdapter.swift in Sources */,
+				BFCD14402E5384B400FE99DD /* ProResProtocols.swift in Sources */,
+				BFCD14412E5384B400FE99DD /* ProResProcessor.swift in Sources */,
 				BF8EDBC52E506E300040E898 /* Types.metal in Sources */,
 				BF8EDBC62E506E300040E898 /* ViewerPanel.swift in Sources */,
 				BF8EDBC72E506E300040E898 /* MetalRenderingManager.swift in Sources */,
 				BF8EDBC82E506E300040E898 /* MetalSettingsPanel.swift in Sources */,
 				BF8EDBC92E506E300040E898 /* NodeInspectors.swift in Sources */,
 				BF8EDBCA2E506E300040E898 /* UIPrimitives.metal in Sources */,
-				BF8EDBCB2E506E300040E898 /* InputNode.swift in Sources */,
 				BF8EDBCC2E506E300040E898 /* NodeGraphProcessor.swift in Sources */,
-				BF8EDBCD2E506E300040E898 /* BaseNode.swift in Sources */,
 				BFD2D8DD2E1F2C8600BFAC11 /* CompositorApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

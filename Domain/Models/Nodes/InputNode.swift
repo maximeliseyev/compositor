@@ -10,11 +10,14 @@ import CoreImage
 import AVFoundation
 import UniformTypeIdentifiers
 
-// MARK: - Media Types
+// Импорты для новых компонентов
+@_exported import struct Foundation.URL
+
+// MARK: - Media Types (Legacy - для обратной совместимости)
 enum MediaType {
     case image
     case video
-    case proRes // Новый тип для ProRes файлов
+    case proRes
 }
 
 class InputNode: BaseNode {
@@ -52,7 +55,7 @@ class InputNode: BaseNode {
     
     // MARK: - Public Methods
     
-    /// Определяет тип медиафайла по расширению и содержимому
+    /// Определяет тип медиафайла по расширению и содержимому (Legacy)
     func getMediaType(for url: URL) -> MediaType {
         let pathExtension = url.pathExtension.lowercased()
         let videoExtensions = ["mov", "mp4", "m4v", "avi", "mkv", "webm", "3gp", "3g2", "asf", "wmv", "flv", "f4v", "ts", "m2ts", "mts"]
@@ -64,6 +67,11 @@ class InputNode: BaseNode {
         }
         
         return videoExtensions.contains(pathExtension) ? .video : .image
+    }
+    
+    /// Универсальный метод определения формата медиафайла
+    func detectMediaFormat(for url: URL) async -> MediaFormat? {
+        return await MediaFormatDetector.detectFormat(for: url)
     }
     
     /// Проверяет, является ли файл ProRes
