@@ -1,10 +1,3 @@
-//
-//  MetalNodeGraphCanvas.swift
-//  Compositor
-//
-//  Renders grid, connections, and selection in one Metal pass
-//
-
 import SwiftUI
 import Metal
 import MetalKit

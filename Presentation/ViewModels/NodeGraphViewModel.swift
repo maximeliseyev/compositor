@@ -1,12 +1,3 @@
-//
-//  NodeGraphViewModel.swift
-//  Compositor
-//
-//  Presentation Layer - ViewModels
-//
-//  Created by Architecture Refactor on 12.08.2025.
-//
-
 import Foundation
 import SwiftUI
 import CoreImage

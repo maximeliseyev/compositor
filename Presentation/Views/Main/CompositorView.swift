@@ -1,7 +1,3 @@
-//
-//  CompositorView.swift
-//
-
 import SwiftUI
 
 // MARK: - Panel Visibility Manager

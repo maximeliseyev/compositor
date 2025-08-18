@@ -1,12 +1,3 @@
-//
-//  Color+NodeTypes.swift
-//  Compositor
-//
-//  SwiftUI Color Extensions for Node Types
-//
-//  Created by Architecture Refactor on 12.08.2025.
-//
-
 import SwiftUI
 import Foundation
 

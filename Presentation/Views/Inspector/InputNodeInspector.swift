@@ -128,6 +128,8 @@ struct InputNodeInspector: View {
             return "photo"
         case .video:
             return "video"
+        case .proRes:
+            return "proRes"
         }
     }
     
@@ -137,6 +139,8 @@ struct InputNodeInspector: View {
             return .cyan
         case .video:
             return .purple
+        case .proRes:
+            return .orange
         }
     }
 } 

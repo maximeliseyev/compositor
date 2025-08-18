@@ -1,12 +1,3 @@
-//
-//  ColorWheelsNode.swift
-//  Compositor
-//
-//  Professional Color Correction Node
-//
-//  Created by Architecture Refactor on 12.08.2025.
-//
-
 import Foundation
 import SwiftUI
 import CoreImage

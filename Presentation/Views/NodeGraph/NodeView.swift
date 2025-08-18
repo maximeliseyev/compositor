@@ -250,6 +250,8 @@ struct InputNodeBodyView: View {
             return Color.blue.opacity(0.6)
         case .video:
             return Color.purple.opacity(0.6)
+        case .proRes:
+            return Color.orange.opacity(0.6)
         }
     }
     
@@ -259,6 +261,8 @@ struct InputNodeBodyView: View {
             return .cyan
         case .video:
             return .purple
+        case .proRes:
+            return .orange
         }
     }
     

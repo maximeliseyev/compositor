@@ -9,11 +9,19 @@ import SwiftUI
 import CoreImage
 import Metal
 
+// Forward declaration for MetalRenderer
+protocol MetalRendererProtocol {
+    var isReady: Bool { get }
+    func processImage(_ image: CIImage, withShader shaderName: String, parameters: [String: Any]) async throws -> CIImage?
+}
+
+
+
 /// Базовый класс для нод, использующих Metal рендеринг
 class MetalNode: BaseNode {
     
     // MARK: - Metal Properties
-    private var metalRenderer: MetalRenderer?
+    private var metalRenderer: MetalRendererProtocol?
     private var isMetalAvailable: Bool = false
     
     // MARK: - Processing Mode
@@ -33,16 +41,9 @@ class MetalNode: BaseNode {
     
     // MARK: - Metal Setup
     private func setupMetalRenderer() {
-        // Инициализация без привязки к @MainActor, чтобы не блокировать граф
-        let renderer = MetalRenderer()
-        if renderer.isReady {
-            self.metalRenderer = renderer
-            self.isMetalAvailable = true
-            print("✅ Metal renderer initialized for \(type.rawValue) node")
-        } else {
-            print("❌ Failed to initialize Metal renderer")
-            self.isMetalAvailable = false
-        }
+        // Временно отключаем Metal рендерер до интеграции
+        self.isMetalAvailable = false
+        print("ℹ️ Metal renderer temporarily disabled")
     }
     
     // MARK: - Processing Override
@@ -109,7 +110,7 @@ class MetalNode: BaseNode {
     
     // MARK: - Metal Shader Processing
     /// Переопределяется в подклассах для специфичной обработки
-    func processWithMetalShader(inputImage: CIImage, renderer: MetalRenderer) async throws -> CIImage? {
+    func processWithMetalShader(inputImage: CIImage, renderer: MetalRendererProtocol) async throws -> CIImage? {
         // Базовая реализация - просто возвращает входное изображение
         // Переопределяется в подклассах для специфичной обработки
         return inputImage
@@ -152,6 +153,65 @@ class MetalNode: BaseNode {
     }
 }
 
+// MARK: - Modern Unified Blur Node
+
+/// Modern blur node with intelligent Metal/MPS processing
+class BlurNode: MetalNode {
+    
+    @Published var radius: Float = 5.0 {
+        didSet { 
+            parameters["radius"] = radius
+        }
+    }
+    
+    override init(type: NodeType = .metalBlur, position: CGPoint) {
+        super.init(type: type, position: position)
+        setupBlurNode()
+    }
+    
+    private func setupBlurNode() {
+        // Initialize parameters (ports are created automatically from metadata)
+        parameters["radius"] = radius
+        parameters["blurType"] = "gaussian"
+        
+        print("🌫️ BlurNode initialized")
+    }
+    
+    override func processWithMetalShader(inputImage: CIImage, renderer: MetalRendererProtocol) async throws -> CIImage? {
+        let params = getMetalParameters()
+        let shaderName = "gaussian_blur_compute"
+        
+        // Add required parameters for BlurParams
+        var fullParams = params
+        fullParams["textureWidth"] = Float(inputImage.extent.width)
+        fullParams["textureHeight"] = Float(inputImage.extent.height)
+        fullParams["dirX"] = 1.0
+        fullParams["dirY"] = 0.0
+        fullParams["samples"] = 0
+        
+        do {
+            return try await renderer.processImage(
+                inputImage,
+                withShader: shaderName,
+                parameters: fullParams
+            )
+        } catch {
+            print("❗ Metal blur failed, using Core Image: \(error)")
+            return processWithCoreImage(inputs: [inputImage])
+        }
+    }
+    
+    override func processWithCoreImage(inputs: [CIImage?]) -> CIImage? {
+        guard let inputImage = inputs.first as? CIImage else { return nil }
+        
+        guard let filter = CIFilter(name: "CIGaussianBlur") else { return inputImage }
+        filter.setValue(inputImage, forKey: kCIInputImageKey)
+        filter.setValue(radius, forKey: kCIInputRadiusKey)
+        
+        return filter.outputImage?.cropped(to: inputImage.extent)
+    }
+}
+
 // MARK: - Metal Node Types
 
 /// Нода для цветокоррекции через Metal
@@ -168,7 +228,7 @@ class MetalCorrectorNode: MetalNode {
         parameters["temperature"] = 0.0
     }
     
-    override func processWithMetalShader(inputImage: CIImage, renderer: MetalRenderer) async throws -> CIImage? {
+    override func processWithMetalShader(inputImage: CIImage, renderer: MetalRendererProtocol) async throws -> CIImage? {
         let params = getMetalParameters()
         return try await renderer.processImage(
             inputImage,
@@ -216,7 +276,7 @@ class MetalBlurNode: MetalNode {
         parameters["blurType"] = "gaussian" // "gaussian" или "box"
     }
     
-    override func processWithMetalShader(inputImage: CIImage, renderer: MetalRenderer) async throws -> CIImage? {
+    override func processWithMetalShader(inputImage: CIImage, renderer: MetalRendererProtocol) async throws -> CIImage? {
         let params = getMetalParameters()
         let blurType = parameters["blurType"] as? String ?? "gaussian"
         let shaderName = blurType == "gaussian" ? "gaussian_blur_compute" : "box_blur_compute"
@@ -236,8 +296,8 @@ class MetalBlurNode: MetalNode {
                 withShader: shaderName,
                 parameters: fullParams
             )
-        } catch MetalError.functionNotFound(let name) {
-            print("❗ Missing Metal function: \(name). Falling back to Core Image blur.")
+        } catch {
+            print("❗ Metal blur failed, falling back to Core Image: \(error)")
             return processWithCoreImage(inputs: [inputImage])
         }
     }
