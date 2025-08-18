@@ -14,8 +14,7 @@ import CoreVideo
 import UIKit
 #endif
 
-
-
+@MainActor
 class VideoProcessor: ObservableObject {
     @Published var isLoading = false
     @Published var currentFrame: CIImage?
@@ -37,20 +36,38 @@ class VideoProcessor: ObservableObject {
     // Для предпросмотра первого кадра
     private var imageGenerator: AVAssetImageGenerator?
     
+    // Кэш для избежания повторной загрузки
+    private var loadedURL: URL?
+    private var frameCache: [Double: CIImage] = [:]
+    private let maxCacheSize = 50
+    private var lastSeekTime: Double = -1.0
+    
     init() {
         setupVideoOutput()
     }
     
     deinit {
-        stopDisplayLink()
-        player?.pause()
+        Task { @MainActor in
+            stopDisplayLink()
+            player?.pause()
+        }
     }
     
     // MARK: - Public Methods
     
     func loadVideo(from url: URL) {
+        // Проверяем, не загружаем ли мы тот же файл
+        if loadedURL == url && player != nil {
+            print("🎬 VideoProcessor: Video already loaded, skipping reload")
+            return
+        }
+        
         isLoading = true
         print("🎬 VideoProcessor.loadVideo url=\(url.lastPathComponent)")
+        
+        // Очищаем предыдущий кэш
+        frameCache.removeAll()
+        loadedURL = url
         
         // Создаем AVAsset из URL
         asset = AVAsset(url: url)
@@ -65,19 +82,15 @@ class VideoProcessor: ObservableObject {
             do {
                 let tracks = try await asset.loadTracks(withMediaType: .video)
                 guard !tracks.isEmpty else {
-                    await MainActor.run {
-                        print("⚠️ No video tracks found")
-                        isLoading = false
-                    }
+                    print("⚠️ No video tracks found")
+                    isLoading = false
                     return
                 }
                 
                 // Получаем длительность
                 let duration = try await asset.load(.duration)
-                await MainActor.run {
-                    self.duration = CMTimeGetSeconds(duration)
-                    print("⏱️ Video duration set: \(self.duration)")
-                }
+                self.duration = CMTimeGetSeconds(duration)
+                print("⏱️ Video duration set: \(self.duration)")
                 
                 // Создаем player item
                 let playerItem = await AVPlayerItem(asset: asset)
@@ -94,16 +107,12 @@ class VideoProcessor: ObservableObject {
                 // Загружаем первый кадр
                 await loadFirstFrame()
                 
-                await MainActor.run {
-                    self.isLoading = false
-                    print("✅ VideoProcessor finished loading")
-                }
+                isLoading = false
+                print("✅ VideoProcessor finished loading")
                 
             } catch {
-                await MainActor.run {
-                    print("❌ VideoProcessor load error: \(error)")
-                    self.isLoading = false
-                }
+                print("❌ VideoProcessor load error: \(error)")
+                isLoading = false
             }
         }
     }
@@ -127,9 +136,27 @@ class VideoProcessor: ObservableObject {
     func seek(to time: Double) {
         guard let player = player else { return }
         
-        let cmTime = CMTime(seconds: time, preferredTimescale: 600)
-        player.seek(to: cmTime) { [weak self] _ in
-            self?.updateCurrentFrame()
+        let clampedTime = max(0, min(time, duration))
+        
+        // Проверяем, не запрашиваем ли мы тот же кадр
+        if abs(clampedTime - lastSeekTime) < 0.016 { // Меньше одного кадра при 60fps
+            return
+        }
+        
+        lastSeekTime = clampedTime
+        currentTime = clampedTime
+        
+        // Проверяем кэш перед загрузкой нового кадра
+        if let cachedFrame = frameCache[clampedTime] {
+            currentFrame = cachedFrame
+            print("🎬 VideoProcessor: Using cached frame at \(clampedTime)s")
+        } else {
+            let cmTime = CMTime(seconds: clampedTime, preferredTimescale: 600)
+            player.seek(to: cmTime) { [weak self] _ in
+                Task { @MainActor in
+                    self?.updateFrame()
+                }
+            }
         }
     }
     
@@ -168,10 +195,9 @@ class VideoProcessor: ObservableObject {
             let cgImage = try await imageGenerator.image(at: time).image
             let ciImage = CIImage(cgImage: cgImage)
             
-            await MainActor.run {
-                self.currentFrame = ciImage
-                print("🖼️ First frame generated: extent=\(ciImage.extent)")
-            }
+            currentFrame = ciImage
+            frameCache[0.0] = ciImage
+            print("🖼️ First frame generated: extent=\(ciImage.extent)")
         } catch {
             print("❌ Error loading first frame: \(error)")
         }
@@ -184,7 +210,9 @@ class VideoProcessor: ObservableObject {
         var displayLink: CVDisplayLink?
         let displayLinkCallback: CVDisplayLinkOutputCallback = { (displayLink, inNow, inOutputTime, flagsIn, flagsOut, displayLinkContext) in
             let processor = Unmanaged<VideoProcessor>.fromOpaque(displayLinkContext!).takeUnretainedValue()
-            processor.updateFrame()
+            Task { @MainActor in
+                processor.updateFrame()
+            }
             return kCVReturnSuccess
         }
         
@@ -204,7 +232,35 @@ class VideoProcessor: ObservableObject {
         }
     }
     
-    #else
+    private func updateFrame() {
+        guard let videoOutput = videoOutput,
+              let playerItem = playerItem else { return }
+        
+        let currentTime = CMTimeGetSeconds(playerItem.currentTime())
+        self.currentTime = currentTime
+        
+        let itemTime = videoOutput.itemTime(forHostTime: CACurrentMediaTime())
+        
+        if videoOutput.hasNewPixelBuffer(forItemTime: itemTime) {
+            if let pixelBuffer = videoOutput.copyPixelBuffer(forItemTime: itemTime, itemTimeForDisplay: nil) {
+                let ciImage = CIImage(cvPixelBuffer: pixelBuffer)
+                currentFrame = ciImage
+                
+                // Кэшируем кадр
+                frameCache[currentTime] = ciImage
+                
+                // Ограничиваем размер кэша
+                if frameCache.count > maxCacheSize {
+                    let sortedKeys = frameCache.keys.sorted()
+                    let keysToRemove = sortedKeys.prefix(frameCache.count - maxCacheSize)
+                    for key in keysToRemove {
+                        frameCache.removeValue(forKey: key)
+                    }
+                }
+            }
+        }
+    }
+#else
     private func startDisplayLink() {
         stopDisplayLink()
         
@@ -218,51 +274,32 @@ class VideoProcessor: ObservableObject {
     }
     
     @objc private func updateFrame() {
-        updateCurrentFrame()
-        updateCurrentTime()
-    }
-    
-    #endif
-    
-    #if os(macOS)
-        private func updateFrame() {
-            DispatchQueue.main.async {
-                self.updateCurrentFrame()
-                self.updateCurrentTime()
-            }
-        }
-        #endif
-    
-    private func updateCurrentFrame() {
         guard let videoOutput = videoOutput,
               let playerItem = playerItem else { return }
         
-        let currentTime = playerItem.currentTime()
+        let currentTime = CMTimeGetSeconds(playerItem.currentTime())
+        self.currentTime = currentTime
         
-        if videoOutput.hasNewPixelBuffer(forItemTime: currentTime) {
-            let pixelBuffer = videoOutput.copyPixelBuffer(forItemTime: currentTime, itemTimeForDisplay: nil)
-            
-            if let pixelBuffer = pixelBuffer {
+        let itemTime = videoOutput.itemTime(forHostTime: CACurrentMediaTime())
+        
+        if videoOutput.hasNewPixelBuffer(forItemTime: itemTime) {
+            if let pixelBuffer = videoOutput.copyPixelBuffer(forItemTime: itemTime, itemTimeForDisplay: nil) {
                 let ciImage = CIImage(cvPixelBuffer: pixelBuffer)
+                currentFrame = ciImage
                 
-                DispatchQueue.main.async {
-                    self.currentFrame = ciImage
-                    print("🧩 New frame from videoOutput: extent=\(ciImage.extent)")
+                // Кэшируем кадр
+                frameCache[currentTime] = ciImage
+                
+                // Ограничиваем размер кэша
+                if frameCache.count > maxCacheSize {
+                    let sortedKeys = frameCache.keys.sorted()
+                    let keysToRemove = sortedKeys.prefix(frameCache.count - maxCacheSize)
+                    for key in keysToRemove {
+                        frameCache.removeValue(forKey: key)
+                    }
                 }
             }
-        } else {
-            // Polling without a new pixel buffer
-            // print("(debug) No new pixel buffer at time: \(CMTimeGetSeconds(currentTime))")
         }
     }
-    
-    private func updateCurrentTime() {
-        guard let player = player else { return }
-        
-        let time = CMTimeGetSeconds(player.currentTime())
-        
-        DispatchQueue.main.async {
-            self.currentTime = time
-        }
-    }
+#endif
 } 

@@ -7,6 +7,10 @@
 
 import SwiftUI
 import CoreImage
+import Foundation
+
+// Импортируем типы нод
+@_exported import struct Foundation.UUID
 
 /// Фабрика для создания нод с поддержкой различных рендереров
 class NodeFactory {
@@ -29,6 +33,8 @@ class NodeFactory {
             return ColorWheelsNode(position: position)
         }
     }
+    
+
     
     /// Создает ноду с предпочтительным рендерером
     static func createNode(type: NodeType, position: CGPoint, preferredRenderer: RendererType) -> BaseNode {

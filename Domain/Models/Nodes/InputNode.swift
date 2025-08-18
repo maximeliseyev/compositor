@@ -10,9 +10,6 @@ import CoreImage
 import AVFoundation
 import UniformTypeIdentifiers
 
-// Импорты для новых компонентов
-@_exported import struct Foundation.URL
-
 // MARK: - Media Types (Legacy - для обратной совместимости)
 enum MediaType {
     case image
@@ -21,22 +18,23 @@ enum MediaType {
 }
 
 class InputNode: BaseNode {
-    // Image properties
+    // Universal Media Properties
+    @Published var mediaProcessor: UniversalMediaProcessor?
+    @Published var mediaFormat: MediaFormat?
+    @Published var mediaInfo: MediaFileInfo?
+    @Published var currentFrame: CIImage?
+    
+    // Legacy Properties (для обратной совместимости)
     @Published var nsImage: NSImage?
     @Published var ciImage: CIImage?
-    
-    // Video properties
-    @Published var videoProcessor: VideoProcessor?
     @Published var mediaType: MediaType = .image
     @Published var isVideoLoading: Bool = false
     @Published var videoURL: URL?
     
-    // ProRes properties
-    @Published var isProResProcessing: Bool = false
-    @Published var proResFrames: [CIImage] = []
-    @Published var currentProResFrameIndex: Int = 0
-    @Published var proResFrameRate: Double = 30.0
-    @Published var proResVariant: String?
+    // Playback state
+    @Published var isPlaying: Bool = false
+    @Published var currentTime: Double = 0.0
+    @Published var duration: Double = 0.0
     
     // File properties
     @Published var fileName: String?
@@ -46,8 +44,13 @@ class InputNode: BaseNode {
     private var securityScopedURL: URL?
     
     // Performance constants
-    private let PRORES_FRAME_BUFFER_SIZE = 30 // Количество кадров для буферизации
-    private let PRORES_SEEK_THRESHOLD = 0.1 // Порог для определения необходимости перемотки (в секундах)
+    private let DEFAULT_PREVIEW_FRAME_INDEX = 0 // Индекс кадра для предварительного просмотра
+    private let FRAME_CACHE_LIMIT = 30 // Максимальное количество кадров в кэше
+    private let MEDIA_LOAD_TIMEOUT = 30.0 // Таймаут загрузки медиафайла в секундах
+    
+    // Cache для избежания повторной загрузки
+    private var frameCache: [Double: CIImage] = [:]
+    private var lastSeekTime: Double = -1.0
     
     init(position: CGPoint) {
         super.init(type: .input, position: position)
@@ -72,6 +75,73 @@ class InputNode: BaseNode {
     /// Универсальный метод определения формата медиафайла
     func detectMediaFormat(for url: URL) async -> MediaFormat? {
         return await MediaFormatDetector.detectFormat(for: url)
+    }
+    
+    /// Загружает медиафайл с использованием универсальной системы
+    @MainActor
+    func loadMediaFile(from url: URL) async {
+        do {
+            // Начинаем безопасный доступ к файлу
+            guard url.startAccessingSecurityScopedResource() else {
+                print("❌ InputNode: Failed to access security-scoped resource")
+                return
+            }
+            
+            defer {
+                // Завершаем безопасный доступ
+                url.stopAccessingSecurityScopedResource()
+            }
+            
+            // Инициализируем процессор если нужно
+            if mediaProcessor == nil {
+                mediaProcessor = UniversalMediaProcessor()
+            }
+            
+            // Определяем формат
+            mediaFormat = await detectMediaFormat(for: url)
+            
+            // Обновляем mediaType на основе формата
+            if let format = mediaFormat {
+                if format.isVideo || format.isProRes {
+                    mediaType = .video
+                    print("🎬 InputNode: Set mediaType to .video for format: \(format.rawValue)")
+                } else {
+                    mediaType = .image
+                    print("🖼️ InputNode: Set mediaType to .image for format: \(format.rawValue)")
+                }
+            }
+            
+            // Загружаем информацию о файле
+            mediaInfo = try await mediaProcessor?.loadMedia(from: url)
+            
+            // Извлекаем первый кадр для предварительного просмотра
+            if let frames = try await mediaProcessor?.extractFrames(from: url, maxFrames: 1) {
+                currentFrame = frames.first
+            }
+            
+            // Обновляем информацию о файле
+            fileName = url.lastPathComponent
+            videoURL = url // Сохраняем URL для последующего использования
+            
+            if let info = mediaInfo {
+                fileSize = formatFileSize(info.fileSize)
+                duration = info.duration ?? 0.0 // Устанавливаем длительность
+                print("🎬 InputNode: Duration set to \(duration)s")
+            }
+            
+            print("🎬 InputNode: Successfully loaded \(mediaFormat?.rawValue ?? "unknown") file")
+            
+        } catch {
+            print("❌ InputNode: Error loading media file: \(error)")
+        }
+    }
+    
+    /// Форматирует размер файла для отображения
+    private func formatFileSize(_ bytes: Int64) -> String {
+        let formatter = ByteCountFormatter()
+        formatter.allowedUnits = [.useMB, .useGB]
+        formatter.countStyle = .file
+        return formatter.string(fromByteCount: bytes)
     }
     
     /// Проверяет, является ли файл ProRes
@@ -101,10 +171,7 @@ class InputNode: BaseNode {
                             ]
                             
                             if proResCodecs.contains(codecType) {
-                                await MainActor.run {
-                                    self.proResVariant = getProResVariantString(from: codecType)
-                                    print("🎬 InputNode: ProRes variant detected - \(self.proResVariant ?? "Unknown")")
-                                }
+                                print("🎬 InputNode: ProRes variant detected")
                             }
                         }
                     }
@@ -119,7 +186,7 @@ class InputNode: BaseNode {
         return false
     }
     
-    /// Определяет вариант ProRes по кодеку
+    /// Получает строку варианта ProRes по кодеку
     private func getProResVariantString(from codecType: FourCharCode) -> String {
         switch codecType {
         case 0x61703434: return "ProRes 4444" // 'ap44'
@@ -131,336 +198,118 @@ class InputNode: BaseNode {
         }
     }
     
-    /// Универсальный метод загрузки медиафайла
-    func loadMedia(from url: URL) {
-        beginSecurityScopedAccess(for: url)
-        let detectedType = getMediaType(for: url)
-        mediaType = detectedType
-        
-        // Сохраняем информацию о файле
-        fileName = url.lastPathComponent
-        updateFileSize(for: url)
-        
-        switch detectedType {
-        case .image:
-            loadImage(from: url)
-        case .video:
-            loadVideo(from: url)
-        case .proRes:
-            loadProRes(from: url)
-        }
+    // MARK: - Legacy Methods (для обратной совместимости)
+    
+    /// Загружает видео файл (Legacy)
+    func loadVideo(from url: URL) async {
+        // Используем новую универсальную систему
+        await loadMediaFile(from: url)
     }
     
-    /// Загрузка изображения (существующий метод)
-    func loadImage(from url: URL) {
-        // Очищаем видео и ProRes если загружали их ранее
-        cleanupVideo()
-        cleanupProRes()
+    /// Воспроизводит видео (Legacy)
+    func play() {
+        isPlaying = true
+        print("▶️ InputNode: Play started")
+    }
+    
+    /// Останавливает воспроизведение (Legacy)
+    func pause() {
+        isPlaying = false
+        print("⏸️ InputNode: Pause started")
+    }
+    
+    /// Перематывает к указанному времени (Legacy) - оптимизированная версия
+    @MainActor
+    func seek(to time: Double) {
+        let clampedTime = max(0, min(time, duration))
         
-        if let nsImage = NSImage(contentsOf: url) {
-            self.nsImage = nsImage
-            if let tiffData = nsImage.tiffRepresentation, let ciImage = CIImage(data: tiffData) {
-                self.ciImage = ciImage
-            } else {
-                self.ciImage = nil
-            }
+        // Проверяем, не запрашиваем ли мы тот же кадр
+        if abs(clampedTime - lastSeekTime) < 0.016 { // Меньше одного кадра при 60fps
+            return
+        }
+        
+        currentTime = clampedTime
+        lastSeekTime = clampedTime
+        print("⏩ InputNode: Seek to \(currentTime)s")
+        
+        // Проверяем кэш перед загрузкой нового кадра
+        if let cachedFrame = frameCache[clampedTime] {
+            currentFrame = cachedFrame
+            print("🎬 InputNode: Using cached frame at \(clampedTime)s")
         } else {
-            self.nsImage = nil
-            self.ciImage = nil
-        }
-    }
-    
-    /// Загрузка видео через VideoProcessor
-    func loadVideo(from url: URL) {
-        // Очищаем изображение и ProRes если загружали их ранее
-        cleanupImage()
-        cleanupProRes()
-        
-        isVideoLoading = true
-        videoURL = url
-        
-        // Создаем новый VideoProcessor если его нет
-        if videoProcessor == nil {
-            videoProcessor = VideoProcessor()
-        } else {
-            // Пересоздадим, чтобы гарантировать чистое состояние подписок и AVPlayerItem
-            videoProcessor?.pause()
-            videoProcessor = VideoProcessor()
-        }
-        
-        // Загружаем видео
-        videoProcessor?.loadVideo(from: url)
-        print("📥 InputNode.loadVideo: \(url.lastPathComponent)")
-        
-        // Отслеживаем состояние загрузки
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            self.isVideoLoading = self.videoProcessor?.isLoading ?? false
-        }
-    }
-    
-    /// Загрузка ProRes файла через специализированный процессор
-    func loadProRes(from url: URL) {
-        // Очищаем изображение и видео если загружали их ранее
-        cleanupImage()
-        cleanupVideo()
-        
-        isProResProcessing = true
-        videoURL = url
-        
-        print("🎬 InputNode.loadProRes: \(url.lastPathComponent)")
-        
-        // Временно обрабатываем ProRes как обычное видео
-        // TODO: Интегрировать ProResProcessor после исправления зависимостей
-        mediaType = .video // Временно меняем тип на video для совместимости
-        loadVideo(from: url)
-        isProResProcessing = false
-    }
-    
-    // MARK: - Video Control Methods
-    
-    func playVideo() {
-        switch mediaType {
-        case .video:
-            videoProcessor?.play()
-        case .proRes:
-            // Временно используем video processor для ProRes
-            if videoProcessor != nil {
-                videoProcessor?.play()
-            } else {
-                startProResPlayback()
-            }
-        case .image:
-            break
-        }
-    }
-    
-    func pauseVideo() {
-        switch mediaType {
-        case .video:
-            videoProcessor?.pause()
-        case .proRes:
-            // Временно используем video processor для ProRes
-            if videoProcessor != nil {
-                videoProcessor?.pause()
-            } else {
-                stopProResPlayback()
-            }
-        case .image:
-            break
-        }
-    }
-    
-    func seekVideo(to time: Double) {
-        switch mediaType {
-        case .video:
-            videoProcessor?.seek(to: time)
-        case .proRes:
-            // Временно используем video processor для ProRes
-            if videoProcessor != nil {
-                videoProcessor?.seek(to: time)
-            } else {
-                seekProRes(to: time)
-            }
-        case .image:
-            break
-        }
-    }
-    
-    var isVideoPlaying: Bool {
-        switch mediaType {
-        case .video:
-            return videoProcessor?.isPlaying ?? false
-        case .proRes:
-            // Временно используем video processor для ProRes
-            if videoProcessor != nil {
-                return videoProcessor?.isPlaying ?? false
-            } else {
-                return isProResPlaying
-            }
-        case .image:
-            return false
-        }
-    }
-    
-    var videoDuration: Double {
-        switch mediaType {
-        case .video:
-            return videoProcessor?.duration ?? 0
-        case .proRes:
-            // Временно используем video processor для ProRes
-            if videoProcessor != nil {
-                return videoProcessor?.duration ?? 0
-            } else {
-                return Double(proResFrames.count) / proResFrameRate
-            }
-        case .image:
-            return 0
-        }
-    }
-    
-    var videoCurrentTime: Double {
-        switch mediaType {
-        case .video:
-            return videoProcessor?.currentTime ?? 0
-        case .proRes:
-            // Временно используем video processor для ProRes
-            if videoProcessor != nil {
-                return videoProcessor?.currentTime ?? 0
-            } else {
-                return Double(currentProResFrameIndex) / proResFrameRate
-            }
-        case .image:
-            return 0
-        }
-    }
-    
-    // MARK: - ProRes Playback Methods
-    
-    private var isProResPlaying: Bool = false
-    private var proResPlaybackTimer: Timer?
-    
-    private func startProResPlayback() {
-        guard !proResFrames.isEmpty else { return }
-        
-        isProResPlaying = true
-        let frameInterval = 1.0 / proResFrameRate
-        
-        proResPlaybackTimer = Timer.scheduledTimer(withTimeInterval: frameInterval, repeats: true) { [weak self] _ in
-            self?.advanceProResFrame()
-        }
-        
-        print("▶️ ProRes playback started at \(proResFrameRate) fps")
-    }
-    
-    private func stopProResPlayback() {
-        isProResPlaying = false
-        proResPlaybackTimer?.invalidate()
-        proResPlaybackTimer = nil
-        print("⏸️ ProRes playback stopped")
-    }
-    
-    private func advanceProResFrame() {
-        guard !proResFrames.isEmpty else { return }
-        
-        currentProResFrameIndex = (currentProResFrameIndex + 1) % proResFrames.count
-        
-        // Если достигли конца, останавливаем воспроизведение
-        if currentProResFrameIndex == 0 {
-            stopProResPlayback()
-        }
-    }
-    
-    private func seekProRes(to time: Double) {
-        guard !proResFrames.isEmpty else { return }
-        
-        let targetFrameIndex = Int(time * proResFrameRate)
-        currentProResFrameIndex = max(0, min(targetFrameIndex, proResFrames.count - 1))
-        
-        print("⏩ ProRes seek to frame \(currentProResFrameIndex) at time \(time)s")
-    }
-    
-    // MARK: - Processing Override
-    
-    override func process(inputs: [CIImage?]) -> CIImage? {
-        switch mediaType {
-        case .image:
-            return ciImage
-        case .video:
-            return videoProcessor?.getCurrentFrame()
-        case .proRes:
-            // Временно используем video processor для ProRes
-            if videoProcessor != nil {
-                return videoProcessor?.getCurrentFrame()
-            } else {
-                guard !proResFrames.isEmpty && currentProResFrameIndex < proResFrames.count else {
-                    return nil
-                }
-                return proResFrames[currentProResFrameIndex]
+            // Обновляем текущий кадр только если его нет в кэше
+            Task {
+                await updateCurrentFrame()
             }
         }
     }
     
-    // MARK: - Helper Methods
-    
-    private func cleanupImage() {
-        nsImage = nil
-        ciImage = nil
-    }
-    
-    private func cleanupVideo() {
-        videoProcessor?.pause()
-        videoProcessor = nil
-        videoURL = nil
-    }
-    
-    private func cleanupProRes() {
-        stopProResPlayback()
-        proResFrames.removeAll()
-        currentProResFrameIndex = 0
-        proResVariant = nil
-        videoURL = nil
-    }
-    
-    private func updateFileSize(for url: URL) {
+    /// Обновляет текущий кадр на основе времени - оптимизированная версия
+    @MainActor
+    private func updateCurrentFrame() async {
+        guard let processor = mediaProcessor,
+              let url = videoURL,
+              mediaType == .video else { return }
+        
         do {
-            let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
-            if let fileSize = attributes[.size] as? Int64 {
-                self.fileSize = ByteCountFormatter.string(fromByteCount: fileSize, countStyle: .file)
+            // Начинаем безопасный доступ к файлу
+            guard url.startAccessingSecurityScopedResource() else {
+                print("❌ InputNode: Failed to access security-scoped resource for frame update")
+                return
+            }
+            
+            defer {
+                url.stopAccessingSecurityScopedResource()
+            }
+            
+            // Извлекаем кадр для текущего времени
+            let frameTime = currentTime
+            let frames = try await processor.extractFrames(from: url, maxFrames: 1, startTime: frameTime)
+            if let firstFrame = frames.first {
+                currentFrame = firstFrame
+                
+                // Кэшируем кадр
+                frameCache[frameTime] = firstFrame
+                
+                // Ограничиваем размер кэша
+                if frameCache.count > FRAME_CACHE_LIMIT {
+                    let sortedKeys = frameCache.keys.sorted()
+                    let keysToRemove = sortedKeys.prefix(frameCache.count - FRAME_CACHE_LIMIT)
+                    for key in keysToRemove {
+                        frameCache.removeValue(forKey: key)
+                    }
+                }
+                
+                print("🎬 InputNode: Updated frame at \(frameTime)s")
             }
         } catch {
-            self.fileSize = nil
+            print("❌ InputNode: Error updating frame: \(error)")
         }
     }
     
-    // MARK: - Node Properties Override
-    
-    override var title: String {
-        if let fileName = fileName {
-            return fileName
-        }
-        return "Input"
+    /// Возвращает текущий кадр (Legacy)
+    func getCurrentFrame() -> CIImage? {
+        return currentFrame
     }
     
-    // MARK: - File Type Checking
+    // MARK: - Cleanup
     
-    static func getSupportedFileTypes() -> [UTType] {
-        return [
-            // Video formats
-            .movie, .video, .quickTimeMovie, .mpeg4Movie,
-            // Image formats  
-            .image, .png, .jpeg, .tiff, .gif, .bmp, .heic, .webP
-        ]
+    /// Очищает ресурсы
+    func cleanup() {
+        mediaProcessor = nil
+        mediaFormat = nil
+        mediaInfo = nil
+        currentFrame = nil
+        fileName = nil
+        fileSize = nil
+        frameCache.removeAll()
+        print("🧹 InputNode: Cleanup completed")
     }
     
-    static func isVideoFile(url: URL) -> Bool {
-        let pathExtension = url.pathExtension.lowercased()
-        let videoExtensions = ["mov", "mp4", "m4v", "avi", "mkv", "webm", "3gp", "3g2", "asf", "wmv", "flv", "f4v", "ts", "m2ts", "mts"]
-        return videoExtensions.contains(pathExtension)
-    }
+    // MARK: - BaseNode Override
     
-    static func isImageFile(url: URL) -> Bool {
-        let pathExtension = url.pathExtension.lowercased()  
-        let imageExtensions = ["jpg", "jpeg", "png", "gif", "bmp", "tiff", "tif", "heic", "webp"]
-        return imageExtensions.contains(pathExtension)
-    }
-    
-    // MARK: - Security Scoped Access Helpers
-    private func beginSecurityScopedAccess(for url: URL) {
-        // Close previous access if any
-        endSecurityScopedAccess()
-        if url.startAccessingSecurityScopedResource() {
-            securityScopedURL = url
-            print("🔐 Started security-scoped access for: \(url.path)")
-        } else {
-            print("❗ Failed to start security-scoped access for: \(url.path)")
-        }
-    }
-    
-    private func endSecurityScopedAccess() {
-        if let u = securityScopedURL {
-            u.stopAccessingSecurityScopedResource()
-            print("🔓 Stopped security-scoped access for: \(u.path)")
-            securityScopedURL = nil
-        }
+    override func process(inputs: [CIImage?]) -> CIImage? {
+        // Возвращаем текущий кадр как выход
+        return currentFrame
     }
 } 

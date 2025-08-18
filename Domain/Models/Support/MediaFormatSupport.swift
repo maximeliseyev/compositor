@@ -129,6 +129,17 @@ public class MediaFormatDetector {
     
     /// Определяет вариант ProRes в .mov файле
     private static func detectProResVariant(for url: URL) async -> MediaFormat? {
+        // Начинаем безопасный доступ к файлу
+        guard url.startAccessingSecurityScopedResource() else {
+            print("❌ MediaFormatDetector: Failed to access security-scoped resource")
+            return nil
+        }
+        
+        defer {
+            // Завершаем безопасный доступ
+            url.stopAccessingSecurityScopedResource()
+        }
+        
         let asset = AVAsset(url: url)
         
         do {

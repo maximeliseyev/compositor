@@ -5,6 +5,7 @@ import UniformTypeIdentifiers
 
 /// Универсальный медиа-процессор для обработки всех форматов
 /// Включает ProRes как подмножество видео-форматов
+@MainActor
 public class UniversalMediaProcessor: ObservableObject, MediaProcessing {
     
     // MARK: - Published Properties
@@ -26,19 +27,15 @@ public class UniversalMediaProcessor: ObservableObject, MediaProcessing {
     
     /// Загружает медиафайл и возвращает информацию о нем
     public func loadMedia(from url: URL) async throws -> MediaFileInfo {
-        await MainActor.run {
-            isProcessing = true
-            currentOperation = "Detecting media format..."
-        }
+        isProcessing = true
+        currentOperation = "Detecting media format..."
         
         guard let format = await MediaFormatDetector.detectFormat(for: url) else {
             throw MediaProcessingError.unsupportedFormat
         }
         
-        await MainActor.run {
-            currentFormat = format
-            currentOperation = "Loading \(format.rawValue) file..."
-        }
+        currentFormat = format
+        currentOperation = "Loading \(format.rawValue) file..."
         
         let fileSize = try await getFileSize(for: url)
         
@@ -54,14 +51,17 @@ public class UniversalMediaProcessor: ObservableObject, MediaProcessing {
     
     /// Извлекает кадры из медиафайла
     public func extractFrames(from url: URL, maxFrames: Int? = nil) async throws -> [CIImage] {
+        return try await extractFrames(from: url, maxFrames: maxFrames, startTime: 0.0)
+    }
+    
+    /// Извлекает кадры из медиафайла с указанного времени
+    public func extractFrames(from url: URL, maxFrames: Int? = nil, startTime: Double) async throws -> [CIImage] {
         guard let format = await MediaFormatDetector.detectFormat(for: url) else {
             throw MediaProcessingError.unsupportedFormat
         }
         
-        await MainActor.run {
-            isProcessing = true
-            currentOperation = "Extracting frames from \(format.rawValue)..."
-        }
+        isProcessing = true
+        currentOperation = "Extracting frames from \(format.rawValue) at \(String(format: "%.2f", startTime))s..."
         
         let frameLimit = maxFrames ?? MAX_FRAME_BUFFER_SIZE
         
@@ -71,37 +71,31 @@ public class UniversalMediaProcessor: ObservableObject, MediaProcessing {
             if format.isImage {
                 frames = try await extractImageFrames(from: url, format: format, maxFrames: frameLimit)
             } else if format.isProRes {
-                frames = try await extractProResFrames(from: url, maxFrames: frameLimit)
+                frames = try await extractProResFrames(from: url, maxFrames: frameLimit, startTime: startTime)
             } else if format.isVideo {
-                frames = try await extractVideoFrames(from: url, maxFrames: frameLimit)
+                frames = try await extractVideoFrames(from: url, maxFrames: frameLimit, startTime: startTime)
             } else {
                 throw MediaProcessingError.unsupportedFormat
             }
             
-            await MainActor.run {
-                isProcessing = false
-                processingProgress = 1.0
-                currentOperation = "Extracted \(frames.count) frames"
-            }
+            isProcessing = false
+            processingProgress = 1.0
+            currentOperation = "Extracted \(frames.count) frames"
             
             return frames
             
         } catch {
-            await MainActor.run {
-                isProcessing = false
-                processingProgress = 0.0
-                currentOperation = "Error: \(error.localizedDescription)"
-            }
+            isProcessing = false
+            processingProgress = 0.0
+            currentOperation = "Error: \(error.localizedDescription)"
             throw error
         }
     }
     
     /// Сохраняет кадры в указанный формат
     public func saveFrames(_ frames: [CIImage], to url: URL, format: MediaFormat) async throws {
-        await MainActor.run {
-            isProcessing = true
-            currentOperation = "Saving frames as \(format.rawValue)..."
-        }
+        isProcessing = true
+        currentOperation = "Saving frames as \(format.rawValue)..."
         
         do {
             if format.isImage {
@@ -114,28 +108,22 @@ public class UniversalMediaProcessor: ObservableObject, MediaProcessing {
                 throw MediaProcessingError.unsupportedFormat
             }
             
-            await MainActor.run {
-                isProcessing = false
-                processingProgress = 1.0
-                currentOperation = "Saved successfully"
-            }
+            isProcessing = false
+            processingProgress = 1.0
+            currentOperation = "Saved successfully"
             
         } catch {
-            await MainActor.run {
-                isProcessing = false
-                processingProgress = 0.0
-                currentOperation = "Error: \(error.localizedDescription)"
-            }
+            isProcessing = false
+            processingProgress = 0.0
+            currentOperation = "Error: \(error.localizedDescription)"
             throw error
         }
     }
     
     /// Конвертирует медиафайл в другой формат
     public func convertMedia(from sourceURL: URL, to destinationURL: URL, targetFormat: MediaFormat) async throws {
-        await MainActor.run {
-            isProcessing = true
-            currentOperation = "Converting to \(targetFormat.rawValue)..."
-        }
+        isProcessing = true
+        currentOperation = "Converting to \(targetFormat.rawValue)..."
         
         // Извлекаем кадры из исходного файла
         let frames = try await extractFrames(from: sourceURL)
@@ -167,6 +155,17 @@ public class UniversalMediaProcessor: ObservableObject, MediaProcessing {
     }
     
     private func loadVideoInfo(url: URL, format: MediaFormat, fileSize: Int64) async throws -> MediaFileInfo {
+        // Начинаем безопасный доступ к файлу
+        guard url.startAccessingSecurityScopedResource() else {
+            print("❌ UniversalMediaProcessor: Failed to access security-scoped resource")
+            throw MediaProcessingError.accessDenied
+        }
+        
+        defer {
+            // Завершаем безопасный доступ
+            url.stopAccessingSecurityScopedResource()
+        }
+        
         let asset = AVAsset(url: url)
         
         let duration = try await asset.load(.duration)
@@ -206,18 +205,24 @@ public class UniversalMediaProcessor: ObservableObject, MediaProcessing {
         return [image]
     }
     
-    private func extractProResFrames(from url: URL, maxFrames: Int) async throws -> [CIImage] {
+    private func extractProResFrames(from url: URL, maxFrames: Int, startTime: Double = 0.0) async throws -> [CIImage] {
         // Используем специализированный ProRes процессор
+        // Пока что игнорируем startTime, так как ProResProcessor не поддерживает его
         return try await proResProcessor.extractFrames(from: url, maxFrames: maxFrames)
     }
     
-    private func extractVideoFrames(from url: URL, maxFrames: Int) async throws -> [CIImage] {
+    private func extractVideoFrames(from url: URL, maxFrames: Int, startTime: Double = 0.0) async throws -> [CIImage] {
         // Используем стандартный видео процессор
         videoProcessor.loadVideo(from: url)
         
         // Ждем загрузки
         while videoProcessor.isLoading {
             try await Task.sleep(nanoseconds: 100_000_000) // 0.1 секунды
+        }
+        
+        // Если указано время, перематываем к нему
+        if startTime > 0.0 {
+            videoProcessor.seek(to: startTime)
         }
         
         // Получаем текущий кадр
@@ -283,6 +288,7 @@ public enum MediaProcessingError: Error, LocalizedError {
     case failedToLoadImage
     case noFramesToSave
     case processingTimeout
+    case accessDenied
     
     public var errorDescription: String? {
         switch self {
@@ -298,6 +304,8 @@ public enum MediaProcessingError: Error, LocalizedError {
             return "No frames to save"
         case .processingTimeout:
             return "Processing timeout"
+        case .accessDenied:
+            return "Access denied to file"
         }
     }
 }

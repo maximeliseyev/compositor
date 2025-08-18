@@ -165,7 +165,7 @@ struct NodeGraphPanel: View {
         // Таймер для обновления видео кадров
         videoTimer?.invalidate()
         videoTimer = Timer.scheduledTimer(withTimeInterval: 1.0/30.0, repeats: true) { _ in
-            processor.processVideoTick()
+            processor.processGraph()
         }
         // Первичная обработка графа
         processor.processGraph()

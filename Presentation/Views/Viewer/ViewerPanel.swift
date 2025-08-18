@@ -13,32 +13,32 @@ struct ViewerPanel: View {
     var body: some View {
         VStack(spacing: 0) {
             // Main viewer area
-        ZStack {
+            ZStack {
                 // Background
-            Rectangle()
-                .fill(Color.black)
+                Rectangle()
+                    .fill(Color.black)
             
-            if let image = controller.currentImage {
-                Image(nsImage: image)
-                    .resizable()
-                    .interpolation(.none)
-                    .antialiased(false)
-                    .aspectRatio(contentMode: .fit)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
+                if let image = controller.currentImage {
+                    Image(nsImage: image)
+                        .resizable()
+                        .interpolation(.none)
+                        .antialiased(false)
+                        .aspectRatio(contentMode: .fit)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
                     // Empty state
-                VStack(spacing: 16) {
+                    VStack(spacing: 16) {
                         Image(systemName: "tv")
                             .font(.system(size: 48))
                             .foregroundColor(.gray)
                         
-                    Text("Viewer")
-                        .font(.title2)
-                        .foregroundColor(.gray)
-                        
+                        Text("Viewer")
+                            .font(.title2)
+                            .foregroundColor(.gray)
+                            
                         Text("Connect an Input or View node to see content")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
                     }
                 }
@@ -47,6 +47,38 @@ struct ViewerPanel: View {
                 ViewerOverlayControls(controller: controller)
             }
             .clipped()
+            .onKeyPress(.leftArrow) {
+                controller.stepBackward()
+                return .handled
+            }
+            .onKeyPress(.rightArrow) {
+                controller.stepForward()
+                return .handled
+            }
+            .onKeyPress(.space) {
+                controller.togglePlayback()
+                return .handled
+            }
+            .onKeyPress(.init("j")) {
+                controller.toggleReversePlayback()
+                return .handled
+            }
+            .onKeyPress(.init("k")) {
+                controller.togglePlayback()
+                return .handled
+            }
+            .onKeyPress(.init("l")) {
+                controller.toggleReversePlayback()
+                return .handled
+            }
+            .onKeyPress(.init("[")) {
+                controller.jumpBackward()
+                return .handled
+            }
+            .onKeyPress(.init("]")) {
+                controller.jumpForward()
+                return .handled
+            }
             
             // Timeline and transport controls
             ViewerTransportControls(controller: controller)
@@ -162,44 +194,53 @@ struct ViewerTransportControls: View {
                     .padding(.top, 8)
             }
             
-            // Transport buttons
-            HStack(spacing: 8) {
-                // Left side - navigation
-                HStack(spacing: 4) {
-                    Button(action: { controller.stepBackward() }) {
-                        Image(systemName: "backward.frame.fill")
-                    }
-                    .buttonStyle(TransportButtonStyle())
-                    .disabled(!controller.isVideoMode)
-                    
-                    Button(action: { controller.jumpBackward() }) {
-                        Image(systemName: "gobackward.10")
-                    }
-                    .buttonStyle(TransportButtonStyle())
-                    .disabled(!controller.isVideoMode)
-                    
-                    Button(action: { controller.togglePlayback() }) {
-                        Image(systemName: controller.isPlaying ? "pause.fill" : "play.fill")
-                    }
-                    .buttonStyle(TransportButtonStyle(isPrimary: true))
-                    .disabled(!controller.isVideoMode)
-                    
-                    Button(action: { controller.jumpForward() }) {
-                        Image(systemName: "goforward.10")
-                    }
-                    .buttonStyle(TransportButtonStyle())
-                    .disabled(!controller.isVideoMode)
-                    
-                    Button(action: { controller.stepForward() }) {
-                        Image(systemName: "forward.frame.fill")
-                    }
-                    .buttonStyle(TransportButtonStyle())
-                    .disabled(!controller.isVideoMode)
-                }
-                
+            // Transport buttons (centered)
+            HStack(spacing: 12) {
                 Spacer()
                 
-                // Center - time display
+                // Reverse toggle
+                Button(action: { controller.toggleReversePlayback() }) {
+                    Image(systemName: controller.isReversing ? "backward.circle.fill" : "backward.circle")
+                }
+                .buttonStyle(TransportButtonStyle())
+                .disabled(!controller.isVideoMode)
+                
+                // Step backward one frame
+                Button(action: { controller.stepBackward() }) {
+                    Image(systemName: "backward.frame.fill")
+                }
+                .buttonStyle(TransportButtonStyle())
+                .disabled(!controller.isVideoMode)
+                
+                // Jump backward 10s
+                Button(action: { controller.jumpBackward() }) {
+                    Image(systemName: "gobackward.10")
+                }
+                .buttonStyle(TransportButtonStyle())
+                .disabled(!controller.isVideoMode)
+                
+                // Play/Pause
+                Button(action: { controller.togglePlayback() }) {
+                    Image(systemName: controller.isPlaying ? "pause.fill" : "play.fill")
+                }
+                .buttonStyle(TransportButtonStyle(isPrimary: true))
+                .disabled(!controller.isVideoMode)
+                
+                // Jump forward 10s
+                Button(action: { controller.jumpForward() }) {
+                    Image(systemName: "goforward.10")
+                }
+                .buttonStyle(TransportButtonStyle())
+                .disabled(!controller.isVideoMode)
+                
+                // Step forward one frame
+                Button(action: { controller.stepForward() }) {
+                    Image(systemName: "forward.frame.fill")
+                }
+                .buttonStyle(TransportButtonStyle())
+                .disabled(!controller.isVideoMode)
+                
+                // Timecode
                 if controller.isVideoMode {
                     Text(formatTime(controller.currentTime))
                         .font(.system(.caption, design: .monospaced))
@@ -207,31 +248,28 @@ struct ViewerTransportControls: View {
                         .frame(minWidth: 60)
                 }
                 
-                Spacer()
-                
-                // Right side - playback options
-                HStack(spacing: 4) {
-                    // Speed control
-                    Menu {
-                        Button("0.25x") { controller.setPlaybackSpeed(0.25) }
-                        Button("0.5x") { controller.setPlaybackSpeed(0.5) }
-                        Button("1.0x") { controller.setPlaybackSpeed(1.0) }
-                        Button("1.5x") { controller.setPlaybackSpeed(1.5) }
-                        Button("2.0x") { controller.setPlaybackSpeed(2.0) }
-                    } label: {
-                        Text("\(String(format: "%.2f", controller.playbackSpeed))x")
-                            .font(.caption)
-                    }
-                    .buttonStyle(TransportButtonStyle())
-                    .disabled(!controller.isVideoMode)
-                    
-                    // Loop toggle
-                    Button(action: { controller.toggleLoop() }) {
-                        Image(systemName: controller.isLooping ? "repeat.circle.fill" : "repeat.circle")
-                    }
-                    .buttonStyle(TransportButtonStyle())
-                    .disabled(!controller.isVideoMode)
+                // Speed control
+                Menu {
+                    Button("0.25x") { controller.setPlaybackSpeed(0.25) }
+                    Button("0.5x") { controller.setPlaybackSpeed(0.5) }
+                    Button("1.0x") { controller.setPlaybackSpeed(1.0) }
+                    Button("1.5x") { controller.setPlaybackSpeed(1.5) }
+                    Button("2.0x") { controller.setPlaybackSpeed(2.0) }
+                } label: {
+                    Text("\(String(format: "%.2f", controller.playbackSpeed))x")
+                        .font(.caption)
                 }
+                .buttonStyle(TransportButtonStyle())
+                .disabled(!controller.isVideoMode)
+                
+                // Loop toggle
+                Button(action: { controller.toggleLoop() }) {
+                    Image(systemName: controller.isLooping ? "repeat.circle.fill" : "repeat.circle")
+                }
+                .buttonStyle(TransportButtonStyle())
+                .disabled(!controller.isVideoMode)
+                
+                Spacer()
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)

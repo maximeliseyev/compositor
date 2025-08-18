@@ -8,14 +8,17 @@
 import Foundation
 import CoreImage
 import Combine
+import SwiftUI
 
 /// Класс для обработки графа нод и автоматической передачи данных
+@MainActor
 class NodeGraphProcessor: ObservableObject {
     private weak var nodeGraph: NodeGraph? // Weak reference to prevent retain cycles
     private var cancellables = Set<AnyCancellable>()
     
     // Кэш обработанных данных для избежания повторных вычислений
-    private var processCache: [UUID: CIImage?] = [:]
+    private var processCache: [UUID: CIImage] = [:]
+    private var nilCache: Set<UUID> = [] // Отдельный набор для nil значений
     private var lastProcessTime: [UUID: Date] = [:]
     
     // Memory management constants
@@ -68,6 +71,20 @@ class NodeGraphProcessor: ObservableObject {
         // Получаем входные данные из соединенных нод
         let inputs = getInputsForNode(node)
         
+        // Проверяем, есть ли валидные входные данные для InputNode
+        if node is InputNode {
+            let inputNode = node as! InputNode
+            if inputNode.currentFrame == nil {
+                #if DEBUG
+                print("⚠️ Node \(node.type.rawValue) produced nil - no current frame")
+                #endif
+                nilCache.insert(node.id)
+                processCache.removeValue(forKey: node.id)
+                lastProcessTime[node.id] = Date()
+                return
+            }
+        }
+        
         // Обрабатываем ноду
         let output = node.processWithCache(inputs: inputs)
         #if DEBUG
@@ -79,7 +96,13 @@ class NodeGraphProcessor: ObservableObject {
         #endif
         
         // Кэшируем результат
-        processCache[node.id] = output
+        if let output = output {
+            processCache[node.id] = output
+            nilCache.remove(node.id)
+        } else {
+            nilCache.insert(node.id)
+            processCache.removeValue(forKey: node.id)
+        }
         lastProcessTime[node.id] = Date()
         
         // Особая обработка для InputNode - запускаем обработку при изменении медиа
@@ -109,21 +132,25 @@ class NodeGraphProcessor: ObservableObject {
             }
             
             // Возвращаем кэшированный результат или обрабатываем source ноду
-            if let cachedResult = processCache[sourceNode.id],
-               let lastTime = lastProcessTime[sourceNode.id],
+            if let lastTime = lastProcessTime[sourceNode.id],
                Date().timeIntervalSince(lastTime) < 0.1 {
-                return cachedResult
-            } else {
-                let sourceOut = sourceNode.processWithCache(inputs: getInputsForNode(sourceNode))
-                #if DEBUG
-                if let so = sourceOut {
-                    print("↪️  input for \(node.type.rawValue) from \(sourceNode.type.rawValue): extent=\(so.extent)")
-                } else {
-                    print("↪️  input for \(node.type.rawValue) from \(sourceNode.type.rawValue): nil")
+                if let cachedResult = processCache[sourceNode.id] {
+                    return cachedResult
+                } else if nilCache.contains(sourceNode.id) {
+                    return nil
                 }
-                #endif
-                return sourceOut
             }
+            
+            // Если кэш недействителен или отсутствует, обрабатываем source ноду
+            let sourceOut = sourceNode.processWithCache(inputs: getInputsForNode(sourceNode))
+            #if DEBUG
+            if let so = sourceOut {
+                print("↪️  input for \(node.type.rawValue) from \(sourceNode.type.rawValue): extent=\(so.extent)")
+            } else {
+                print("↪️  input for \(node.type.rawValue) from \(sourceNode.type.rawValue): nil")
+            }
+            #endif
+            return sourceOut
         }
         
         return sortedInputs
@@ -139,29 +166,20 @@ class NodeGraphProcessor: ObservableObject {
             }
             .store(in: &cancellables)
         
-        // Отслеживаем изменения в видео
-        inputNode.$videoProcessor
+        // Отслеживаем изменения в медиа
+        inputNode.$currentFrame
             .dropFirst()
             .sink { [weak self] _ in
                 self?.onInputNodeChanged(inputNode)
             }
             .store(in: &cancellables)
-        
-        // Отслеживаем изменения текущего времени видео
-        if let videoProcessor = inputNode.videoProcessor {
-            videoProcessor.$currentTime
-                .dropFirst()
-                .sink { [weak self] _ in
-                    self?.onInputNodeChanged(inputNode)
-                }
-                .store(in: &cancellables)
-        }
     }
     
     /// Вызывается при изменении InputNode
     private func onInputNodeChanged(_ inputNode: InputNode) {
         // Инвалидируем кэш для этой ноды
         processCache.removeValue(forKey: inputNode.id)
+        nilCache.remove(inputNode.id)
         
         // Находим все ноды, которые зависят от этой input ноды
         let dependentNodes = findDependentNodes(for: inputNode)
@@ -217,12 +235,10 @@ class NodeGraphProcessor: ObservableObject {
             
             visiting.insert(node.id)
             
-            // Посещаем все input ноды сначала
-            let inputConnections = nodeGraph.connections.filter { $0.toNode == node.id }
-            for connection in inputConnections {
-                if let inputNode = nodeGraph.nodes.first(where: { $0.id == connection.fromNode }) {
-                    visit(inputNode)
-                }
+            // Обрабатываем зависимости
+            let dependencies = getDependencies(for: node)
+            for dependency in dependencies {
+                visit(dependency)
             }
             
             visiting.remove(node.id)
@@ -231,67 +247,84 @@ class NodeGraphProcessor: ObservableObject {
         }
         
         for node in nodeGraph.nodes {
-            visit(node)
+            if !visited.contains(node.id) {
+                visit(node)
+            }
         }
         
         return sorted
     }
     
-    /// Очищает устаревшие записи из кэша
+    /// Получает зависимости для ноды
+    private func getDependencies(for node: BaseNode) -> [BaseNode] {
+        guard let nodeGraph = nodeGraph else { return [] }
+        
+        var dependencies: [BaseNode] = []
+        
+        for connection in nodeGraph.connections {
+            if connection.toNode == node.id {
+                if let sourceNode = nodeGraph.nodes.first(where: { $0.id == connection.fromNode }) {
+                    dependencies.append(sourceNode)
+                }
+            }
+        }
+        
+        return dependencies
+    }
+    
+    /// Очищает устаревшие записи кэша
     private func cleanupExpiredCache() {
         let now = Date()
-        let expiredKeys = lastProcessTime.compactMap { (key, time) -> UUID? in
-            return now.timeIntervalSince(time) > cacheExpirationTime ? key : nil
+        let expiredKeys = lastProcessTime.compactMap { (key, time) in
+            now.timeIntervalSince(time) > cacheExpirationTime ? key : nil
         }
         
         for key in expiredKeys {
             processCache.removeValue(forKey: key)
+            nilCache.remove(key)
             lastProcessTime.removeValue(forKey: key)
         }
         
         // Ограничиваем размер кэша
         if processCache.count > maxCacheSize {
-            let sortedByTime = lastProcessTime.sorted { $0.value < $1.value }
-            let keysToRemove = sortedByTime.prefix(processCache.count - maxCacheSize).map { $0.key }
+            let sortedKeys = lastProcessTime.sorted { $0.value < $1.value }.map { $0.key }
+            let keysToRemove = sortedKeys.prefix(processCache.count - maxCacheSize)
             
             for key in keysToRemove {
                 processCache.removeValue(forKey: key)
+                nilCache.remove(key)
                 lastProcessTime.removeValue(forKey: key)
             }
         }
     }
     
-    deinit {
-        cancellables.removeAll()
+    /// Инвалидирует весь кэш
+    func invalidateCache() {
         processCache.removeAll()
-        lastProcessTime.removeAll()
-        print("🗑️ NodeGraphProcessor deallocated")
-    }
-    
-    /// Принудительно обновляет все ноды
-    func forceRefresh() {
-        invalidateCache()
-        processGraph()
-    }
-    
-    /// Очищает кэш обработки
-    private func invalidateCache() {
-        processCache.removeAll()
+        nilCache.removeAll()
         lastProcessTime.removeAll()
     }
     
-    /// Получает выходные данные определенной ноды
-    func getOutput(for node: BaseNode) -> CIImage? {
-        return processCache[node.id] ?? nil
-    }
-    
-    /// Обработка видео тика для обновления видео нод
-    func processVideoTick() {
-        guard let nodeGraph = nodeGraph else { return }
-        let videoNodes = nodeGraph.nodes.compactMap { $0 as? InputNode }.filter { $0.mediaType == .video && $0.isVideoPlaying }
-        
-        for videoNode in videoNodes {
-            onInputNodeChanged(videoNode)
+    /// Получает результат обработки ноды из кэша
+    func getCachedResult(for nodeId: UUID) -> CIImage? {
+        if let cachedResult = processCache[nodeId] {
+            return cachedResult
+        } else if nilCache.contains(nodeId) {
+            return nil
         }
+        return nil
     }
-} 
+    
+    /// Принудительно обрабатывает конкретную ноду
+    func forceProcessNode(_ node: BaseNode) {
+        processCache.removeValue(forKey: node.id)
+        nilCache.remove(node.id)
+        processNode(node)
+    }
+    
+    /// Очищает все ресурсы
+    func cleanup() {
+        invalidateCache()
+        cancellables.removeAll()
+    }
+}

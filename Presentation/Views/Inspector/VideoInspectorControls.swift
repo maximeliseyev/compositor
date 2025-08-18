@@ -18,32 +18,32 @@ struct VideoInspectorControls: View {
             // Playback controls
             HStack {
                 Button(action: {
-                    if node.isVideoPlaying {
-                        node.pauseVideo()
+                    if node.isPlaying {
+                        node.pause()
                     } else {
-                        node.playVideo()
+                        node.play()
                     }
                 }) {
                     HStack {
-                        Image(systemName: node.isVideoPlaying ? "pause.fill" : "play.fill")
-                        Text(node.isVideoPlaying ? "Pause" : "Play")
+                        Image(systemName: node.isPlaying ? "pause.fill" : "play.fill")
+                        Text(node.isPlaying ? "Pause" : "Play")
                     }
                     .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.bordered)
-                .disabled(node.videoDuration == 0)
+                .disabled(node.duration == 0)
             }
             
             // Timeline
-            if node.videoDuration > 0 {
+            if node.duration > 0 {
                 VStack(alignment: .leading, spacing: 8) {
                     // Time labels
                     HStack {
-                        Text(formatTime(node.videoCurrentTime))
+                        Text(formatTime(node.currentTime))
                             .font(.caption)
                             .monospacedDigit()
                         Spacer()
-                        Text(formatTime(node.videoDuration))
+                        Text(formatTime(node.duration))
                             .font(.caption)
                             .monospacedDigit()
                     }
@@ -51,10 +51,10 @@ struct VideoInspectorControls: View {
                     
                     // Scrubber
                     VideoScrubber(
-                        currentTime: node.videoCurrentTime,
-                        duration: node.videoDuration,
+                        currentTime: node.currentTime,
+                        duration: node.duration,
                         onSeek: { time in
-                            node.seekVideo(to: time)
+                            node.seek(to: time)
                         }
                     )
                 }
@@ -71,11 +71,11 @@ struct VideoInspectorControls: View {
                     }
                 }
                 
-                if node.videoDuration > 0 {
+                if node.duration > 0 {
                     HStack {
                         Text("Duration:")
                             .foregroundColor(.secondary)
-                        Text(formatTime(node.videoDuration))
+                        Text(formatTime(node.duration))
                         Spacer()
                     }
                     .font(.caption)

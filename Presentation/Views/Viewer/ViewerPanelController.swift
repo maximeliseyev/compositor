@@ -20,6 +20,7 @@ class ViewerPanelController: ObservableObject {
     @Published var currentTime: Double = 0
     @Published var playbackSpeed: Double = 1.0
     @Published var isLooping: Bool = false
+    @Published var isReversing: Bool = false
     
     // MARK: - UI Properties
     @Published var zoomLevel: Double = 1.0
@@ -30,8 +31,12 @@ class ViewerPanelController: ObservableObject {
     
     // MARK: - Private properties
     private var overlayTimer: Timer?
+    private var playbackTimer: Timer?
     private var connectedInputNode: InputNode?
     private var cancellables = Set<AnyCancellable>()
+    
+    // Performance/behavior constants
+    private let DEFAULT_FRAME_RATE: Double = 30.0 // Default frames-per-second used when frame rate is unknown
     
     init() {
         setupOverlayTimer()
@@ -49,6 +54,7 @@ class ViewerPanelController: ObservableObject {
     }
     
     func updateFromInputNode(_ inputNode: InputNode) {
+        print("🔗 updateFromInputNode called")
         connectedInputNode = inputNode
         
         // Setup observation of input node
@@ -56,11 +62,12 @@ class ViewerPanelController: ObservableObject {
         
         // Update current state
         isVideoMode = inputNode.mediaType == .video
+        print("📺 isVideoMode set to: \(isVideoMode) (mediaType: \(inputNode.mediaType))")
         
         if isVideoMode {
-            videoDuration = inputNode.videoDuration
-            currentTime = inputNode.videoCurrentTime
-            isPlaying = inputNode.isVideoPlaying
+            videoDuration = inputNode.duration
+            currentTime = inputNode.currentTime
+            isPlaying = inputNode.isPlaying
             print("🎥 Viewer bound to InputNode (video). duration=\(videoDuration), currentTime=\(currentTime), playing=\(isPlaying)")
         } else {
             videoDuration = 0
@@ -73,46 +80,86 @@ class ViewerPanelController: ObservableObject {
     // MARK: - Video Control Methods
     
     func togglePlayback() {
-        guard let inputNode = connectedInputNode, isVideoMode else { return }
+        print("🎮 togglePlayback called - isVideoMode: \(isVideoMode), connectedInputNode: \(connectedInputNode != nil)")
+        guard let inputNode = connectedInputNode, isVideoMode else { 
+            print("❌ togglePlayback blocked - no inputNode or not video mode")
+            return 
+        }
         
         if isPlaying {
-            inputNode.pauseVideo()
+            print("⏸️ Pausing playback")
+            inputNode.pause()
+            isPlaying = false
+            stopPlaybackTimer()
         } else {
-            inputNode.playVideo()
+            print("▶️ Starting playback")
+            inputNode.play()
+            isPlaying = true
+            startPlaybackTimer()
         }
         
         showTransportOverlayTemporarily()
     }
     
+    func toggleReversePlayback() {
+        guard connectedInputNode != nil, isVideoMode else { return }
+        
+        isReversing.toggle()
+        // If not currently playing, start playback in the chosen direction
+        if isPlaying == false {
+            isPlaying = true
+        }
+        
+        // Restart timer to apply the new direction
+        stopPlaybackTimer()
+        startPlaybackTimer()
+        
+        showTransportOverlayTemporarily()
+    }
+    
+    @MainActor
     func stepBackward() {
-        guard let inputNode = connectedInputNode, isVideoMode else { return }
+        print("⏪ stepBackward called")
+        guard let inputNode = connectedInputNode, isVideoMode else { 
+            print("❌ stepBackward blocked")
+            return 
+        }
         
         let newTime = max(0, currentTime - (1.0/30.0)) // Step back one frame at 30fps
-        inputNode.seekVideo(to: newTime)
+        print("⏪ Seeking to: \(newTime)")
+        inputNode.seek(to: newTime)
         showTransportOverlayTemporarily()
     }
     
+    @MainActor
     func stepForward() {
-        guard let inputNode = connectedInputNode, isVideoMode else { return }
+        print("⏩ stepForward called")
+        guard let inputNode = connectedInputNode, isVideoMode else { 
+            print("❌ stepForward blocked")
+            return 
+        }
         
         let newTime = min(videoDuration, currentTime + (1.0/30.0)) // Step forward one frame at 30fps
-        inputNode.seekVideo(to: newTime)
+        print("⏩ Seeking to: \(newTime)")
+        inputNode.seek(to: newTime)
         showTransportOverlayTemporarily()
     }
     
+    @MainActor
     func jumpBackward() {
         guard let inputNode = connectedInputNode, isVideoMode else { return }
         
         let newTime = max(0, currentTime - 10.0) // Jump back 10 seconds
-        inputNode.seekVideo(to: newTime)
+        inputNode.seek(to: newTime)
         showTransportOverlayTemporarily()
     }
     
+    @MainActor
     func jumpForward() {
         guard let inputNode = connectedInputNode, isVideoMode else { return }
         
         let newTime = min(videoDuration, currentTime + 10.0) // Jump forward 10 seconds
-        inputNode.seekVideo(to: newTime)
+        inputNode.seek(to: newTime)
         showTransportOverlayTemporarily()
     }
     
@@ -120,6 +167,12 @@ class ViewerPanelController: ObservableObject {
         playbackSpeed = speed
         // Note: Actual playback speed control would need to be implemented in VideoProcessor
         showTransportOverlayTemporarily()
+        
+        // Restart timer with updated speed if currently playing
+        if isPlaying {
+            stopPlaybackTimer()
+            startPlaybackTimer()
+        }
     }
     
     func toggleLoop() {
@@ -135,11 +188,12 @@ class ViewerPanelController: ObservableObject {
         showTransportOverlay = true
     }
     
+    @MainActor
     func scrub(to time: Double) {
         guard let inputNode = connectedInputNode, isVideoMode else { return }
         
         currentTime = time
-        inputNode.seekVideo(to: time)
+        inputNode.seek(to: time)
     }
     
     func endScrubbing() {
@@ -171,28 +225,30 @@ class ViewerPanelController: ObservableObject {
         // Clear previous subscriptions
         cancellables.removeAll()
         
-        // Re-bind when videoProcessor appears/changes
-        inputNode.$videoProcessor
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] processor in
-                self?.bindVideoProcessor(processor)
-            }
-            .store(in: &cancellables)
-        
-        // Bind immediately if already available
-        bindVideoProcessor(inputNode.videoProcessor)
-        
         // Observe media type changes
         inputNode.$mediaType
             .receive(on: DispatchQueue.main)
             .sink { [weak self] mediaType in
+                print("🔄 mediaType changed to: \(mediaType)")
                 self?.isVideoMode = (mediaType == .video)
+                print("📺 isVideoMode updated to: \(self?.isVideoMode ?? false)")
                 if mediaType != .video {
                     self?.isPlaying = false
                     self?.videoDuration = 0
                     self?.currentTime = 0
                 }
                 print("🔄 mediaType=\(mediaType == .video ? "video" : "image")")
+            }
+            .store(in: &cancellables)
+        
+        // Observe current frame changes
+        inputNode.$currentFrame
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] ciImage in
+                if let ciImage = ciImage {
+                    print("🧩 Received frame: extent=\(ciImage.extent)")
+                    self?.updateImage(Self.nsImage(from: ciImage))
+                }
             }
             .store(in: &cancellables)
         
@@ -214,46 +270,6 @@ class ViewerPanelController: ObservableObject {
                 if inputNode.mediaType == .image, let ciImage = ciImage {
                     print("🧩 CIImage updated: extent=\(ciImage.extent)")
                     self?.updateImage(Self.nsImage(from: ciImage))
-                }
-            }
-            .store(in: &cancellables)
-    }
-    
-    private func bindVideoProcessor(_ videoProcessor: VideoProcessor?) {
-        guard let videoProcessor = videoProcessor else { return }
-        print("👀 Subscribing to VideoProcessor events")
-        
-        videoProcessor.$currentFrame
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] ciImage in
-                guard let ciImage = ciImage else { return }
-                print("🧩 Received video frame: extent=\(ciImage.extent)")
-                self?.updateImage(Self.nsImage(from: ciImage))
-            }
-            .store(in: &cancellables)
-        
-        videoProcessor.$isPlaying
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] isPlaying in
-                print("▶️ isPlaying=\(isPlaying)")
-                self?.isPlaying = isPlaying
-            }
-            .store(in: &cancellables)
-        
-        videoProcessor.$duration
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] duration in
-                print("⏱️ duration=\(duration)")
-                self?.videoDuration = duration
-            }
-            .store(in: &cancellables)
-        
-        videoProcessor.$currentTime
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] currentTime in
-                if self?.isScrubbing != true {
-                    print("⏳ currentTime=\(currentTime)")
-                    self?.currentTime = currentTime
                 }
             }
             .store(in: &cancellables)
@@ -290,5 +306,37 @@ class ViewerPanelController: ObservableObject {
                 }
             }
         }
+    }
+    
+    private func startPlaybackTimer() {
+        guard isVideoMode, videoDuration > 0 else { return }
+        stopPlaybackTimer()
+        
+        // Determine frame interval. Use default until we surface actual frame rate from input node.
+        let fps = max(1.0, DEFAULT_FRAME_RATE * max(0.1, playbackSpeed))
+        let interval = 1.0 / fps
+        
+        playbackTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
+            guard let self = self, let inputNode = self.connectedInputNode else { return }
+            
+            let delta = 1.0 / self.DEFAULT_FRAME_RATE
+            let signedDelta = self.isReversing ? -delta : delta
+            var newTime = self.currentTime + signedDelta
+            
+            if self.isLooping {
+                if newTime < 0 { newTime = self.videoDuration }
+                if newTime > self.videoDuration { newTime = 0 }
+            } else {
+                newTime = min(max(0, newTime), self.videoDuration)
+            }
+            
+            self.currentTime = newTime
+            inputNode.seek(to: newTime)
+        }
+    }
+    
+    private func stopPlaybackTimer() {
+        playbackTimer?.invalidate()
+        playbackTimer = nil
     }
 }

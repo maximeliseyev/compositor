@@ -32,13 +32,15 @@ struct InputNodeInspector: View {
                 .buttonStyle(.borderedProminent)
                 .fileImporter(
                     isPresented: $showingFilePicker,
-                    allowedContentTypes: InputNode.getSupportedFileTypes(),
+                    allowedContentTypes: getSupportedFileTypes(),
                     allowsMultipleSelection: false
                 ) { result in
                     switch result {
                     case .success(let urls):
                         if let url = urls.first {
-                            node.loadMedia(from: url)
+                            Task {
+                                await node.loadMediaFile(from: url)
+                            }
                         }
                     case .failure(let error):
                         print("File picker error: \(error)")
@@ -74,7 +76,7 @@ struct InputNodeInspector: View {
                                 .foregroundColor(.secondary)
                             HStack(spacing: 4) {
                                 Image(systemName: mediaTypeIcon)
-                                Text(node.mediaType == .image ? "Image" : "Video")
+                                Text(getMediaTypeDisplayName())
                             }
                             .foregroundColor(mediaTypeColor)
                             Spacer()
@@ -88,37 +90,89 @@ struct InputNodeInspector: View {
                 }
             }
 
-            // Video Controls Section
-            if node.mediaType == .video, node.videoURL != nil {
+            // Media Info Section
+            if let mediaInfo = node.mediaInfo {
                 Divider()
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Playback")
+                    Text("Media Info")
                         .font(.headline)
-
-                    HStack(spacing: 12) {
-                        Button(action: {
-                            if node.isVideoPlaying {
-                                node.pauseVideo()
-                            } else {
-                                node.playVideo()
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        if let duration = mediaInfo.duration {
+                            HStack {
+                                Text("Duration:")
+                                    .foregroundColor(.secondary)
+                                Text(String(format: "%.2fs", duration))
+                                Spacer()
                             }
-                        }) {
-                            Image(systemName: node.isVideoPlaying ? "pause.fill" : "play.fill")
-                        }
-                        .buttonStyle(.bordered)
-
-                        Text(String(format: "%.1fs / %.1fs", node.videoCurrentTime, node.videoDuration))
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                        }
+                        
+                        if let frameRate = mediaInfo.frameRate {
+                            HStack {
+                                Text("Frame Rate:")
+                                    .foregroundColor(.secondary)
+                                Text(String(format: "%.2f fps", frameRate))
+                                Spacer()
+                            }
+                            .font(.caption)
+                        }
+                        
+                        if let resolution = mediaInfo.resolution {
+                            HStack {
+                                Text("Resolution:")
+                                    .foregroundColor(.secondary)
+                                Text("\(Int(resolution.width))×\(Int(resolution.height))")
+                                Spacer()
+                            }
+                            .font(.caption)
+                        }
+                        
+                        if let bitDepth = mediaInfo.bitDepth {
+                            HStack {
+                                Text("Bit Depth:")
+                                    .foregroundColor(.secondary)
+                                Text("\(bitDepth)-bit")
+                                Spacer()
+                            }
+                            .font(.caption)
+                        }
+                        
+                        HStack {
+                            Text("Alpha Channel:")
+                                .foregroundColor(.secondary)
+                            Text(mediaInfo.hasAlpha ? "Yes" : "No")
+                                .foregroundColor(mediaInfo.hasAlpha ? .green : .red)
+                            Spacer()
+                        }
+                        .font(.caption)
                     }
-
-                    // Simple scrubber
-                    Slider(value: Binding(
-                        get: { node.videoCurrentTime },
-                        set: { newValue in node.seekVideo(to: newValue) }
-                    ), in: 0...max(0.1, node.videoDuration))
                 }
             }
+        }
+    }
+    
+    private func getSupportedFileTypes() -> [UTType] {
+        return [
+            // Video formats
+            .movie, .video, .quickTimeMovie, .mpeg4Movie,
+            // Image formats  
+            .image, .png, .jpeg, .tiff, .gif, .bmp, .heic, .webP
+        ]
+    }
+    
+    private func getMediaTypeDisplayName() -> String {
+        if let format = node.mediaFormat {
+            return format.rawValue
+        }
+        
+        switch node.mediaType {
+        case .image:
+            return "Image"
+        case .video:
+            return "Video"
+        case .proRes:
+            return "ProRes"
         }
     }
     
