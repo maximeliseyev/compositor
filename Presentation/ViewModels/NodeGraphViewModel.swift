@@ -1,3 +1,10 @@
+//
+//  NodeGraphViewModel.swift
+//  Compositor
+//
+//  Created by Maxim Eliseyev on 12.08.2025.
+//
+
 import Foundation
 import SwiftUI
 import CoreImage
@@ -5,7 +12,7 @@ import Combine
 
 // MARK: - Node Graph ViewModel
 
-/// ViewModel для управления графом нод (упрощенная версия для демонстрации архитектуры)
+/// ViewModel для управления графом нод с асинхронной обработкой
 @MainActor
 class NodeGraphViewModel: ObservableObject {
     
@@ -17,11 +24,14 @@ class NodeGraphViewModel: ObservableObject {
     @Published var isProcessing: Bool = false
     @Published var processingProgress: Double = 0.0
     @Published var errorMessage: String?
+    @Published var activeNodeCount: Int = 0
     
     // MARK: - Private Properties
     
     private let nodeGraph: NodeGraph
+    private let processor: NodeGraphProcessor
     private var cancellables = Set<AnyCancellable>()
+    private var syncTimer: Timer?
     
     // Performance tracking
     private var lastProcessingTime: Date = Date()
@@ -29,24 +39,18 @@ class NodeGraphViewModel: ObservableObject {
     
     // MARK: - Initialization
     
-    init(nodeGraph: NodeGraph = NodeGraph()) {
+    init(nodeGraph: NodeGraph) {
         self.nodeGraph = nodeGraph
+        self.processor = NodeGraphProcessor(nodeGraph: nodeGraph)
         setupBindings()
         setupPerformanceMonitoring()
+        setupProcessorBindings()
+        setupDataSync()
     }
     
     // MARK: - Setup
     
     private func setupBindings() {
-        // Подписка на изменения в графе нод
-        nodeGraph.$nodes
-            .receive(on: DispatchQueue.main)
-            .assign(to: &$nodes)
-        
-        nodeGraph.$connections
-            .receive(on: DispatchQueue.main)
-            .assign(to: &$connections)
-        
         // Автоматическая обработка при изменениях
         Publishers.CombineLatest($nodes, $connections)
             .debounce(for: .milliseconds(300), scheduler: DispatchQueue.main)
@@ -58,6 +62,34 @@ class NodeGraphViewModel: ObservableObject {
             .store(in: &cancellables)
     }
     
+    private func setupDataSync() {
+        // Синхронизируем данные с NodeGraph каждые 100ms
+        syncTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                self?.syncDataFromNodeGraph()
+            }
+        }
+    }
+    
+    private func setupProcessorBindings() {
+        // Подписка на состояние процессора
+        processor.$isProcessing
+            .receive(on: DispatchQueue.main)
+            .assign(to: &$isProcessing)
+        
+        processor.$processingProgress
+            .receive(on: DispatchQueue.main)
+            .assign(to: &$processingProgress)
+        
+        processor.$errorMessage
+            .receive(on: DispatchQueue.main)
+            .assign(to: &$errorMessage)
+        
+        processor.$activeNodeCount
+            .receive(on: DispatchQueue.main)
+            .assign(to: &$activeNodeCount)
+    }
+    
     private func setupPerformanceMonitoring() {
         // Обновление статистики каждые 2 секунды
         Timer.publish(every: 2.0, on: .main, in: .common)
@@ -66,6 +98,23 @@ class NodeGraphViewModel: ObservableObject {
                 self?.updatePerformanceStats()
             }
             .store(in: &cancellables)
+    }
+    
+    // MARK: - Data Synchronization
+    
+    private func syncDataFromNodeGraph() {
+        // Синхронизируем ноды по ID
+        let currentNodeIds = Set(nodes.map { $0.id })
+        let graphNodeIds = Set(nodeGraph.nodes.map { $0.id })
+        
+        if currentNodeIds != graphNodeIds {
+            nodes = nodeGraph.nodes
+        }
+        
+        // Синхронизируем соединения
+        if connections != nodeGraph.connections {
+            connections = nodeGraph.connections
+        }
     }
     
     // MARK: - Public Methods
@@ -108,9 +157,9 @@ class NodeGraphViewModel: ObservableObject {
         )
         
         if success {
-            print("🔗 Connected: \(fromNode.type.rawValue).\(fromPort.name) → \(toNode.type.rawValue).\(toPort.name)")
+            print("🔗 Connected \(fromNode.type.rawValue) to \(toNode.type.rawValue)")
         } else {
-            errorMessage = "Failed to connect ports: incompatible types or would create cycle"
+            print("❌ Failed to connect \(fromNode.type.rawValue) to \(toNode.type.rawValue)")
         }
         
         return success
@@ -118,189 +167,110 @@ class NodeGraphViewModel: ObservableObject {
     
     /// Удаляет соединение
     func removeConnection(_ connection: NodeConnection) {
+        // Используем централизованный метод из NodeGraph
         nodeGraph.removeConnection(connection)
-        print("🔓 Removed connection")
+        
+        print("🔌 Removed connection")
     }
     
-    /// Выделяет/снимает выделение с ноды
-    func toggleNodeSelection(_ nodeId: UUID) {
-        if selectedNodes.contains(nodeId) {
-            selectedNodes.remove(nodeId)
-        } else {
-            selectedNodes.insert(nodeId)
-        }
+    /// Выбирает ноду
+    func selectNode(_ node: BaseNode) {
+        selectedNodes.insert(node.id)
     }
     
-    /// Очищает выделение
+    /// Отменяет выбор ноды
+    func deselectNode(_ node: BaseNode) {
+        selectedNodes.remove(node.id)
+    }
+    
+    /// Очищает выбор
     func clearSelection() {
         selectedNodes.removeAll()
     }
     
-    /// Выделяет все ноды
-    func selectAll() {
+    /// Выбирает несколько нод
+    func selectNodes(_ nodes: [BaseNode]) {
         selectedNodes = Set(nodes.map { $0.id })
-    }
-    
-    /// Удаляет выделенные ноды
-    func deleteSelectedNodes() {
-        let nodesToDelete = nodes.filter { selectedNodes.contains($0.id) }
-        for node in nodesToDelete {
-            removeNode(node)
-        }
-        clearSelection()
     }
     
     // MARK: - Processing
     
-    /// Обрабатывает граф нод (упрощенная версия)
-    func processGraph() async {
-        guard !isProcessing else { return }
-        
-        isProcessing = true
-        processingProgress = 0.0
-        errorMessage = nil
-        
-        let startTime = Date()
-        
-        do {
-            // Простая обработка графа
-            processingProgress = 0.2
-            
-            // Симуляция обработки
-            try await Task.sleep(nanoseconds: 500_000_000) // 0.5 секунды
-            
-            processingProgress = 1.0
-            
-            // Обновляем статистику времени
-            let processingTime = Date().timeIntervalSince(startTime)
-            updateProcessingTime(processingTime)
-            
-            print("✅ Graph processed successfully in \(String(format: "%.2f", processingTime))s")
-            
-        } catch {
-            errorMessage = "Processing failed: \(error.localizedDescription)"
-            print("❌ Graph processing failed: \(error)")
-        }
-        
-        isProcessing = false
-    }
-    
-    /// Обрабатывает граф при необходимости (с дебаунсом)
     private func processGraphIfNeeded() async {
-        // Обрабатываем только если есть ноды и соединения
         guard !nodes.isEmpty else { return }
         
-        await processGraph()
+        // Проверяем на циклы
+        if nodeGraph.hasCycles() {
+            errorMessage = "Cycle detected in node graph"
+            return
+        }
+        
+        // Запускаем обработку через процессор
+        await processor.processGraph()
+    }
+    
+    /// Принудительно запускает обработку графа
+    func startProcessing() async {
+        await processor.processGraph()
+    }
+    
+    /// Останавливает обработку графа
+    func stopProcessing() async {
+        await processor.stopProcessing()
+    }
+    
+    /// Приостанавливает обработку графа
+    func pauseProcessing() async {
+        await processor.pauseProcessing()
+    }
+    
+    /// Возобновляет обработку графа
+    func resumeProcessing() async {
+        await processor.resumeProcessing()
     }
     
     // MARK: - Performance Monitoring
     
     private func updatePerformanceStats() {
-        // Упрощенная версия без внешних зависимостей
-        print("📊 Performance stats updated")
-    }
-    
-    private func updateProcessingTime(_ time: TimeInterval) {
-        processingTimes.append(time)
+        let averageTime = processor.averageProcessingTime
+        let maxTime = processor.maxProcessingTime
+        let minTime = processor.minProcessingTime
         
-        // Ограничиваем количество записей
-        if processingTimes.count > 10 {
-            processingTimes.removeFirst()
-        }
+        print("📊 Performance Stats:")
+        print("   Average processing time: \(String(format: "%.2f", averageTime * 1000))ms")
+        print("   Max processing time: \(String(format: "%.2f", maxTime * 1000))ms")
+        print("   Min processing time: \(String(format: "%.2f", minTime * 1000))ms")
+        print("   Node count: \(nodes.count)")
+        print("   Connection count: \(connections.count)")
+        print("   Active nodes: \(activeNodeCount)")
     }
     
-    /// Получает среднее время обработки
-    var averageProcessingTime: TimeInterval {
-        guard !processingTimes.isEmpty else { return 0 }
-        return processingTimes.reduce(0, +) / Double(processingTimes.count)
-    }
+    // MARK: - Utility Methods
     
-    // MARK: - Memory Management
-    
-    /// Очищает память и кэши
-    func cleanupMemory() {
-        // Упрощенная версия
-        print("🧹 Memory cleanup requested")
-    }
-    
-    // MARK: - Debug Information
-    
-    /// Получает информацию для отладки
-    func getDebugInfo() -> String {
+    /// Получает информацию о производительности
+    func getPerformanceInfo() -> String {
+        let averageTime = processor.averageProcessingTime
+        
         return """
-        📊 Node Graph Debug Info:
-           Nodes: \(nodes.count)
-           Connections: \(connections.count)
-           Selected: \(selectedNodes.count)
-           Processing: \(isProcessing ? "Yes" : "No")
-           Avg Processing Time: \(String(format: "%.2f", averageProcessingTime))s
+        📊 Performance Information:
+           Average Processing Time: \(String(format: "%.3f", averageTime))s
+           Active Nodes: \(activeNodeCount)
+           Processing Progress: \(String(format: "%.1f", processingProgress * 100))%
+           Total Nodes: \(nodes.count)
+           Total Connections: \(connections.count)
+           Selected Nodes: \(selectedNodes.count)
         """
     }
     
+    /// Получает статистику кэша
+    func getCacheStats() -> String {
+        // Здесь можно добавить статистику кэша из asyncProcessor
+        return "Cache statistics available through async processor"
+    }
+    
+    // MARK: - Cleanup
+    
     deinit {
+        syncTimer?.invalidate()
         cancellables.removeAll()
-        print("🗑️ NodeGraphViewModel deallocated")
     }
-}
-
-// MARK: - Factory Methods
-
-extension NodeGraphViewModel {
-    
-    /// Создает ноду указанного типа
-    func createNode(type: NodeType, at position: CGPoint) -> BaseNode {
-        let node = BaseNode(type: type, position: position)
-        addNode(node)
-        return node
-    }
-    
-    /// Дублирует выделенные ноды
-    func duplicateSelectedNodes() {
-        let nodesToDuplicate = nodes.filter { selectedNodes.contains($0.id) }
-        clearSelection()
-        
-        for node in nodesToDuplicate {
-            let duplicatedNode = BaseNode(
-                type: node.type,
-                position: CGPoint(x: node.position.x + 50, y: node.position.y + 50)
-            )
-            
-            // Копируем параметры
-            duplicatedNode.parameters = node.parameters
-            
-            addNode(duplicatedNode)
-            selectedNodes.insert(duplicatedNode.id)
-        }
-    }
-}
-
-// MARK: - Keyboard Shortcuts Support
-
-extension NodeGraphViewModel {
-    
-    /// Обрабатывает команды клавиатуры
-    func handleKeyCommand(_ command: KeyCommand) {
-        switch command {
-        case .delete:
-            deleteSelectedNodes()
-        case .selectAll:
-            selectAll()
-        case .duplicate:
-            duplicateSelectedNodes()
-        case .processGraph:
-            Task {
-                await processGraph()
-            }
-        case .cleanupMemory:
-            cleanupMemory()
-        }
-    }
-}
-
-enum KeyCommand {
-    case delete
-    case selectAll
-    case duplicate
-    case processGraph
-    case cleanupMemory
 }

@@ -7,11 +7,14 @@ import Foundation
 import SwiftUI
 import CoreImage
 
+/// Граф нод для управления композицией
+/// Все операции с графом изолированы на главном акторе для безопасности UI
+@MainActor
 class NodeGraph: ObservableObject {
     @Published var nodes: [BaseNode] = []
     @Published var connections: [NodeConnection] = []
     
-    // Добавляем Published свойство для отслеживания изменений позиций
+    // Добавляем свойство для отслеживания изменений позиций
     @Published var nodePositionsChanged: Bool = false
     
     // Быстрый доступ к нодам по id
@@ -26,9 +29,7 @@ class NodeGraph: ObservableObject {
     
     func removeNode(_ node: BaseNode) {
         // Remove all connections involving this node
-        connections.removeAll { connection in
-            connection.fromNode == node.id || connection.toNode == node.id
-        }
+        removeNodeConnections(node)
         
         // Remove the node itself
         nodes.removeAll { $0.id == node.id }
@@ -56,8 +57,9 @@ class NodeGraph: ObservableObject {
         }
     }
     
-    // MARK: - Port-based Connection Methods
+    // MARK: - Connection Management
     
+    /// Создает соединение между портами двух нод
     func connectPorts(fromNode: BaseNode, fromPort: NodePort, toNode: BaseNode, toPort: NodePort) -> Bool {
         let validation = validateConnection(fromNode: fromNode, fromPort: fromPort, toNode: toNode, toPort: toPort)
         
@@ -80,15 +82,40 @@ class NodeGraph: ObservableObject {
         
         connections.append(connection)
         
-        // Update node connections using proper methods
+        // Обновляем соединения в нодах
         fromNode.addOutputConnection(connection)
         toNode.addInputConnection(connection)
         
         return true
     }
     
-    // Новый метод для удаления соединений к определенному порту
-    private func removeConnectionsToPort(nodeId: UUID, portId: UUID) {
+    /// Удаляет соединение между нодами
+    func disconnectNodes(fromNode: BaseNode, toNode: BaseNode) {
+        let connectionsToRemove = connections.filter { connection in
+            connection.fromNode == fromNode.id && connection.toNode == toNode.id
+        }
+        
+        for connection in connectionsToRemove {
+            removeConnection(connection)
+        }
+    }
+    
+    /// Удаляет конкретное соединение
+    func removeConnection(_ connection: NodeConnection) {
+        // Удаляем соединение из нод
+        if let fromNode = nodesById[connection.fromNode] {
+            fromNode.removeOutputConnection(connection)
+        }
+        if let toNode = nodesById[connection.toNode] {
+            toNode.removeInputConnection(connection)
+        }
+        
+        // Удаляем соединение из списка
+        connections.removeAll { $0.id == connection.id }
+    }
+    
+    /// Удаляет соединения к определенному порту
+    func removeConnectionsToPort(nodeId: UUID, portId: UUID) {
         let connectionsToRemove = connections.filter { connection in
             (connection.fromNode == nodeId && connection.fromPort == portId) ||
             (connection.toNode == nodeId && connection.toPort == portId)
@@ -99,56 +126,10 @@ class NodeGraph: ObservableObject {
         }
     }
     
-    func validateConnection(fromNode: BaseNode, fromPort: NodePort, toNode: BaseNode, toPort: NodePort) -> ConnectionValidationResult {
-        // Cannot connect to same node
-        if fromNode.id == toNode.id {
-            return .invalidSameNode
-        }
-        
-        // Port types must be compatible
-        if fromPort.type != .output || toPort.type != .input {
-            return .invalidPortType
-        }
-        
-        // Data types must match
-        if fromPort.dataType != toPort.dataType {
-            return .invalidDataType
-        }
-        
-        // Не проверяем существующие соединения здесь, так как мы их автоматически удаляем в connectPorts
-        
-        // Check for cycle detection
-        if wouldCreateCycle(from: fromNode, to: toNode) {
-            return .wouldCreateCycle
-        }
-        
-        return .valid
-    }
-    
-    // MARK: - Legacy methods removed - use connectPorts instead for precise control
-    
-    // MARK: - Connection Management
-    
-    func addConnection(_ connection: NodeConnection) {
-        connections.append(connection)
-    }
-    
-    func removeConnection(_ connection: NodeConnection) {
-        connections.removeAll { $0.id == connection.id }
-        
-        // Update node connections
-        if let fromNode = nodes.first(where: { $0.id == connection.fromNode }) {
-            fromNode.removeOutputConnection(connection)
-        }
-        
-        if let toNode = nodes.first(where: { $0.id == connection.toNode }) {
-            toNode.removeInputConnection(connection)
-        }
-    }
-    
-    func removeConnectionsForPort(_ portId: UUID) {
+    /// Удаляет все соединения ноды
+    func removeNodeConnections(_ node: BaseNode) {
         let connectionsToRemove = connections.filter { connection in
-            connection.fromPort == portId || connection.toPort == portId
+            connection.fromNode == node.id || connection.toNode == node.id
         }
         
         for connection in connectionsToRemove {
@@ -156,61 +137,181 @@ class NodeGraph: ObservableObject {
         }
     }
     
-    // MARK: - Node Parameter Updates
+    /// Очищает все соединения в графе
+    func clearAllConnections() {
+        // Очищаем все соединения из нод
+        for node in nodes {
+            node.clearAllConnections()
+        }
+        
+        // Очищаем список соединений
+        connections.removeAll()
+    }
     
-    func updateNodeParameter(_ node: BaseNode, key: String, value: Double) {
-        if let index = nodes.firstIndex(where: { $0.id == node.id }) {
-            nodes[index].parameters[key] = value
+    // MARK: - Connection Validation
+    
+    private func validateConnection(fromNode: BaseNode, fromPort: NodePort, toNode: BaseNode, toPort: NodePort) -> ConnectionValidation {
+        // Проверяем, что порты существуют
+        guard fromNode.outputPorts.contains(where: { $0.id == fromPort.id }) else {
+            return .invalidPort
+        }
+        
+        guard toNode.inputPorts.contains(where: { $0.id == toPort.id }) else {
+            return .invalidPort
+        }
+        
+        // Проверяем, что не соединяем ноду саму с собой
+        guard fromNode.id != toNode.id else {
+            return .selfConnection
+        }
+        
+        // Проверяем совместимость типов портов
+        guard fromPort.dataType == toPort.dataType else {
+            return .typeMismatch
+        }
+        
+        // Проверяем, что output порт не является input портом
+        guard fromPort.type == .output else {
+            return .invalidPortType
+        }
+        
+        // Проверяем, что to порт является input портом
+        guard toPort.type == .input else {
+            return .invalidPortType
+        }
+        
+        return .valid
+    }
+    
+    // MARK: - Utility Methods
+    
+    func getNode(by id: UUID) -> BaseNode? {
+        return nodesById[id]
+    }
+    
+    func getConnections(for node: BaseNode) -> [NodeConnection] {
+        return connections.filter { connection in
+            connection.fromNode == node.id || connection.toNode == node.id
         }
     }
     
-    // MARK: - Cycle Detection
+    func getInputConnections(for node: BaseNode) -> [NodeConnection] {
+        return connections.filter { connection in
+            connection.toNode == node.id
+        }
+    }
     
-    private func wouldCreateCycle(from: BaseNode, to: BaseNode) -> Bool {
+    func getOutputConnections(for node: BaseNode) -> [NodeConnection] {
+        return connections.filter { connection in
+            connection.fromNode == node.id
+        }
+    }
+    
+
+    
+    func getConnectedNodes(for node: BaseNode) -> [BaseNode] {
+        let connectionIds = getConnections(for: node).flatMap { [$0.fromNode, $0.toNode] }
+        let uniqueIds = Set(connectionIds).subtracting([node.id])
+        return uniqueIds.compactMap { getNode(by: $0) }
+    }
+    
+    func getUpstreamNodes(for node: BaseNode) -> [BaseNode] {
+        let inputConnections = getInputConnections(for: node)
+        let upstreamIds = inputConnections.map { $0.fromNode }
+        return upstreamIds.compactMap { getNode(by: $0) }
+    }
+    
+    func getDownstreamNodes(for node: BaseNode) -> [BaseNode] {
+        let outputConnections = getOutputConnections(for: node)
+        let downstreamIds = outputConnections.map { $0.toNode }
+        return downstreamIds.compactMap { getNode(by: $0) }
+    }
+    
+    func hasCycles() -> Bool {
         var visited = Set<UUID>()
+        var recursionStack = Set<UUID>()
         
-        func canReach(_ nodeId: UUID, target: UUID) -> Bool {
+        func hasCycleDFS(_ nodeId: UUID) -> Bool {
+            if recursionStack.contains(nodeId) {
+                return true
+            }
+            
             if visited.contains(nodeId) {
                 return false
             }
             
-            if nodeId == target {
-                return true
-            }
-            
             visited.insert(nodeId)
+            recursionStack.insert(nodeId)
             
-            let outgoingConnections = connections.filter { $0.fromNode == nodeId }
-            for connection in outgoingConnections {
-                if canReach(connection.toNode, target: target) {
+            guard let node = getNode(by: nodeId) else { return false }
+            
+            let downstreamNodes = getDownstreamNodes(for: node)
+            for downstreamNode in downstreamNodes {
+                if hasCycleDFS(downstreamNode.id) {
                     return true
                 }
             }
             
+            recursionStack.remove(nodeId)
             return false
         }
         
-        return canReach(to.id, target: from.id)
-    }
-    
-    // MARK: - Graph Processing
-    
-    func processGraph() {
-        // Implementation for processing the node graph
-        // This would typically involve executing nodes in topological order
-    }
-    
-    // MARK: - Helper Methods
-    
-    func getConnectedPorts(for node: BaseNode) -> (inputs: [NodePort], outputs: [NodePort]) {
-        let connectedInputPorts = node.inputPorts.filter { port in
-            connections.contains { $0.toNode == node.id && $0.toPort == port.id }
+        for node in nodes {
+            if !visited.contains(node.id) {
+                if hasCycleDFS(node.id) {
+                    return true
+                }
+            }
         }
         
-        let connectedOutputPorts = node.outputPorts.filter { port in
-            connections.contains { $0.fromNode == node.id && $0.fromPort == port.id }
+        return false
+    }
+    
+    func getTopologicalSort() -> [BaseNode] {
+        var result: [BaseNode] = []
+        var visited = Set<UUID>()
+        var tempVisited = Set<UUID>()
+        
+        func topologicalSortDFS(_ node: BaseNode) {
+            if tempVisited.contains(node.id) {
+                // Цикл обнаружен
+                return
+            }
+            
+            if visited.contains(node.id) {
+                return
+            }
+            
+            tempVisited.insert(node.id)
+            
+            let downstreamNodes = getDownstreamNodes(for: node)
+            for downstreamNode in downstreamNodes {
+                topologicalSortDFS(downstreamNode)
+            }
+            
+            tempVisited.remove(node.id)
+            visited.insert(node.id)
+            result.append(node)
         }
         
-        return (connectedInputPorts, connectedOutputPorts)
+        for node in nodes {
+            if !visited.contains(node.id) {
+                topologicalSortDFS(node)
+            }
+        }
+        
+        return result.reversed()
     }
 }
+
+// MARK: - Connection Validation
+
+enum ConnectionValidation {
+    case valid
+    case invalidPort
+    case invalidPortType
+    case typeMismatch
+    case selfConnection
+    case cycleDetected
+}
+

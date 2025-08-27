@@ -35,24 +35,10 @@ struct NodeGraphPanel: View {
                 MetalNodeGraphCanvas(
                     size: geo.size,
                     gridSpacing: 40,
-                    connections: nodeGraph.connections.compactMap { conn in
-                        if let fromNode = cache.getCachedNode(id: conn.fromNode),
-                           let toNode = cache.getCachedNode(id: conn.toNode) {
-                            let points = cache.getCachedConnectionPoints(for: conn, fromNode: fromNode, toNode: toNode)
-                            return (points.0, points.1)
-                        }
-                        return nil
-                    },
-                    previewConnection: connectionManager.hasActiveConnection() ? connectionManager.getPreviewConnectionPoints() : nil,
-                    selectionRect: selectionManager.isSelecting ? selectionManager.selectionRect : nil,
-                    nodes: nodeGraph.nodes.map { node in
-                        NodeRenderItem(
-                            position: node.position,
-                            size: CGSize(width: NodeViewConstants.nodeWidth, height: NodeViewConstants.nodeHeight),
-                            cornerRadius: NodeViewConstants.nodeCornerRadius,
-                            isSelected: selectionManager.isNodeSelected(node.id)
-                        )
-                    }
+                    connections: getCanvasConnections(),
+                    previewConnection: getPreviewConnection(),
+                    selectionRect: getSelectionRect(),
+                    nodes: getCanvasNodes()
                 )
                 .allowsHitTesting(false)
                 nodeViewsLayer(geometry: geo)
@@ -60,25 +46,29 @@ struct NodeGraphPanel: View {
             .background(Color.clear)
             .coordinateSpace(name: "NodeGraphPanel")
             .onAppear {
-                setupPanel(geometry: geo)
+                Task {
+                    await setupPanel(geometry: geo)
+                }
             }
             .onDisappear {
                 cleanupPanel()
             }
             .onChange(of: nodeGraph.connections.map { $0.id }) { _, _ in
                 if let last = nodeGraph.connections.last {
-                    processConnection(last)
+                    Task {
+                        await processConnection(last)
+                    }
                 }
             }
             .onChange(of: nodeGraph.nodes.count) { oldValue, newValue in
                 cache.updateNodeCache(nodes: nodeGraph.nodes)
             }
-//            .onChange(of: nodeGraph.connections.count) { _ in
-//                // Обновляем соединения при изменении
-//                DispatchQueue.main.async {
-//                    self.updateVideoNodes()
-//                }
-//            }
+            .onChange(of: nodeGraph.connections.count) { _, _ in
+                // Обновляем соединения при изменении
+                DispatchQueue.main.async {
+                    self.updateVideoNodes()
+                }
+            }
         }
         .gesture(selectionGesture)
         .clipped()
@@ -95,7 +85,9 @@ struct NodeGraphPanel: View {
             
             NodePanelEventHandler(
                 onCreateNode: { nodeType, location in
-                    createNode(ofType: nodeType, at: location)
+                    Task {
+                        await createNode(ofType: nodeType, at: location)
+                    }
                 },
                 onDelete: {
                     selectionManager.deleteSelectedNodes(nodeGraph: nodeGraph, cache: cache)
@@ -134,7 +126,7 @@ struct NodeGraphPanel: View {
     
     // MARK: - Setup and Cleanup
     
-    private func setupPanel(geometry: GeometryProxy) {
+    private func setupPanel(geometry: GeometryProxy) async {
         panelSize = geometry.size
         cache.updateNodeCache(nodes: nodeGraph.nodes)
         setupNotifications(geometry: geometry)
@@ -163,12 +155,12 @@ struct NodeGraphPanel: View {
             }
             .store(in: &cancellables)
         // Таймер для обновления видео кадров
-        videoTimer?.invalidate()
-        videoTimer = Timer.scheduledTimer(withTimeInterval: 1.0/30.0, repeats: true) { _ in
-            processor.processGraph()
-        }
+//        videoTimer?.invalidate()
+//        videoTimer = Timer.scheduledTimer(withTimeInterval: 1.0/30.0, repeats: true) { _ in
+//            processor.processGraphAsync()
+//        }
         // Первичная обработка графа
-        processor.processGraph()
+        await processor.processGraph()
     }
     
     private func cleanupPanel() {
@@ -244,7 +236,9 @@ struct NodeGraphPanel: View {
     private func handleCreateNodeNotification(notification: Notification, geometry: GeometryProxy, nodeGraph: NodeGraph) {
         if let type = notification.object as? NodeType {
             let center = CGPoint(x: geometry.size.width / 2, y: geometry.size.height / 2)
-            createNode(ofType: type, at: center)
+            Task {
+                await createNode(ofType: type, at: center)
+            }
         }
     }
     
@@ -252,7 +246,7 @@ struct NodeGraphPanel: View {
         NotificationCenter.default.removeObserver(self)
     }
     
-    private func createNode(ofType type: NodeType, at position: CGPoint) {
+    private func createNode(ofType type: NodeType, at position: CGPoint) async {
         let newNode: BaseNode
         
         switch type {
@@ -260,25 +254,19 @@ struct NodeGraphPanel: View {
             newNode = ViewNode(position: position, viewerPanel: viewerController)
         case .input:
             newNode = InputNode(position: position)
-        case .corrector:
-            newNode = CorrectorNode(position: position)
-        case .metalCorrector:
-            newNode = MetalCorrectorNode(type: type, position: position)
-        case .metalBlur:
-            newNode = MetalBlurNode(type: type, position: position)
-        case .colorWheels:
-            newNode = ColorWheelsNode(position: position)
+        case .blur:
+            newNode = BlurNode(type: type, position: position)
         }
         
         nodeGraph.addNode(newNode)
         selectionManager.selectNode(newNode)
         // После добавления ноды, перезапускаем процессор графа, чтобы он учитывал новые ноды
-        graphProcessor?.processGraph()
+        await graphProcessor?.processGraph()
     }
     
     // MARK: - Simple Connection Processing
     
-    private func processConnection(_ connection: NodeConnection) {
+    private func processConnection(_ connection: NodeConnection) async {
         guard let fromNode = nodeGraph.nodes.first(where: { $0.id == connection.fromNode }),
               let toNode = nodeGraph.nodes.first(where: { $0.id == connection.toNode }) else {
             return
@@ -293,12 +281,53 @@ struct NodeGraphPanel: View {
             viewerController.updateFromInputNode(inputNode)
             
             // Принудительно обрабатываем граф для получения текущего кадра/изображения
-            graphProcessor?.processGraph()
+            await graphProcessor?.processGraph()
             
             // Передаем результат в View ноду для синхронизации состояния Viewer
             let inputData = inputNode.process(inputs: [])
             _ = viewNode.process(inputs: [inputData])
             print("📤 Sent initial frame to View node")
+        }
+    }
+    
+    // MARK: - Canvas Data Preparation Methods
+    
+    private func getCanvasConnections() -> [(CGPoint, CGPoint)] {
+        return nodeGraph.connections.compactMap { conn in
+            if let fromNode = cache.getCachedNode(id: conn.fromNode),
+               let toNode = cache.getCachedNode(id: conn.toNode) {
+                let points = cache.getCachedConnectionPoints(for: conn, fromNode: fromNode, toNode: toNode)
+                return (points.0, points.1)
+            }
+            return nil
+        }
+    }
+    
+    private func getPreviewConnection() -> (CGPoint, CGPoint)? {
+        return connectionManager.hasActiveConnection() ? connectionManager.getPreviewConnectionPoints() : nil
+    }
+    
+    private func getSelectionRect() -> CGRect? {
+        return selectionManager.isSelecting ? selectionManager.selectionRect : nil
+    }
+    
+    private func getCanvasNodes() -> [NodeRenderItem] {
+        return nodeGraph.nodes.map { node in
+            NodeRenderItem(
+                position: node.position,
+                size: CGSize(width: NodeViewConstants.nodeWidth, height: NodeViewConstants.nodeHeight),
+                cornerRadius: NodeViewConstants.nodeCornerRadius,
+                isSelected: selectionManager.isNodeSelected(node.id)
+            )
+        }
+    }
+    
+    // MARK: - Video Node Updates
+    
+    private func updateVideoNodes() {
+        // Обновляем видео ноды при изменении соединений
+        for case let viewNode as ViewNode in nodeGraph.nodes {
+            viewNode.viewerPanel = viewerController
         }
     }
 }

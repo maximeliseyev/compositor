@@ -7,7 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		BF8EDB572E506BBA0040E898 /* DIContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB562E506BBA0040E898 /* DIContainer.swift */; };
+		BF0798CF2E548CBE00949707 /* PerformanceConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0798CD2E548CBE00949707 /* PerformanceConstants.swift */; };
+		BF0798E42E54967600949707 /* TextureData.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0798E32E54967600949707 /* TextureData.swift */; };
+		BF0798E62E5496AD00949707 /* OptimizedMetalRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0798E52E5496AD00949707 /* OptimizedMetalRenderer.swift */; };
+		BF0798E82E5496EC00949707 /* MetalNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0798E72E5496EC00949707 /* MetalNode.swift */; };
+		BF1A71272E5F2F39007EF611 /* NodeGraphProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF1A71262E5F2F39007EF611 /* NodeGraphProcessor.swift */; };
+		BF1A712B2E5F323B007EF611 /* NodeGraphExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF1A712A2E5F3228007EF611 /* NodeGraphExtensions.swift */; };
+		BF1A71522E5F39F9007EF611 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF0798C92E548B6B00949707 /* XCTest.framework */; };
+		BF1A71532E5F39F9007EF611 /* XCTest.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = BF0798C92E548B6B00949707 /* XCTest.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		BF8EDBA12E506E300040E898 /* CompositorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB8A2E506E300040E898 /* CompositorView.swift */; };
 		BF8EDBA22E506E300040E898 /* Color+NodeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB802E506E300040E898 /* Color+NodeTypes.swift */; };
 		BF8EDBA32E506E300040E898 /* NodeGraphRenderStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB8E2E506E300040E898 /* NodeGraphRenderStyle.swift */; };
@@ -44,20 +51,18 @@
 		BF8EDBC82E506E300040E898 /* MetalSettingsPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB982E506E300040E898 /* MetalSettingsPanel.swift */; };
 		BF8EDBC92E506E300040E898 /* NodeInspectors.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB862E506E300040E898 /* NodeInspectors.swift */; };
 		BF8EDBCA2E506E300040E898 /* UIPrimitives.metal in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB6C2E506E300040E898 /* UIPrimitives.metal */; };
-		BF8EDBCC2E506E300040E898 /* NodeGraphProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB652E506E300040E898 /* NodeGraphProcessor.swift */; };
-		BFB2814E2E26901C00BD1B79 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = BFB2814D2E26901C00BD1B79 /* Info.plist */; };
+		BFBAE05B2E551255000A7D70 /* PerformanceSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFBAE05A2E551255000A7D70 /* PerformanceSettingsView.swift */; };
+		BFBAE05D2E5512A1000A7D70 /* IntegratedSettingsPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFBAE05C2E5512A1000A7D70 /* IntegratedSettingsPanel.swift */; };
 		BFCD14192E537E6400FE99DD /* MetalFXManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCD140E2E537E6400FE99DD /* MetalFXManager.swift */; };
 		BFCD141A2E537E6400FE99DD /* MPSProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCD140F2E537E6400FE99DD /* MPSProcessor.swift */; };
 		BFCD141E2E537E6400FE99DD /* PerformanceOptimizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCD14102E537E6400FE99DD /* PerformanceOptimizer.swift */; };
 		BFCD141F2E537E6400FE99DD /* ProcessingStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCD14112E537E6400FE99DD /* ProcessingStrategy.swift */; };
 		BFCD142A2E53827D00FE99DD /* NodeConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCD14272E53827D00FE99DD /* NodeConnection.swift */; };
-		BFCD142B2E53827D00FE99DD /* CorrectorNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCD14222E53827D00FE99DD /* CorrectorNode.swift */; };
 		BFCD142C2E53827D00FE99DD /* InputNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCD14232E53827D00FE99DD /* InputNode.swift */; };
 		BFCD142D2E53827D00FE99DD /* ViewNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCD14252E53827D00FE99DD /* ViewNode.swift */; };
 		BFCD142E2E53827D00FE99DD /* BaseNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCD14202E53827D00FE99DD /* BaseNode.swift */; };
-		BFCD142F2E53827D00FE99DD /* ColorWheelsNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCD14212E53827D00FE99DD /* ColorWheelsNode.swift */; };
 		BFCD14302E53827D00FE99DD /* NodeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCD14282E53827D00FE99DD /* NodeTypes.swift */; };
-		BFCD14312E53827D00FE99DD /* MetalNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCD14242E53827D00FE99DD /* MetalNode.swift */; };
+		BFCD14312E53827D00FE99DD /* BlurNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCD14242E53827D00FE99DD /* BlurNode.swift */; };
 		BFCD14372E5382A800FE99DD /* VideoProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCD14352E5382A800FE99DD /* VideoProcessor.swift */; };
 		BFCD14392E53846000FE99DD /* MediaFormatSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCD14382E53846000FE99DD /* MediaFormatSupport.swift */; };
 		BFCD143B2E53848300FE99DD /* UniversalMediaProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCD143A2E53848300FE99DD /* UniversalMediaProcessor.swift */; };
@@ -70,11 +75,49 @@
 		BFD2D93B2E200DF900BFAC11 /* LICENSE.md in Resources */ = {isa = PBXBuildFile; fileRef = BFD2D93A2E200DF500BFAC11 /* LICENSE.md */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		BF1A713D2E5F39EB007EF611 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = BFD2D8D12E1F2C8600BFAC11 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = BFD2D8D82E1F2C8600BFAC11;
+			remoteInfo = Compositor;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		BF1A71542E5F39F9007EF611 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				BF1A71532E5F39F9007EF611 /* XCTest.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		BF0798C42E54764900949707 /* VideoInspectorControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoInspectorControls.swift; sourceTree = "<group>"; };
+		BF0798C92E548B6B00949707 /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Platforms/MacOSX.platform/Developer/Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
+		BF0798CD2E548CBE00949707 /* PerformanceConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceConstants.swift; sourceTree = "<group>"; };
+		BF0798E32E54967600949707 /* TextureData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextureData.swift; sourceTree = "<group>"; };
+		BF0798E52E5496AD00949707 /* OptimizedMetalRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptimizedMetalRenderer.swift; sourceTree = "<group>"; };
+		BF0798E72E5496EC00949707 /* MetalNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalNode.swift; sourceTree = "<group>"; };
+		BF1A71262E5F2F39007EF611 /* NodeGraphProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeGraphProcessor.swift; sourceTree = "<group>"; };
+		BF1A712A2E5F3228007EF611 /* NodeGraphExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeGraphExtensions.swift; sourceTree = "<group>"; };
+		BF1A712C2E5F36DB007EF611 /* AsyncProcessingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncProcessingTests.swift; sourceTree = "<group>"; };
+		BF1A712D2E5F36DB007EF611 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		BF1A712E2E5F36DB007EF611 /* NodeConnectionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeConnectionTests.swift; sourceTree = "<group>"; };
+		BF1A712F2E5F36DB007EF611 /* NodeGraphTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeGraphTests.swift; sourceTree = "<group>"; };
+		BF1A71322E5F36DB007EF611 /* TextureDataTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextureDataTests.swift; sourceTree = "<group>"; };
+		BF1A71332E5F36DB007EF611 /* TextureManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextureManagerTests.swift; sourceTree = "<group>"; };
+		BF1A71392E5F39EB007EF611 /* CompositorTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CompositorTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		BF8EDB562E506BBA0040E898 /* DIContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DIContainer.swift; sourceTree = "<group>"; };
 		BF8EDB622E506E300040E898 /* NodeFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeFactory.swift; sourceTree = "<group>"; };
 		BF8EDB632E506E300040E898 /* NodeGraph.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeGraph.swift; sourceTree = "<group>"; };
-		BF8EDB652E506E300040E898 /* NodeGraphProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeGraphProcessor.swift; sourceTree = "<group>"; };
 		BF8EDB682E506E300040E898 /* Blur.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Blur.metal; sourceTree = "<group>"; };
 		BF8EDB692E506E300040E898 /* Edge.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Edge.metal; sourceTree = "<group>"; };
 		BF8EDB6A2E506E300040E898 /* Merge.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Merge.metal; sourceTree = "<group>"; };
@@ -109,16 +152,16 @@
 		BF8EDB9A2E506E300040E898 /* ViewerPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewerPanel.swift; sourceTree = "<group>"; };
 		BF8EDB9B2E506E300040E898 /* ViewerPanelController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewerPanelController.swift; sourceTree = "<group>"; };
 		BF8EDB9F2E506E300040E898 /* Compositor.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Compositor.xcdatamodel; sourceTree = "<group>"; };
-		BFB2814D2E26901C00BD1B79 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		BFBAE04F2E54BBF9000A7D70 /* Compositor-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Compositor-Info.plist"; sourceTree = "<group>"; };
+		BFBAE05A2E551255000A7D70 /* PerformanceSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceSettingsView.swift; sourceTree = "<group>"; };
+		BFBAE05C2E5512A1000A7D70 /* IntegratedSettingsPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntegratedSettingsPanel.swift; sourceTree = "<group>"; };
 		BFCD140E2E537E6400FE99DD /* MetalFXManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalFXManager.swift; sourceTree = "<group>"; };
 		BFCD140F2E537E6400FE99DD /* MPSProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MPSProcessor.swift; sourceTree = "<group>"; };
 		BFCD14102E537E6400FE99DD /* PerformanceOptimizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceOptimizer.swift; sourceTree = "<group>"; };
 		BFCD14112E537E6400FE99DD /* ProcessingStrategy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessingStrategy.swift; sourceTree = "<group>"; };
 		BFCD14202E53827D00FE99DD /* BaseNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseNode.swift; sourceTree = "<group>"; };
-		BFCD14212E53827D00FE99DD /* ColorWheelsNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorWheelsNode.swift; sourceTree = "<group>"; };
-		BFCD14222E53827D00FE99DD /* CorrectorNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CorrectorNode.swift; sourceTree = "<group>"; };
 		BFCD14232E53827D00FE99DD /* InputNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputNode.swift; sourceTree = "<group>"; };
-		BFCD14242E53827D00FE99DD /* MetalNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalNode.swift; sourceTree = "<group>"; };
+		BFCD14242E53827D00FE99DD /* BlurNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlurNode.swift; sourceTree = "<group>"; };
 		BFCD14252E53827D00FE99DD /* ViewNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewNode.swift; sourceTree = "<group>"; };
 		BFCD14272E53827D00FE99DD /* NodeConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeConnection.swift; sourceTree = "<group>"; };
 		BFCD14282E53827D00FE99DD /* NodeTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeTypes.swift; sourceTree = "<group>"; };
@@ -136,7 +179,23 @@
 		BFD2D93A2E200DF500BFAC11 /* LICENSE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = LICENSE.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		BF1A713A2E5F39EB007EF611 /* CompositorTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = CompositorTests;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
 /* Begin PBXFrameworksBuildPhase section */
+		BF1A71362E5F39EB007EF611 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BF1A71522E5F39F9007EF611 /* XCTest.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		BFD2D8D62E1F2C8600BFAC11 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -147,6 +206,35 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		BF0798C82E548B6A00949707 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				BF0798C92E548B6B00949707 /* XCTest.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		BF0798CE2E548CBE00949707 /* Configuration */ = {
+			isa = PBXGroup;
+			children = (
+				BF0798CD2E548CBE00949707 /* PerformanceConstants.swift */,
+			);
+			path = Configuration;
+			sourceTree = "<group>";
+		};
+		BF1A71342E5F36DB007EF611 /* CompositorTests */ = {
+			isa = PBXGroup;
+			children = (
+				BF1A712D2E5F36DB007EF611 /* Info.plist */,
+				BF1A712C2E5F36DB007EF611 /* AsyncProcessingTests.swift */,
+				BF1A712E2E5F36DB007EF611 /* NodeConnectionTests.swift */,
+				BF1A712F2E5F36DB007EF611 /* NodeGraphTests.swift */,
+				BF1A71322E5F36DB007EF611 /* TextureDataTests.swift */,
+				BF1A71332E5F36DB007EF611 /* TextureManagerTests.swift */,
+			);
+			path = CompositorTests;
+			sourceTree = "<group>";
+		};
 		BF8EDB612E506E300040E898 /* Models */ = {
 			isa = PBXGroup;
 			children = (
@@ -161,6 +249,7 @@
 			children = (
 				BF8EDB622E506E300040E898 /* NodeFactory.swift */,
 				BF8EDB632E506E300040E898 /* NodeGraph.swift */,
+				BF1A712A2E5F3228007EF611 /* NodeGraphExtensions.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -168,7 +257,7 @@
 		BF8EDB662E506E300040E898 /* UseCases */ = {
 			isa = PBXGroup;
 			children = (
-				BF8EDB652E506E300040E898 /* NodeGraphProcessor.swift */,
+				BF1A71262E5F2F39007EF611 /* NodeGraphProcessor.swift */,
 			);
 			path = UseCases;
 			sourceTree = "<group>";
@@ -226,7 +315,9 @@
 				BF8EDB712E506E300040E898 /* Shaders */,
 				BF8EDB722E506E300040E898 /* MetalRenderer.swift */,
 				BF8EDB732E506E300040E898 /* MetalRenderingManager.swift */,
+				BF0798E52E5496AD00949707 /* OptimizedMetalRenderer.swift */,
 				BF8EDB742E506E300040E898 /* TextureManager.swift */,
+				BF0798E32E54967600949707 /* TextureData.swift */,
 			);
 			path = Metal;
 			sourceTree = "<group>";
@@ -292,6 +383,7 @@
 				BF8EDB862E506E300040E898 /* NodeInspectors.swift */,
 				BF8EDB872E506E300040E898 /* VideoInspectorControls.swift */,
 				BF8EDB882E506E300040E898 /* VideoScrubber.swift */,
+				BF0798C42E54764900949707 /* VideoInspectorControls.swift */,
 			);
 			path = Inspector;
 			sourceTree = "<group>";
@@ -339,6 +431,8 @@
 			isa = PBXGroup;
 			children = (
 				BF8EDB982E506E300040E898 /* MetalSettingsPanel.swift */,
+				BFBAE05A2E551255000A7D70 /* PerformanceSettingsView.swift */,
+				BFBAE05C2E5512A1000A7D70 /* IntegratedSettingsPanel.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -407,10 +501,9 @@
 			isa = PBXGroup;
 			children = (
 				BFCD14202E53827D00FE99DD /* BaseNode.swift */,
-				BFCD14212E53827D00FE99DD /* ColorWheelsNode.swift */,
-				BFCD14222E53827D00FE99DD /* CorrectorNode.swift */,
+				BF0798E72E5496EC00949707 /* MetalNode.swift */,
+				BFCD14242E53827D00FE99DD /* BlurNode.swift */,
 				BFCD14232E53827D00FE99DD /* InputNode.swift */,
-				BFCD14242E53827D00FE99DD /* MetalNode.swift */,
 				BFCD14252E53827D00FE99DD /* ViewNode.swift */,
 			);
 			path = Nodes;
@@ -443,15 +536,19 @@
 			children = (
 				BFD2D8EF2E1F2E5100BFAC11 /* App */,
 				BFCD14182E537E6400FE99DD /* Future */,
+				BF0798CE2E548CBE00949707 /* Configuration */,
 				BF8EDB672E506E300040E898 /* Domain */,
 				BF8EDB792E506E300040E898 /* Infrastructure */,
 				BF8EDB9E2E506E300040E898 /* Presentation */,
 				BFD2D8F42E1F2EA000BFAC11 /* Resources */,
 				BFD2D8ED2E1F2E1400BFAC11 /* README.md */,
+				BFBAE04F2E54BBF9000A7D70 /* Compositor-Info.plist */,
 				BFD2D8E72E1F2C8900BFAC11 /* Compositor.entitlements */,
+				BF1A713A2E5F39EB007EF611 /* CompositorTests */,
 				BFD2D8DA2E1F2C8600BFAC11 /* Products */,
 				BFD2D93A2E200DF500BFAC11 /* LICENSE.md */,
-				BFB2814D2E26901C00BD1B79 /* Info.plist */,
+				BF1A71342E5F36DB007EF611 /* CompositorTests */,
+				BF0798C82E548B6A00949707 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -459,6 +556,7 @@
 			isa = PBXGroup;
 			children = (
 				BFD2D8D92E1F2C8600BFAC11 /* Compositor.app */,
+				BF1A71392E5F39EB007EF611 /* CompositorTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -483,6 +581,30 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		BF1A71382E5F39EB007EF611 /* CompositorTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BF1A713F2E5F39EB007EF611 /* Build configuration list for PBXNativeTarget "CompositorTests" */;
+			buildPhases = (
+				BF1A71352E5F39EB007EF611 /* Sources */,
+				BF1A71362E5F39EB007EF611 /* Frameworks */,
+				BF1A71372E5F39EB007EF611 /* Resources */,
+				BF1A71542E5F39F9007EF611 /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				BF1A713E2E5F39EB007EF611 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				BF1A713A2E5F39EB007EF611 /* CompositorTests */,
+			);
+			name = CompositorTests;
+			packageProductDependencies = (
+			);
+			productName = CompositorTests;
+			productReference = BF1A71392E5F39EB007EF611 /* CompositorTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		BFD2D8D82E1F2C8600BFAC11 /* Compositor */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = BFD2D8EA2E1F2C8900BFAC11 /* Build configuration list for PBXNativeTarget "Compositor" */;
@@ -512,6 +634,10 @@
 				LastSwiftUpdateCheck = 1640;
 				LastUpgradeCheck = 1640;
 				TargetAttributes = {
+					BF1A71382E5F39EB007EF611 = {
+						CreatedOnToolsVersion = 16.4;
+						TestTargetID = BFD2D8D82E1F2C8600BFAC11;
+					};
 					BFD2D8D82E1F2C8600BFAC11 = {
 						CreatedOnToolsVersion = 16.4;
 					};
@@ -532,16 +658,23 @@
 			projectRoot = "";
 			targets = (
 				BFD2D8D82E1F2C8600BFAC11 /* Compositor */,
+				BF1A71382E5F39EB007EF611 /* CompositorTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		BF1A71372E5F39EB007EF611 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		BFD2D8D72E1F2C8600BFAC11 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BFB2814E2E26901C00BD1B79 /* Info.plist in Resources */,
 				BFD2D8EE2E1F2E1A00BFAC11 /* README.md in Resources */,
 				BFD2D93B2E200DF900BFAC11 /* LICENSE.md in Resources */,
 				BFD2D8E12E1F2C8900BFAC11 /* Assets.xcassets in Resources */,
@@ -551,13 +684,21 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		BF1A71352E5F39EB007EF611 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		BFD2D8D52E1F2C8600BFAC11 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BF8EDB572E506BBA0040E898 /* DIContainer.swift in Sources */,
 				BF8EDBA12E506E300040E898 /* CompositorView.swift in Sources */,
+				BFBAE05D2E5512A1000A7D70 /* IntegratedSettingsPanel.swift in Sources */,
 				BF8EDBA22E506E300040E898 /* Color+NodeTypes.swift in Sources */,
+				BF0798CF2E548CBE00949707 /* PerformanceConstants.swift in Sources */,
 				BF8EDBA32E506E300040E898 /* NodeGraphRenderStyle.swift in Sources */,
 				BF8EDBA42E506E300040E898 /* Compositor.xcdatamodeld in Sources */,
 				BF8EDBA52E506E300040E898 /* NodeGraphViewModel.swift in Sources */,
@@ -565,17 +706,19 @@
 				BF8EDBA72E506E300040E898 /* InspectorPanel.swift in Sources */,
 				BF8EDBA82E506E300040E898 /* NodeGraphConnectionManager.swift in Sources */,
 				BF8EDBA92E506E300040E898 /* TextureManager.swift in Sources */,
+				BF0798E42E54967600949707 /* TextureData.swift in Sources */,
 				BFCD142A2E53827D00FE99DD /* NodeConnection.swift in Sources */,
-				BFCD142B2E53827D00FE99DD /* CorrectorNode.swift in Sources */,
+				BF0798E82E5496EC00949707 /* MetalNode.swift in Sources */,
 				BFCD142C2E53827D00FE99DD /* InputNode.swift in Sources */,
 				BFCD142D2E53827D00FE99DD /* ViewNode.swift in Sources */,
 				BFCD142E2E53827D00FE99DD /* BaseNode.swift in Sources */,
-				BFCD142F2E53827D00FE99DD /* ColorWheelsNode.swift in Sources */,
 				BFCD14302E53827D00FE99DD /* NodeTypes.swift in Sources */,
-				BFCD14312E53827D00FE99DD /* MetalNode.swift in Sources */,
+				BFCD14312E53827D00FE99DD /* BlurNode.swift in Sources */,
+				BFBAE05B2E551255000A7D70 /* PerformanceSettingsView.swift in Sources */,
 				BF8EDBAA2E506E300040E898 /* Blur.metal in Sources */,
 				BF8EDBAB2E506E300040E898 /* NodeGraphPanel.swift in Sources */,
 				BF8EDBAC2E506E300040E898 /* NodeHeaderView.swift in Sources */,
+				BF1A712B2E5F323B007EF611 /* NodeGraphExtensions.swift in Sources */,
 				BF8EDBB02E506E300040E898 /* Color.metal in Sources */,
 				BF8EDBB12E506E300040E898 /* NodePanelEventHandler.swift in Sources */,
 				BF8EDBB22E506E300040E898 /* NodeFactory.swift in Sources */,
@@ -593,6 +736,7 @@
 				BF8EDBB82E506E300040E898 /* NodeViewConstants.swift in Sources */,
 				BF8EDBB92E506E300040E898 /* VideoInspectorControls.swift in Sources */,
 				BF8EDBBC2E506E300040E898 /* Edge.metal in Sources */,
+				BF0798E62E5496AD00949707 /* OptimizedMetalRenderer.swift in Sources */,
 				BF8EDBBD2E506E300040E898 /* NodeView.swift in Sources */,
 				BFCD14392E53846000FE99DD /* MediaFormatSupport.swift in Sources */,
 				BF8EDBBF2E506E300040E898 /* MetalNodeInspector.swift in Sources */,
@@ -607,17 +751,59 @@
 				BF8EDBC52E506E300040E898 /* Types.metal in Sources */,
 				BF8EDBC62E506E300040E898 /* ViewerPanel.swift in Sources */,
 				BF8EDBC72E506E300040E898 /* MetalRenderingManager.swift in Sources */,
+				BF1A71272E5F2F39007EF611 /* NodeGraphProcessor.swift in Sources */,
 				BF8EDBC82E506E300040E898 /* MetalSettingsPanel.swift in Sources */,
 				BF8EDBC92E506E300040E898 /* NodeInspectors.swift in Sources */,
 				BF8EDBCA2E506E300040E898 /* UIPrimitives.metal in Sources */,
-				BF8EDBCC2E506E300040E898 /* NodeGraphProcessor.swift in Sources */,
 				BFD2D8DD2E1F2C8600BFAC11 /* CompositorApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		BF1A713E2E5F39EB007EF611 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = BFD2D8D82E1F2C8600BFAC11 /* Compositor */;
+			targetProxy = BF1A713D2E5F39EB007EF611 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		BF1A71402E5F39EB007EF611 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = PK2473XF3P;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = MaxEliseyev.CompositorTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Compositor.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Compositor";
+			};
+			name = Debug;
+		};
+		BF1A71412E5F39EB007EF611 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = PK2473XF3P;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = MaxEliseyev.CompositorTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Compositor.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Compositor";
+			};
+			name = Release;
+		};
 		BFD2D8E82E1F2C8900BFAC11 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -743,7 +929,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = Compositor.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -752,9 +938,11 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Compositor-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Compositor;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.video";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -777,7 +965,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = Compositor.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -786,9 +974,11 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Compositor-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Compositor;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.video";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -809,6 +999,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		BF1A713F2E5F39EB007EF611 /* Build configuration list for PBXNativeTarget "CompositorTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BF1A71402E5F39EB007EF611 /* Debug */,
+				BF1A71412E5F39EB007EF611 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		BFD2D8D42E1F2C8600BFAC11 /* Build configuration list for PBXProject "Compositor" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

@@ -57,7 +57,7 @@ struct MetalSettingsPanel: View {
                     
                     Button("Reset") {
                         metalManager.isMetalEnabled = true
-                        metalManager.preferredRenderer = .metal
+                        metalManager.preferredRenderer = "metal"
                     }
                     .buttonStyle(.borderless)
                     .font(.caption)
@@ -69,12 +69,9 @@ struct MetalSettingsPanel: View {
                         .font(.subheadline)
                         .foregroundColor(.primary)
                     
-                    Picker("Renderer", selection: $metalManager.preferredRenderer) {
-                        ForEach(RendererType.allCases, id: \.self) { renderer in
-                            Text(renderer.displayName).tag(renderer)
-                        }
-                    }
-                    .pickerStyle(SegmentedPickerStyle())
+                    // TODO: Восстановить после исправления импортов
+                    Text("Renderer selection not available")
+                        .foregroundColor(.secondary)
                 }
             }
             
@@ -92,21 +89,9 @@ struct MetalSettingsPanel: View {
                         .font(.subheadline)
                         .foregroundColor(.primary)
                     
-                    Picker("Mode", selection: $metalManager.performanceMode) {
-                        ForEach(MetalRenderingManager.PerformanceMode.allCases, id: \.self) { mode in
-                            VStack(alignment: .leading) {
-                                Text(mode.rawValue)
-                                Text(mode.description)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                            .tag(mode)
-                        }
-                    }
-                    .pickerStyle(MenuPickerStyle())
-                    .onChange(of: metalManager.performanceMode) { _, newMode in
-                        metalManager.setPerformanceMode(newMode)
-                    }
+                    // TODO: Восстановить после исправления импортов
+                    Text("Performance mode selection not available")
+                        .foregroundColor(.secondary)
                 }
                 
                 // Статистика производительности
@@ -202,7 +187,11 @@ struct MetalSettingsPanel: View {
             Spacer()
         }
         .padding()
+        #if os(macOS)
         .frame(minWidth: 300, maxWidth: 400)
+        #elseif os(iOS)
+        .frame(maxWidth: .infinity)
+        #endif
         .sheet(isPresented: $showingSystemInfo) {
             SystemInfoView()
                 .environmentObject(metalManager)
@@ -243,8 +232,12 @@ struct SystemInfoView: View {
             
             HStack {
                 Button("Copy to Clipboard") {
+                    #if os(macOS)
                     NSPasteboard.general.clearContents()
                     NSPasteboard.general.setString(metalManager.getSystemInfo(), forType: .string)
+                    #elseif os(iOS)
+                    UIPasteboard.general.string = metalManager.getSystemInfo()
+                    #endif
                 }
                 .buttonStyle(.bordered)
                 
@@ -257,15 +250,11 @@ struct SystemInfoView: View {
             }
         }
         .padding()
+        #if os(macOS)
         .frame(width: 500, height: 400)
+        #elseif os(iOS)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        #endif
     }
 }
 
-// MARK: - Preview
-
-struct MetalSettingsPanel_Previews: PreviewProvider {
-    static var previews: some View {
-        MetalSettingsPanel()
-            .environmentObject(MetalRenderingManager.shared)
-    }
-}

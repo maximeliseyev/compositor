@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-import CoreImage
+@preconcurrency import CoreImage
 
 // MARK: - Node Protocol
 protocol NodeProtocol: ObservableObject, Identifiable {
@@ -20,12 +20,14 @@ protocol NodeProtocol: ObservableObject, Identifiable {
     var outputPorts: [NodePort] { get }
     
     func process(inputs: [CIImage?]) -> CIImage?
+    func processAsync(inputs: [CIImage?]) async throws -> CIImage?
     func getParameterKeys() -> [String]
     func setParameter(key: String, value: Any)
     func getParameter(key: String) -> Any?
 }
 
-class BaseNode: NodeProtocol {
+@MainActor
+class BaseNode: @preconcurrency NodeProtocol, Equatable {
     let id = UUID()
     let type: NodeType
     @Published var position: CGPoint
@@ -61,8 +63,27 @@ class BaseNode: NodeProtocol {
         }
     }
     
+    // MARK: - Equatable
+    
+    nonisolated static func == (lhs: BaseNode, rhs: BaseNode) -> Bool {
+        return lhs.id == rhs.id
+    }
+    
     func process(inputs: [CIImage?]) -> CIImage? {
         return inputs.first ?? nil
+    }
+    
+    // MARK: - Async Processing
+    
+    /// Асинхронная версия обработки - по умолчанию вызывает синхронную версию
+    func processAsync(inputs: [CIImage?]) async throws -> CIImage? {
+        // По умолчанию выполняем синхронную обработку в фоновом потоке
+        return await withCheckedContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                let result = self.process(inputs: inputs)
+                continuation.resume(returning: result)
+            }
+        }
     }
     
     func processWithCache(inputs: [CIImage?]) -> CIImage? {
@@ -73,6 +94,23 @@ class BaseNode: NodeProtocol {
         }
         
         let result = process(inputs: inputs)
+        cachedOutput = result
+        lastInputHash = currentHash
+        
+        return result
+    }
+    
+    // MARK: - Async Cache Processing
+    
+    /// Асинхронная версия обработки с кэшированием
+    func processWithCacheAsync(inputs: [CIImage?]) async throws -> CIImage? {
+        let currentHash = inputs.compactMap { $0?.extent.debugDescription }.joined().hashValue
+        
+        if currentHash == lastInputHash, let cached = cachedOutput {
+            return cached
+        }
+        
+        let result = try await processAsync(inputs: inputs)
         cachedOutput = result
         lastInputHash = currentHash
         
@@ -97,6 +135,9 @@ class BaseNode: NodeProtocol {
         lastInputHash = 0
     }
     
+    // MARK: - Connection Management
+    
+    /// Добавляет входящее соединение к ноде
     func addInputConnection(_ connection: NodeConnection) {
         // Prevent duplicate connections
         if !inputConnections.contains(where: { $0.id == connection.id }) {
@@ -104,10 +145,17 @@ class BaseNode: NodeProtocol {
         }
     }
         
+    /// Удаляет конкретное входящее соединение
     func removeInputConnection(_ connection: NodeConnection) {
         inputConnections.removeAll { $0.id == connection.id }
     }
+    
+    /// Удаляет все входящие соединения
+    func clearInputConnections() {
+        inputConnections.removeAll()
+    }
         
+    /// Добавляет исходящее соединение к ноде
     func addOutputConnection(_ connection: NodeConnection) {
         // Prevent duplicate connections
         if !outputConnections.contains(where: { $0.id == connection.id }) {
@@ -115,8 +163,26 @@ class BaseNode: NodeProtocol {
         }
     }
         
+    /// Удаляет конкретное исходящее соединение
     func removeOutputConnection(_ connection: NodeConnection) {
         outputConnections.removeAll { $0.id == connection.id }
+    }
+    
+    /// Удаляет все исходящие соединения
+    func clearOutputConnections() {
+        outputConnections.removeAll()
+    }
+    
+    /// Удаляет конкретное соединение (как входящее, так и исходящее)
+    func removeConnection(_ connection: NodeConnection) {
+        inputConnections.removeAll { $0.id == connection.id }
+        outputConnections.removeAll { $0.id == connection.id }
+    }
+    
+    /// Очищает все соединения ноды
+    func clearAllConnections() {
+        inputConnections.removeAll()
+        outputConnections.removeAll()
     }
 }
 

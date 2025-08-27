@@ -85,8 +85,6 @@ struct NodeInspectorView: View {
             Group {
                 if let inputNode = node as? InputNode {
                     InputNodeInspector(node: inputNode)
-                } else if let correctorNode = node as? CorrectorNode {
-                    CorrectorNodeInspector(node: correctorNode)
                 } else if let viewNode = node as? ViewNode {
                     ViewNodeInspector(node: viewNode)
                 } else {

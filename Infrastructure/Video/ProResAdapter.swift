@@ -122,10 +122,10 @@ class ProResAdapter: ObservableObject {
         do {
             let duration = try await asset.load(.duration)
             let totalSeconds = CMTimeGetSeconds(duration)
-            let frameCount = min(maxFrames, Int(totalSeconds * 30)) // 30fps estimate
+            let frameCount = min(maxFrames, Int(totalSeconds * PerformanceConstants.defaultVideoFrameRate)) // FPS estimate
             
             for i in 0..<frameCount {
-                let time = CMTime(seconds: Double(i) * totalSeconds / Double(frameCount), preferredTimescale: 600)
+                let time = CMTime(seconds: Double(i) * totalSeconds / Double(frameCount), preferredTimescale: PerformanceConstants.preferredVideoTimescale)
                 
                 do {
                     let cgImage = try await imageGenerator.image(at: time).image

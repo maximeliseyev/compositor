@@ -9,6 +9,7 @@ import SwiftUI
 import Combine
 import CoreImage
 
+@MainActor
 class ViewerPanelController: ObservableObject {
     // MARK: - Image Properties
     @Published var currentImage: NSImage?
@@ -117,7 +118,6 @@ class ViewerPanelController: ObservableObject {
         showTransportOverlayTemporarily()
     }
     
-    @MainActor
     func stepBackward() {
         print("⏪ stepBackward called")
         guard let inputNode = connectedInputNode, isVideoMode else { 
@@ -131,7 +131,6 @@ class ViewerPanelController: ObservableObject {
         showTransportOverlayTemporarily()
     }
     
-    @MainActor
     func stepForward() {
         print("⏩ stepForward called")
         guard let inputNode = connectedInputNode, isVideoMode else { 
@@ -145,7 +144,6 @@ class ViewerPanelController: ObservableObject {
         showTransportOverlayTemporarily()
     }
     
-    @MainActor
     func jumpBackward() {
         guard let inputNode = connectedInputNode, isVideoMode else { return }
         
@@ -154,7 +152,6 @@ class ViewerPanelController: ObservableObject {
         showTransportOverlayTemporarily()
     }
     
-    @MainActor
     func jumpForward() {
         guard let inputNode = connectedInputNode, isVideoMode else { return }
         
@@ -188,7 +185,6 @@ class ViewerPanelController: ObservableObject {
         showTransportOverlay = true
     }
     
-    @MainActor
     func scrub(to time: Double) {
         guard let inputNode = connectedInputNode, isVideoMode else { return }
         
@@ -331,7 +327,9 @@ class ViewerPanelController: ObservableObject {
             }
             
             self.currentTime = newTime
-            inputNode.seek(to: newTime)
+            Task { @MainActor in
+                inputNode.seek(to: newTime)
+            }
         }
     }
     

@@ -19,7 +19,7 @@ struct ConnectionHelper {
         return outputPort.dataType == inputPort.dataType
     }
     
-    static func canConnect(from outputNode: BaseNode, outputPort: NodePort, to inputNode: BaseNode, inputPort: NodePort) -> Bool {
+    static func canConnect(from outputNode: BaseNode, outputPort: NodePort, to inputNode: BaseNode, inputPort: NodePort) async -> Bool {
         // Don't allow self-connections
         guard outputNode.id != inputNode.id else {
             return false
@@ -32,12 +32,13 @@ struct ConnectionHelper {
         
         // Check if input port already has a connection (unless it supports multiple inputs)
         if !inputPort.isMultiInput {
-            let existingConnections = inputNode.inputConnections.filter { connection in
-                connection.toPort == inputPort.id
-            }
-            if !existingConnections.isEmpty {
-                return false
-            }
+            // Используем Task для доступа к @MainActor свойствам
+            return await Task { @MainActor in
+                let existingConnections = inputNode.inputConnections.filter { connection in
+                    connection.toPort == inputPort.id
+                }
+                return existingConnections.isEmpty
+            }.value
         }
         
         return true

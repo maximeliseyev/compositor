@@ -9,24 +9,24 @@ import SwiftUI
 
 struct NodeViewConstants {
     // Node dimensions
-    static let nodeWidth: CGFloat = 80
-    static let nodeHeight: CGFloat = 40
+    static let nodeWidth: CGFloat = PerformanceConstants.nodeWidth
+    static let nodeHeight: CGFloat = PerformanceConstants.nodeHeight
     
     // Port dimensions
-    static let portSize: CGFloat = 10
-    static let portSpacing: CGFloat = 20 // Distance between the ports
-    static let portVerticalOffset: CGFloat = 10 // Distance from the edge of the node to the port
+    static let portSize: CGFloat = PerformanceConstants.portSize
+    static let portSpacing: CGFloat = PerformanceConstants.portSpacing // Distance between the ports
+    static let portVerticalOffset: CGFloat = PerformanceConstants.portVerticalOffset // Distance from the edge of the node to the port
     
     // Node spacing and padding
-    static let nodeSelectionPadding: CGFloat = 20
+    static let nodeSelectionPadding: CGFloat = PerformanceConstants.nodeSelectionPadding
     
     // Visual elements
-    static let nodeCornerRadius: CGFloat = 8
-    static let connectionLineWidth: CGFloat = 3
-    static let selectionBorderWidth: CGFloat = 2
+    static let nodeCornerRadius: CGFloat = PerformanceConstants.nodeCornerRadius
+    static let connectionLineWidth: CGFloat = PerformanceConstants.connectionLineWidth
+    static let selectionBorderWidth: CGFloat = PerformanceConstants.selectionBorderWidth
     
     // Grid
-    static let gridSpacing: CGFloat = 40
+    static let gridSpacing: CGFloat = PerformanceConstants.gridSpacing
     
     // MARK: - Node frame calculations
     

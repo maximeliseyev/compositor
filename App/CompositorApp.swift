@@ -10,11 +10,21 @@ import AppKit
 
 @main
 struct SwiftCompositorApp: App {
+    
+    @State private var showingPerformanceSettings = false
+    
+    init() {
+        // Инициализация приложения
+        print("🚀 Compositor App starting...")
+    }
+
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .environmentObject(MetalRenderingManager.shared)
                 .metalRendering()
+                .sheet(isPresented: $showingPerformanceSettings) {
+                    IntegratedSettingsPanel()
+                }
         }
         .windowStyle(.titleBar)
         .windowToolbarStyle(.unified)
@@ -51,6 +61,13 @@ struct SwiftCompositorApp: App {
                     NotificationCenter.default.post(name: .showAllPanels, object: nil)
                 }
                 .keyboardShortcut("0", modifiers: [.command, .shift])
+            }
+            
+            CommandGroup(after: .appSettings) {
+                Button("Performance Settings...") {
+                    showingPerformanceSettings = true
+                }
+                .keyboardShortcut(",", modifiers: [.command, .option])
             }
         }
     }

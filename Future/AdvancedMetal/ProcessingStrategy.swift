@@ -52,7 +52,7 @@ class ProcessingStrategyManager: ObservableObject {
     
     // MARK: - System Information
     private let device: MTLDevice
-    private let systemInfo: SystemInfo
+    private let systemInfo: MetalSystemInfo
     @Published var currentTier: ProcessingTier
     @Published var recommendedStrategy: ProcessingStrategy
     
@@ -68,7 +68,7 @@ class ProcessingStrategyManager: ObservableObject {
     // MARK: - Initialization
     init(device: MTLDevice) {
         self.device = device
-        self.systemInfo = SystemInfo(device: device)
+        self.systemInfo = MetalSystemInfo(device: device)
         let tier = ProcessingStrategyManager.determineTier(for: device)
         self.currentTier = tier
         self.recommendedStrategy = ProcessingStrategyManager.determineInitialStrategy(for: tier)
@@ -89,8 +89,6 @@ class ProcessingStrategyManager: ObservableObject {
         
         // Consider current system state
         let systemLoad = getCurrentSystemLoad()
-        let availableMemory = getAvailableGPUMemory()
-        let imageComplexity = calculateImageComplexity(size: imageSize)
         
         // MPS availability check
         let mpsSupported = isMPSSupported(for: operation)
@@ -351,7 +349,7 @@ struct PerformanceMetric {
     let timestamp: Date = Date()
 }
 
-struct SystemInfo {
+struct MetalSystemInfo {
     let deviceName: String
     let metalVersion: String
     let maxThreadsPerThreadgroup: MTLSize

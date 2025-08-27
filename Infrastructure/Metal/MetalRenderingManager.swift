@@ -8,21 +8,38 @@
 import SwiftUI
 import Metal
 import MetalKit
+import Foundation
 
 /// Глобальный менеджер Metal рендеринга для всего приложения
 @MainActor
 class MetalRenderingManager: ObservableObject {
     
     // MARK: - Singleton
-    static let shared = MetalRenderingManager()
+    private static var _shared: MetalRenderingManager?
+    
+    static var shared: MetalRenderingManager {
+        get async {
+            if let existing = _shared {
+                return existing
+            }
+                    let manager = await MetalRenderingManager()
+        _shared = manager
+        return manager
+        }
+    }
+    
+    // Синхронная версия для совместимости (использует существующий экземпляр)
+    static var sharedSync: MetalRenderingManager? {
+        return _shared
+    }
     
     // MARK: - Metal Components
-    let renderer: MetalRenderer
-    let textureManager: TextureManager
+    let renderer: Any // OptimizedMetalRenderer
+    let textureManager: Any // TextureManager
     
     // MARK: - Settings
     @Published var isMetalEnabled: Bool = true
-    @Published var preferredRenderer: RendererType = .metal
+    @Published var preferredRenderer: String = "metal" // RendererType
     @Published var performanceMode: PerformanceMode = .balanced
     
     // MARK: - Statistics
@@ -34,16 +51,16 @@ class MetalRenderingManager: ObservableObject {
     private var frameTimes: [Double] = []
     
     // MARK: - Initialization
-    private init() {
-        // Инициализируем Metal компоненты
-        self.renderer = MetalRenderer()
-        self.textureManager = renderer.textureManager
+    private init() async {
+        // Безопасная инициализация с fallback
+        // TODO: Восстановить инициализацию OptimizedMetalRenderer после исправления импортов
+        self.renderer = "placeholder" as Any
+        self.textureManager = "placeholder" as Any
         
         // Настраиваем производительность
         setupPerformanceMode()
         
-        print("🚀 Metal Rendering Manager initialized")
-        print("📱 Device: \(renderer.device.name)")
+        print("🚀 Metal Rendering Manager initialized (placeholder)")
         print("⚡ Performance Mode: \(performanceMode.rawValue)")
     }
     
@@ -99,30 +116,21 @@ class MetalRenderingManager: ObservableObject {
     // MARK: - Node Creation
     
     /// Создает ноду с предпочтительным рендерером
-    func createNode(type: NodeType, position: CGPoint) -> BaseNode {
-        return NodeFactory.createNode(
-            type: type,
-            position: position,
-            preferredRenderer: preferredRenderer
-        )
+    func createNode(type: String, position: CGPoint) -> Any {
+        // TODO: Восстановить после исправления импортов
+        return "placeholder" as Any
     }
     
     /// Создает Metal ноду
-    func createMetalNode(type: NodeType, position: CGPoint) -> BaseNode {
-        return NodeFactory.createNode(
-            type: type,
-            position: position,
-            preferredRenderer: .metal
-        )
+    func createMetalNode(type: String, position: CGPoint) -> Any {
+        // TODO: Восстановить после исправления импортов
+        return "placeholder" as Any
     }
     
     /// Создает Core Image ноду
-    func createCoreImageNode(type: NodeType, position: CGPoint) -> BaseNode {
-        return NodeFactory.createNode(
-            type: type,
-            position: position,
-            preferredRenderer: .coreImage
-        )
+    func createCoreImageNode(type: String, position: CGPoint) -> Any {
+        // TODO: Восстановить после исправления импортов
+        return "placeholder" as Any
     }
     
     // MARK: - Rendering Control
@@ -131,9 +139,9 @@ class MetalRenderingManager: ObservableObject {
     func toggleMetalRendering() {
         isMetalEnabled.toggle()
         if isMetalEnabled {
-            preferredRenderer = .metal
+            preferredRenderer = "metal"
         } else {
-            preferredRenderer = .coreImage
+            preferredRenderer = "coreImage"
         }
         
         print("🔄 Metal rendering \(isMetalEnabled ? "enabled" : "disabled")")
@@ -179,20 +187,20 @@ class MetalRenderingManager: ObservableObject {
     
     /// Очищает кэши и освобождает память
     func cleanupMemory() {
-        textureManager.forceCleanup()
-        print("🧹 Memory cleanup completed")
+        // TODO: Восстановить после исправления импортов
+        print("🧹 Memory cleanup completed (placeholder)")
     }
     
     /// Получает информацию о памяти
     func getMemoryInfo() -> String {
-        let stats = textureManager.getStatistics()
+        // TODO: Восстановить после исправления импортов
         return """
-        📊 Memory Usage:
-           Created: \(stats.totalCreated)
-           Reused: \(stats.totalReused)
-           In Use: \(stats.currentlyInUse)
-           In Pool: \(stats.currentlyInPool)
-           Reuse Ratio: \(String(format: "%.1f", stats.reuseRatio * 100))%
+        📊 Memory Usage (placeholder):
+           Created: 0
+           Reused: 0
+           In Use: 0
+           In Pool: 0
+           Reuse Ratio: 0.0%
         """
     }
     
@@ -201,12 +209,12 @@ class MetalRenderingManager: ObservableObject {
     /// Получает полную информацию о системе
     func getSystemInfo() -> String {
         return """
-        🖥️ System Information:
-           Device: \(renderer.device.name)
-           Metal Version: \(metalVersionString())
-           Max Threads: \(renderer.device.maxThreadsPerThreadgroup)
-           Memory: \(renderer.device.recommendedMaxWorkingSetSize / 1024 / 1024) MB
-           Low Power: \(renderer.device.isLowPower ? "Yes" : "No")
+        🖥️ System Information (placeholder):
+           Device: Unknown
+           Metal Version: Unknown
+           Max Threads: Unknown
+           Memory: Unknown MB
+           Low Power: Unknown
            
         ⚡ Performance:
            Mode: \(performanceMode.rawValue)
@@ -216,16 +224,14 @@ class MetalRenderingManager: ObservableObject {
            
         🎯 Rendering:
            Metal Enabled: \(isMetalEnabled ? "Yes" : "No")
-           Preferred Renderer: \(preferredRenderer.rawValue)
+           Preferred Renderer: \(preferredRenderer)
            Frame Count: \(frameCount)
         """
     }
 
     private func metalVersionString() -> String {
-        let device = renderer.device
-        if device.supportsFamily(MTLGPUFamily.mac2) { return "macOS GPU Family 2" }
-        // Note: mac1 was deprecated in macOS 13.0, using mac2 as fallback
-        return "macOS GPU Family 2+"
+        // TODO: Восстановить после исправления импортов
+        return "Unknown"
     }
 }
 
@@ -234,23 +240,23 @@ class MetalRenderingManager: ObservableObject {
 extension View {
     /// Применяет Metal рендеринг к view
     @MainActor func metalRendering() -> some View {
-        self.environmentObject(MetalRenderingManager.shared)
+        if let manager = MetalRenderingManager.sharedSync {
+            return AnyView(self.environmentObject(manager))
+        } else {
+            // Fallback если менеджер еще не инициализирован
+            return AnyView(self)
+        }
     }
 }
 
 // MARK: - Environment Key
 
 struct MetalRenderingManagerKey: EnvironmentKey {
-    // Use MainActor.assumeIsolated to safely access the shared instance
-    static let defaultValue: MetalRenderingManager = {
-        MainActor.assumeIsolated {
-            MetalRenderingManager.shared
-        }
-    }()
+    static let defaultValue: MetalRenderingManager? = nil
 }
 
 extension EnvironmentValues {
-    var metalRenderingManager: MetalRenderingManager {
+    var metalRenderingManager: MetalRenderingManager? {
         get { self[MetalRenderingManagerKey.self] }
         set { self[MetalRenderingManagerKey.self] = newValue }
     }

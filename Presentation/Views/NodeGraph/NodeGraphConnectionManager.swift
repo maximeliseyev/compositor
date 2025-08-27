@@ -101,7 +101,13 @@ class NodeGraphConnectionManager: ObservableObject {
               let _ = (toNode.inputPorts + toNode.outputPorts).first(where: { $0.id == toPortID }) else {
             // Если это была существующая связь, восстанавливаем её
             if let draggedConnection = draggedConnection {
-                nodeGraph.addConnection(draggedConnection)
+                // Восстанавливаем соединение через connectPorts
+                if let fromNode = cache.getCachedNode(id: draggedConnection.fromNode),
+                   let toNode = cache.getCachedNode(id: draggedConnection.toNode),
+                   let fromPort = fromNode.outputPorts.first(where: { $0.id == draggedConnection.fromPort }),
+                   let toPort = toNode.inputPorts.first(where: { $0.id == draggedConnection.toPort }) {
+                    let _ = nodeGraph.connectPorts(fromNode: fromNode, fromPort: fromPort, toNode: toNode, toPort: toPort)
+                }
             }
             resetConnectionDrag()
             return
@@ -144,7 +150,13 @@ class NodeGraphConnectionManager: ObservableObject {
         } else {
             // Если не удалось подключить и это была существующая связь, восстанавливаем её
             if let draggedConnection = draggedConnection {
-                nodeGraph.addConnection(draggedConnection)
+                // Восстанавливаем соединение через connectPorts
+                if let fromNode = cache.getCachedNode(id: draggedConnection.fromNode),
+                   let toNode = cache.getCachedNode(id: draggedConnection.toNode),
+                   let fromPort = fromNode.outputPorts.first(where: { $0.id == draggedConnection.fromPort }),
+                   let toPort = toNode.inputPorts.first(where: { $0.id == draggedConnection.toPort }) {
+                    let _ = nodeGraph.connectPorts(fromNode: fromNode, fromPort: fromPort, toNode: toNode, toPort: toPort)
+                }
             }
         }
         

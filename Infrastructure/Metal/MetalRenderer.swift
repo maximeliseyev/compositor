@@ -30,31 +30,39 @@ class MetalRenderer: ObservableObject, @unchecked Sendable {
     @Published var isReady = false
     @Published var errorMessage: String?
     
-    init() {
-        // Проверяем доступность Metal
-        guard let device = MTLCreateSystemDefaultDevice() else {
-            fatalError("Metal not supported on this device")
-        }
-        
-        guard let commandQueue = device.makeCommandQueue() else {
-            fatalError("Could not create Metal command queue")
-        }
-        
-        // Пытаемся загрузить шейдеры
-        guard let library = device.makeDefaultLibrary() else {
-            fatalError("Could not load Metal shaders library")
-        }
-        
+    private init(device: MTLDevice, commandQueue: MTLCommandQueue, library: MTLLibrary, textureManager: TextureManager) {
         self.device = device
         self.commandQueue = commandQueue
         self.library = library
-        self.textureManager = TextureManager(device: device)
-        
+        self.textureManager = textureManager
         self.isReady = true
         
         print("✅ Metal initialized successfully")
         print("📱 Device: \(device.name)")
         print("🔧 Max threads per group: \(device.maxThreadsPerThreadgroup)")
+    }
+    
+    /// Создает новый экземпляр MetalRenderer асинхронно
+    static func create() async -> MetalRenderer? {
+        // Проверяем доступность Metal
+        guard let device = MTLCreateSystemDefaultDevice() else {
+            print("❌ Metal not supported on this device")
+            return nil
+        }
+        
+        guard let commandQueue = device.makeCommandQueue() else {
+            print("❌ Could not create Metal command queue")
+            return nil
+        }
+        
+        // Пытаемся загрузить шейдеры
+        guard let library = device.makeDefaultLibrary() else {
+            print("❌ Could not load Metal shaders library")
+            return nil
+        }
+        
+        let textureManager = await TextureManager(device: device)
+        return MetalRenderer(device: device, commandQueue: commandQueue, library: library, textureManager: textureManager)
     }
     
     // MARK: - CIImage Integration
@@ -71,7 +79,7 @@ class MetalRenderer: ObservableObject, @unchecked Sendable {
     func textureFromCIImage(_ ciImage: CIImage) async throws -> MTLTexture? {
         // Захватываем необходимые значения на MainActor до перехода на фон
         let extent = ciImage.extent
-        guard let texture = self.textureManager.acquireTexture(
+        guard let texture = await self.textureManager.acquireTextureSync(
             width: Int(extent.width),
             height: Int(extent.height),
             pixelFormat: MTLPixelFormat.rgba8Unorm
@@ -112,39 +120,35 @@ class MetalRenderer: ObservableObject, @unchecked Sendable {
             throw MetalError.cannotCreateTexture
         }
         
-        let outputTexture = textureManager.acquireTexture(
+        guard let outputTexture = await textureManager.acquireTexture(
             width: inputTexture.width,
             height: inputTexture.height,
             pixelFormat: inputTexture.pixelFormat
-        )
-        
-        guard let outputTexture = outputTexture else {
+        ) else {
             throw MetalError.cannotCreateTexture
         }
         
-        // Применяем шейдер
-        try await applyComputeShader(
-            shaderName: shaderName,
+        try await processTextureWithShader(
             inputTexture: inputTexture,
             outputTexture: outputTexture,
+            shaderName: shaderName,
             parameters: parameters
         )
         
-        // Конвертируем обратно в CIImage
         let result = ciImageFromTexture(outputTexture)
         
         // Освобождаем текстуры
-        textureManager.releaseTexture(inputTexture)
-        textureManager.releaseTexture(outputTexture)
+        await textureManager.releaseTexture(inputTexture)
+        await textureManager.releaseTexture(outputTexture)
         
         return result
     }
     
-    /// Применяет compute шейдер к текстурам
-    private func applyComputeShader(
-        shaderName: String,
+    /// Асинхронно обрабатывает текстуру через Metal шейдер
+    private func processTextureWithShader(
         inputTexture: MTLTexture,
         outputTexture: MTLTexture,
+        shaderName: String,
         parameters: [String: Any]
     ) async throws {
         guard let commandBuffer = commandQueue.makeCommandBuffer() else {
@@ -181,8 +185,16 @@ class MetalRenderer: ObservableObject, @unchecked Sendable {
         computeEncoder.endEncoding()
         
         commandBuffer.commit()
-        commandBuffer.waitUntilCompleted()
+        
+        // Асинхронное ожидание завершения
+        return try await withCheckedThrowingContinuation { continuation in
+            commandBuffer.addCompletedHandler { _ in
+                continuation.resume()
+            }
+        }
     }
+    
+
     
     /// Создает буфер параметров для шейдера
     private func createParameterBuffer(parameters: [String: Any]) throws -> (MTLBuffer, Int) {
@@ -308,15 +320,15 @@ class MetalRenderer: ObservableObject, @unchecked Sendable {
     }
     
     // MARK: - Basic Rendering Operations
-    func createBlankTexture(width: Int, height: Int, pixelFormat: MTLPixelFormat = .rgba8Unorm) -> MTLTexture? {
-        return textureManager.acquireTexture(
+    func createBlankTexture(width: Int, height: Int, pixelFormat: MTLPixelFormat = .rgba8Unorm) async -> MTLTexture? {
+        return await textureManager.acquireTexture(
             width: width,
             height: height,
             pixelFormat: pixelFormat
         )
     }
     
-    func copyTexture(from source: MTLTexture, to destination: MTLTexture) throws {
+    func copyTexture(from source: MTLTexture, to destination: MTLTexture) async throws {
         guard let commandBuffer = commandQueue.makeCommandBuffer() else {
             throw MetalError.cannotCreateCommandBuffer
         }
@@ -339,7 +351,13 @@ class MetalRenderer: ObservableObject, @unchecked Sendable {
         
         blitEncoder.endEncoding()
         commandBuffer.commit()
-        commandBuffer.waitUntilCompleted()
+        
+        // Асинхронное ожидание завершения
+        return try await withCheckedThrowingContinuation { continuation in
+            commandBuffer.addCompletedHandler { _ in
+                continuation.resume()
+            }
+        }
     }
     
     // MARK: - Debug Helpers

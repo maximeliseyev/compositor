@@ -2,329 +2,158 @@
 //  NodeGraphProcessor.swift
 //  Compositor
 //
-//  Created by Maxim Eliseyev on 19.07.2025.
+//  Created by Maxim Eliseyev on 12.08.2025.
 //
 
 import Foundation
 import CoreImage
 import Combine
-import SwiftUI
 
-/// Класс для обработки графа нод и автоматической передачи данных
+// MARK: - Node Graph Processor
+
+/// Процессор для асинхронной обработки графа нод
 @MainActor
 class NodeGraphProcessor: ObservableObject {
-    private weak var nodeGraph: NodeGraph? // Weak reference to prevent retain cycles
+    
+    // MARK: - Published Properties
+    
+    @Published var isProcessing: Bool = false
+    @Published var processingProgress: Double = 0.0
+    @Published var errorMessage: String?
+    @Published var activeNodeCount: Int = 0
+    
+    // MARK: - Private Properties
+    
+    private let nodeGraph: NodeGraph
+    private var processingTask: Task<Void, Never>?
     private var cancellables = Set<AnyCancellable>()
     
-    // Кэш обработанных данных для избежания повторных вычислений
-    private var processCache: [UUID: CIImage] = [:]
-    private var nilCache: Set<UUID> = [] // Отдельный набор для nil значений
-    private var lastProcessTime: [UUID: Date] = [:]
+    // Performance tracking
+    private var processingTimes: [TimeInterval] = []
+    private var lastProcessingTime: Date = Date()
     
-    // Memory management constants
-    private let maxCacheSize = 50
-    private let cacheExpirationTime: TimeInterval = 30.0
+    // MARK: - Initialization
     
     init(nodeGraph: NodeGraph) {
         self.nodeGraph = nodeGraph
-        setupSubscriptions()
+        setupBindings()
     }
     
-    private func setupSubscriptions() {
-        guard let nodeGraph = nodeGraph else { return }
-        
-        // Подписка на изменения в графе
-        nodeGraph.$connections
-            .sink { [weak self] _ in
-                self?.invalidateCache()
-                self?.processGraph()
-            }
-            .store(in: &cancellables)
-        
-        // Подписка на изменения нод
-        nodeGraph.$nodes
-            .sink { [weak self] _ in
-                self?.invalidateCache()
-                self?.processGraph()
-            }
-            .store(in: &cancellables)
+    // MARK: - Setup
+    
+    private func setupBindings() {
+        // Автоматическая обработка при изменениях в графе
+        // TODO: Добавить наблюдение за изменениями в NodeGraph
     }
     
-    /// Обрабатывает весь граф нод
-    func processGraph() {
-        guard nodeGraph != nil else { return }
-        
-        cleanupExpiredCache()
-        let sortedNodes = topologicalSort()
-        
-        #if DEBUG
-        print("🧮 Processing graph, nodes order: \(sortedNodes.map{ $0.type.rawValue })")
-        #endif
-        
-        for node in sortedNodes {
-            processNode(node)
-        }
-    }
+    // MARK: - Public Methods
     
-    /// Обрабатывает конкретную ноду
-    func processNode(_ node: BaseNode) {
-        // Получаем входные данные из соединенных нод
-        let inputs = getInputsForNode(node)
+    /// Запускает обработку графа нод
+    func processGraph() async {
+        guard !isProcessing else { return }
         
-        // Проверяем, есть ли валидные входные данные для InputNode
-        if node is InputNode {
-            let inputNode = node as! InputNode
-            if inputNode.currentFrame == nil {
-                #if DEBUG
-                print("⚠️ Node \(node.type.rawValue) produced nil - no current frame")
-                #endif
-                nilCache.insert(node.id)
-                processCache.removeValue(forKey: node.id)
-                lastProcessTime[node.id] = Date()
-                return
-            }
-        }
+        isProcessing = true
+        processingProgress = 0.0
+        errorMessage = nil
+        activeNodeCount = 0
         
-        // Обрабатываем ноду
-        let output = node.processWithCache(inputs: inputs)
-        #if DEBUG
-        if let out = output {
-            print("✅ Node \(node.type.rawValue) produced: extent=\(out.extent)")
-        } else {
-            print("⚠️ Node \(node.type.rawValue) produced nil")
-        }
-        #endif
+        let startTime = Date()
         
-        // Кэшируем результат
-        if let output = output {
-            processCache[node.id] = output
-            nilCache.remove(node.id)
-        } else {
-            nilCache.insert(node.id)
-            processCache.removeValue(forKey: node.id)
-        }
-        lastProcessTime[node.id] = Date()
-        
-        // Особая обработка для InputNode - запускаем обработку при изменении медиа
-        if let inputNode = node as? InputNode {
-            setupInputNodeObservation(inputNode)
-        }
-    }
-    
-    /// Получает входные данные для ноды из соединенных output-нод
-    private func getInputsForNode(_ node: BaseNode) -> [CIImage?] {
-        guard let nodeGraph = nodeGraph else { return [] }
-        
-        // Сортируем input connections по порядку портов
-        let sortedInputs = node.inputPorts.map { inputPort in
-            // Находим соединение к этому input порту
-            let connection = nodeGraph.connections.first { conn in
-                conn.toNode == node.id && conn.toPort == inputPort.id
-            }
-            
-            guard let connection = connection else {
-                return nil as CIImage?
-            }
-            
-            // Находим source ноду
-            guard let sourceNode = nodeGraph.nodes.first(where: { $0.id == connection.fromNode }) else {
-                return nil
-            }
-            
-            // Возвращаем кэшированный результат или обрабатываем source ноду
-            if let lastTime = lastProcessTime[sourceNode.id],
-               Date().timeIntervalSince(lastTime) < 0.1 {
-                if let cachedResult = processCache[sourceNode.id] {
-                    return cachedResult
-                } else if nilCache.contains(sourceNode.id) {
-                    return nil
-                }
-            }
-            
-            // Если кэш недействителен или отсутствует, обрабатываем source ноду
-            let sourceOut = sourceNode.processWithCache(inputs: getInputsForNode(sourceNode))
-            #if DEBUG
-            if let so = sourceOut {
-                print("↪️  input for \(node.type.rawValue) from \(sourceNode.type.rawValue): extent=\(so.extent)")
-            } else {
-                print("↪️  input for \(node.type.rawValue) from \(sourceNode.type.rawValue): nil")
-            }
-            #endif
-            return sourceOut
-        }
-        
-        return sortedInputs
-    }
-    
-    /// Настройка наблюдения за изменениями в InputNode
-    private func setupInputNodeObservation(_ inputNode: InputNode) {
-        // Отслеживаем изменения в изображении
-        inputNode.$ciImage
-            .dropFirst()
-            .sink { [weak self] _ in
-                self?.onInputNodeChanged(inputNode)
-            }
-            .store(in: &cancellables)
-        
-        // Отслеживаем изменения в медиа
-        inputNode.$currentFrame
-            .dropFirst()
-            .sink { [weak self] _ in
-                self?.onInputNodeChanged(inputNode)
-            }
-            .store(in: &cancellables)
-    }
-    
-    /// Вызывается при изменении InputNode
-    private func onInputNodeChanged(_ inputNode: InputNode) {
-        // Инвалидируем кэш для этой ноды
-        processCache.removeValue(forKey: inputNode.id)
-        nilCache.remove(inputNode.id)
-        
-        // Находим все ноды, которые зависят от этой input ноды
-        let dependentNodes = findDependentNodes(for: inputNode)
-        
-        // Обрабатываем зависимые ноды
-        for dependentNode in dependentNodes {
-            processNode(dependentNode)
-        }
-    }
-    
-    /// Находит все ноды, которые зависят от данной ноды
-    private func findDependentNodes(for sourceNode: BaseNode) -> [BaseNode] {
-        var dependentNodes: [BaseNode] = []
-        var visited: Set<UUID> = []
-        
-        func collectDependents(_ node: BaseNode) {
-            guard !visited.contains(node.id) else { return }
-            visited.insert(node.id)
-            
-            // Находим все соединения от этой ноды
-            guard let nodeGraph = nodeGraph else { return }
-            let outgoingConnections = nodeGraph.connections.filter { $0.fromNode == node.id }
-            
-            for connection in outgoingConnections {
-                if let dependentNode = nodeGraph.nodes.first(where: { $0.id == connection.toNode }) {
-                    dependentNodes.append(dependentNode)
-                    collectDependents(dependentNode)
-                }
-            }
-        }
-        
-        collectDependents(sourceNode)
-        return dependentNodes
-    }
-    
-    /// Топологическая сортировка нод для правильного порядка обработки
-    private func topologicalSort() -> [BaseNode] {
-        guard let nodeGraph = nodeGraph else { return [] }
-        
-        var sorted: [BaseNode] = []
-        var visited: Set<UUID> = []
-        var visiting: Set<UUID> = []
-        
-        func visit(_ node: BaseNode) {
-            if visiting.contains(node.id) {
-                // Обнаружен цикл - пропускаем
+        do {
+            // Проверяем на циклы
+            if nodeGraph.hasCycles() {
+                errorMessage = "Cycle detected in node graph"
+                isProcessing = false
                 return
             }
             
-            if visited.contains(node.id) {
-                return
+            // Получаем топологическую сортировку
+            let sortedNodes = nodeGraph.getTopologicalSort()
+            activeNodeCount = sortedNodes.count
+            
+            // Обрабатываем ноды в правильном порядке
+            for (index, node) in sortedNodes.enumerated() {
+                processingProgress = Double(index) / Double(sortedNodes.count)
+                
+                // Обрабатываем ноду
+                await processNode(node)
+                
+                // Небольшая задержка для UI
+                try await Task.sleep(nanoseconds: 10_000_000) // 10ms
             }
             
-            visiting.insert(node.id)
+            processingProgress = 1.0
+            errorMessage = nil
             
-            // Обрабатываем зависимости
-            let dependencies = getDependencies(for: node)
-            for dependency in dependencies {
-                visit(dependency)
+            // Обновляем статистику производительности
+            let processingTime = Date().timeIntervalSince(startTime)
+            processingTimes.append(processingTime)
+            
+            // Ограничиваем количество измерений
+            if processingTimes.count > 10 {
+                processingTimes.removeFirst()
             }
             
-            visiting.remove(node.id)
-            visited.insert(node.id)
-            sorted.append(node)
+        } catch {
+            errorMessage = "Processing error: \(error.localizedDescription)"
         }
         
-        for node in nodeGraph.nodes {
-            if !visited.contains(node.id) {
-                visit(node)
-            }
-        }
-        
-        return sorted
+        isProcessing = false
+        activeNodeCount = 0
     }
     
-    /// Получает зависимости для ноды
-    private func getDependencies(for node: BaseNode) -> [BaseNode] {
-        guard let nodeGraph = nodeGraph else { return [] }
-        
-        var dependencies: [BaseNode] = []
-        
-        for connection in nodeGraph.connections {
-            if connection.toNode == node.id {
-                if let sourceNode = nodeGraph.nodes.first(where: { $0.id == connection.fromNode }) {
-                    dependencies.append(sourceNode)
-                }
-            }
-        }
-        
-        return dependencies
+    /// Останавливает обработку
+    func stopProcessing() async {
+        processingTask?.cancel()
+        isProcessing = false
+        activeNodeCount = 0
     }
     
-    /// Очищает устаревшие записи кэша
-    private func cleanupExpiredCache() {
-        let now = Date()
-        let expiredKeys = lastProcessTime.compactMap { (key, time) in
-            now.timeIntervalSince(time) > cacheExpirationTime ? key : nil
-        }
+    /// Приостанавливает обработку
+    func pauseProcessing() async {
+        // TODO: Реализовать приостановку
+        print("⏸️ Processing paused")
+    }
+    
+    /// Возобновляет обработку
+    func resumeProcessing() async {
+        // TODO: Реализовать возобновление
+        print("▶️ Processing resumed")
+    }
+    
+    // MARK: - Private Methods
+    
+    private func processNode(_ node: BaseNode) async {
+        // Здесь должна быть логика обработки конкретной ноды
+        // Например, рендеринг, применение фильтров и т.д.
+        print("⚙️ Processing node: \(node.type.rawValue)")
         
-        for key in expiredKeys {
-            processCache.removeValue(forKey: key)
-            nilCache.remove(key)
-            lastProcessTime.removeValue(forKey: key)
-        }
-        
-        // Ограничиваем размер кэша
-        if processCache.count > maxCacheSize {
-            let sortedKeys = lastProcessTime.sorted { $0.value < $1.value }.map { $0.key }
-            let keysToRemove = sortedKeys.prefix(processCache.count - maxCacheSize)
-            
-            for key in keysToRemove {
-                processCache.removeValue(forKey: key)
-                nilCache.remove(key)
-                lastProcessTime.removeValue(forKey: key)
-            }
-        }
+        // Имитация обработки
+        try? await Task.sleep(nanoseconds: 50_000_000) // 50ms
     }
     
-    /// Инвалидирует весь кэш
-    func invalidateCache() {
-        processCache.removeAll()
-        nilCache.removeAll()
-        lastProcessTime.removeAll()
+    // MARK: - Performance Monitoring
+    
+    /// Получает среднее время обработки
+    var averageProcessingTime: TimeInterval {
+        guard !processingTimes.isEmpty else { return 0 }
+        return processingTimes.reduce(0, +) / Double(processingTimes.count)
     }
     
-    /// Получает результат обработки ноды из кэша
-    func getCachedResult(for nodeId: UUID) -> CIImage? {
-        if let cachedResult = processCache[nodeId] {
-            return cachedResult
-        } else if nilCache.contains(nodeId) {
-            return nil
-        }
-        return nil
+    /// Получает максимальное время обработки
+    var maxProcessingTime: TimeInterval {
+        return processingTimes.max() ?? 0
     }
     
-    /// Принудительно обрабатывает конкретную ноду
-    func forceProcessNode(_ node: BaseNode) {
-        processCache.removeValue(forKey: node.id)
-        nilCache.remove(node.id)
-        processNode(node)
+    /// Получает минимальное время обработки
+    var minProcessingTime: TimeInterval {
+        return processingTimes.min() ?? 0
     }
     
-    /// Очищает все ресурсы
-    func cleanup() {
-        invalidateCache()
+    // MARK: - Cleanup
+    
+    deinit {
+        processingTask?.cancel()
         cancellables.removeAll()
     }
 }

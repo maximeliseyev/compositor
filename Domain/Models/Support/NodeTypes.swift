@@ -27,10 +27,7 @@ struct NodePortDefinition {
 enum NodeType: String, CaseIterable {
     case view = "View"
     case input = "Input"
-    case corrector = "Corrector"
-    case metalCorrector = "MetalCorrector"
-    case metalBlur = "MetalBlur"
-    case colorWheels = "Color Wheels"
+    case blur = "Blur"
     
     // MARK: - Unified Metadata
     var metadata: NodeMetadata {
@@ -55,43 +52,13 @@ enum NodeType: String, CaseIterable {
                 inputPorts: [],
                 outputPorts: [NodePortDefinition(name: "Output", dataType: .image)]
             )
-        case .corrector:
-            return NodeMetadata(
-                displayName: "Corrector Node",
-                description: "Apply image corrections",
-                iconName: "slider.horizontal.3",
-                category: .processing,
-                color: "orange",
-                inputPorts: [NodePortDefinition(name: "Input", dataType: .image)],
-                outputPorts: [NodePortDefinition(name: "Output", dataType: .image)]
-            )
-        case .metalCorrector:
-            return NodeMetadata(
-                displayName: "Metal Corrector",
-                description: "Apply color corrections using Metal",
-                iconName: "paintbrush",
-                category: .processing,
-                color: "purple",
-                inputPorts: [NodePortDefinition(name: "Input", dataType: .image)],
-                outputPorts: [NodePortDefinition(name: "Output", dataType: .image)]
-            )
-        case .metalBlur:
+        case .blur:
             return NodeMetadata(
                 displayName: "Metal Blur",
                 description: "Apply blur effects using Metal",
                 iconName: "camera.filters",
                 category: .processing,
                 color: "indigo",
-                inputPorts: [NodePortDefinition(name: "Input", dataType: .image)],
-                outputPorts: [NodePortDefinition(name: "Output", dataType: .image)]
-            )
-        case .colorWheels:
-            return NodeMetadata(
-                displayName: "Color Wheels",
-                description: "Professional color correction with lift/gamma/gain controls",
-                iconName: "paintpalette",
-                category: .processing,
-                color: "pink",
                 inputPorts: [NodePortDefinition(name: "Input", dataType: .image)],
                 outputPorts: [NodePortDefinition(name: "Output", dataType: .image)]
             )

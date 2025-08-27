@@ -217,7 +217,7 @@ public class UniversalMediaProcessor: ObservableObject, MediaProcessing {
         
         // Ждем загрузки
         while videoProcessor.isLoading {
-            try await Task.sleep(nanoseconds: 100_000_000) // 0.1 секунды
+            try await Task.sleep(nanoseconds: PerformanceConstants.videoLoadWaitInterval)
         }
         
         // Если указано время, перематываем к нему

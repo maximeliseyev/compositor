@@ -115,10 +115,8 @@ struct NodeParametersSection: View {
                 .foregroundColor(.primary)
             
             // Динамические параметры в зависимости от типа ноды
-            if node is MetalCorrectorNode {
-                MetalCorrectorParameters(node: node as! MetalCorrectorNode)
-            } else if node is MetalBlurNode {
-                MetalBlurParameters(node: node as! MetalBlurNode)
+            if node is BlurNode {
+                BlurParameters(node: node as! BlurNode)
             } else {
                 GenericParameters(node: node)
             }
@@ -126,75 +124,11 @@ struct NodeParametersSection: View {
     }
 }
 
-// MARK: - Metal Corrector Parameters
-
-struct MetalCorrectorParameters: View {
-    @ObservedObject var node: MetalCorrectorNode
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            // Exposure
-            ParameterSlider(
-                title: "Exposure",
-                value: Binding(
-                    get: { node.parameters["exposure"] as? Float ?? 0.0 },
-                    set: { node.setParameter(key: "exposure", value: $0) }
-                ),
-                range: -2.0...2.0,
-                step: 0.1
-            )
-            
-            // Contrast
-            ParameterSlider(
-                title: "Contrast",
-                value: Binding(
-                    get: { node.parameters["contrast"] as? Float ?? 1.0 },
-                    set: { node.setParameter(key: "contrast", value: $0) }
-                ),
-                range: 0.0...3.0,
-                step: 0.1
-            )
-            
-            // Saturation
-            ParameterSlider(
-                title: "Saturation",
-                value: Binding(
-                    get: { node.parameters["saturation"] as? Float ?? 1.0 },
-                    set: { node.setParameter(key: "saturation", value: $0) }
-                ),
-                range: 0.0...3.0,
-                step: 0.1
-            )
-            
-            // Brightness
-            ParameterSlider(
-                title: "Brightness",
-                value: Binding(
-                    get: { node.parameters["brightness"] as? Float ?? 0.0 },
-                    set: { node.setParameter(key: "brightness", value: $0) }
-                ),
-                range: -1.0...1.0,
-                step: 0.05
-            )
-            
-            // Temperature
-            ParameterSlider(
-                title: "Temperature",
-                value: Binding(
-                    get: { node.parameters["temperature"] as? Float ?? 0.0 },
-                    set: { node.setParameter(key: "temperature", value: $0) }
-                ),
-                range: -1.0...1.0,
-                step: 0.05
-            )
-        }
-    }
-}
 
 // MARK: - Metal Blur Parameters
 
-struct MetalBlurParameters: View {
-    @ObservedObject var node: MetalBlurNode
+struct BlurParameters: View {
+    @ObservedObject var node: BlurNode
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -305,13 +239,5 @@ struct ParameterSlider: View {
             Slider(value: $value, in: range, step: step)
                 .accentColor(.blue)
         }
-    }
-}
-
-// MARK: - Preview
-
-struct MetalNodeInspector_Previews: PreviewProvider {
-    static var previews: some View {
-        MetalNodeInspector(node: MetalCorrectorNode(type: .metalCorrector, position: .zero))
     }
 }

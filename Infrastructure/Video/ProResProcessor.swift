@@ -52,7 +52,6 @@ class ProResProcessor: ObservableObject {
     }
     
     // MARK: - Properties
-    private let logger = Logger(subsystem: "compositor.prores", category: "prores-processor")
     
     // MARK: - AVFoundation Components
     private var videoComposition: AVMutableVideoComposition?
@@ -90,10 +89,8 @@ class ProResProcessor: ObservableObject {
         isHardwareAccelerated = device?.supportsFamily(.apple7) ?? false
         
         if isHardwareAccelerated {
-            logger.info("✅ Hardware ProRes acceleration available")
             print("✅ ProRes: Hardware acceleration available")
         } else {
-            logger.warning("⚠️ Hardware ProRes acceleration not available")
             print("⚠️ ProRes: Hardware acceleration not available (using software)")
         }
     }
@@ -156,7 +153,7 @@ class ProResProcessor: ObservableObject {
         let decodingTime = CFAbsoluteTimeGetCurrent() - startTime
         await updateDecodingMetrics(decodingTime: decodingTime, frameCount: frameCount)
         
-        logger.info("✅ Decoded \(frameCount) frames in \(String(format: "%.2f", decodingTime))s")
+        print("✅ ProRes: Decoded \(frameCount) frames in \(String(format: "%.2f", decodingTime))s")
         print("✅ ProRes: Decoded \(frameCount) frames")
         
         return frames
@@ -233,7 +230,7 @@ class ProResProcessor: ObservableObject {
         let encodingTime = CFAbsoluteTimeGetCurrent() - startTime
         await updateEncodingMetrics(encodingTime: encodingTime, frameCount: images.count)
         
-        logger.info("✅ Encoded \(images.count) frames to ProRes \(variant.rawValue) in \(String(format: "%.2f", encodingTime))s")
+        print("✅ ProRes: Encoded \(images.count) frames to \(variant.rawValue) in \(String(format: "%.2f", encodingTime))s")
         print("✅ ProRes: Encoded \(images.count) frames to \(variant.rawValue)")
     }
     
@@ -282,7 +279,7 @@ class ProResProcessor: ObservableObject {
         
         if exportSession.status == .completed {
             let conversionTime = CFAbsoluteTimeGetCurrent() - startTime
-            logger.info("✅ ProRes conversion completed in \(String(format: "%.2f", conversionTime))s")
+            print("✅ ProRes: Conversion completed in \(String(format: "%.2f", conversionTime))s")
             print("✅ ProRes: Conversion to \(targetVariant.rawValue) completed")
         } else {
             throw ProResError.exportFailed(exportSession.error)

@@ -212,23 +212,27 @@ struct ResizableDivider: View {
             .contentShape(Rectangle())
             .onHover { hovering in
                 isHovering = hovering
+                #if os(macOS)
                 if hovering {
                     NSCursor.resizeLeftRight.set()
                 } else if !isDragging {
                     NSCursor.arrow.set()
                 }
+                #endif
             }
             .gesture(
                 DragGesture()
                     .onChanged { value in
                         if !isDragging {
                             isDragging = true
+                            #if os(macOS)
                             switch orientation {
                             case .horizontal:
                                 NSCursor.resizeUpDown.set()
                             case .vertical:
                                 NSCursor.resizeLeftRight.set()
                             }
+                            #endif
                         }
                         
                         let delta = orientation == .vertical ? value.translation.width : value.translation.height
@@ -236,6 +240,7 @@ struct ResizableDivider: View {
                     }
                     .onEnded { _ in
                         isDragging = false
+                        #if os(macOS)
                         if isHovering {
                             switch orientation {
                             case .horizontal:
@@ -246,6 +251,7 @@ struct ResizableDivider: View {
                         } else {
                             NSCursor.arrow.set()
                         }
+                        #endif
                     }
             )
     }

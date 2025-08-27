@@ -12,30 +12,10 @@ import SwiftUI
 struct NodeInspectorFactory {
     static func createInspector(for node: BaseNode) -> some View {
         switch node {
-        case let metalNode as MetalNode:
-            return AnyView(MetalNodeInspector(node: metalNode))
-        case let correctorNode as CorrectorNode:
-            return AnyView(CorrectorNodeInspector(node: correctorNode))
         case let viewNode as ViewNode:
             return AnyView(ViewNodeInspector(node: viewNode))
         default:
             return AnyView(BaseNodeInspector(node: node))
-        }
-    }
-}
-
-// MARK: - Corrector Node Inspector
-
-struct CorrectorNodeInspector: View {
-    @ObservedObject var node: CorrectorNode
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Image Corrections")
-                .font(.headline)
-            
-            Text("Correction controls will be implemented here")
-                .foregroundColor(.secondary)
         }
     }
 }

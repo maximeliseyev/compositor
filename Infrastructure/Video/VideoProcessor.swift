@@ -39,7 +39,7 @@ class VideoProcessor: ObservableObject {
     // Кэш для избежания повторной загрузки
     private var loadedURL: URL?
     private var frameCache: [Double: CIImage] = [:]
-    private let maxCacheSize = 50
+    private let maxCacheSize = PerformanceConstants.videoFrameCacheSize
     private var lastSeekTime: Double = -1.0
     
     init() {
@@ -47,10 +47,9 @@ class VideoProcessor: ObservableObject {
     }
     
     deinit {
-        Task { @MainActor in
-            stopDisplayLink()
-            player?.pause()
-        }
+        // Очистка ресурсов при деинициализации
+        player?.pause()
+        // stopDisplayLink() вызывается только из @MainActor контекста
     }
     
     // MARK: - Public Methods
@@ -93,7 +92,7 @@ class VideoProcessor: ObservableObject {
                 print("⏱️ Video duration set: \(self.duration)")
                 
                 // Создаем player item
-                let playerItem = await AVPlayerItem(asset: asset)
+                let playerItem = AVPlayerItem(asset: asset)
                 self.playerItem = playerItem
                 
                 // Создаем player
