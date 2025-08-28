@@ -115,7 +115,7 @@ class MetalNode: BaseNode {
             
             // Обновляем метрики производительности
             let processingTime = CFAbsoluteTimeGetCurrent() - startTime
-            await updatePerformanceMetrics(renderer: renderer, processingTime: processingTime)
+            updatePerformanceMetrics(renderer: renderer, processingTime: processingTime)
             
             return result
         } catch {
@@ -134,7 +134,6 @@ class MetalNode: BaseNode {
     
     // MARK: - Performance Monitoring
     
-    @MainActor
     private func updatePerformanceMetrics(renderer: MetalRendererProtocol, processingTime: TimeInterval) {
         self.metalProcessingTime = processingTime
         self.conversionCount = renderer.conversionCount

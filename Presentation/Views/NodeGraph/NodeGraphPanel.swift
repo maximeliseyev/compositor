@@ -247,15 +247,11 @@ struct NodeGraphPanel: View {
     }
     
     private func createNode(ofType type: NodeType, at position: CGPoint) async {
-        let newNode: BaseNode
+        let newNode = NodeFactory.createNode(type: type, position: position)
         
-        switch type {
-        case .view:
-            newNode = ViewNode(position: position, viewerPanel: viewerController)
-        case .input:
-            newNode = InputNode(position: position)
-        case .blur:
-            newNode = BlurNode(type: type, position: position)
+        // Специальная обработка для ViewNode
+        if let viewNode = newNode as? ViewNode {
+            viewNode.viewerPanel = viewerController
         }
         
         nodeGraph.addNode(newNode)

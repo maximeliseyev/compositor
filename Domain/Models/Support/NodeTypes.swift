@@ -28,6 +28,7 @@ enum NodeType: String, CaseIterable {
     case view = "View"
     case input = "Input"
     case blur = "Blur"
+    case brightness = "Brightness"
     
     // MARK: - Unified Metadata
     var metadata: NodeMetadata {
@@ -54,11 +55,21 @@ enum NodeType: String, CaseIterable {
             )
         case .blur:
             return NodeMetadata(
-                displayName: "Metal Blur",
-                description: "Apply blur effects using Metal",
+                displayName: "Core Image Blur",
+                description: "Apply blur effects using Core Image",
                 iconName: "camera.filters",
                 category: .processing,
                 color: "indigo",
+                inputPorts: [NodePortDefinition(name: "Input", dataType: .image)],
+                outputPorts: [NodePortDefinition(name: "Output", dataType: .image)]
+            )
+        case .brightness:
+            return NodeMetadata(
+                displayName: "Brightness & Contrast",
+                description: "Adjust brightness, contrast and saturation using Core Image",
+                iconName: "sun.max",
+                category: .processing,
+                color: "yellow",
                 inputPorts: [NodePortDefinition(name: "Input", dataType: .image)],
                 outputPorts: [NodePortDefinition(name: "Output", dataType: .image)]
             )

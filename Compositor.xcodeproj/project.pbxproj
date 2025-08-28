@@ -9,12 +9,17 @@
 /* Begin PBXBuildFile section */
 		BF0798CF2E548CBE00949707 /* PerformanceConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0798CD2E548CBE00949707 /* PerformanceConstants.swift */; };
 		BF0798E42E54967600949707 /* TextureData.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0798E32E54967600949707 /* TextureData.swift */; };
-		BF0798E62E5496AD00949707 /* OptimizedMetalRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0798E52E5496AD00949707 /* OptimizedMetalRenderer.swift */; };
+		BF0798E62E5496AD00949707 /* MetalRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0798E52E5496AD00949707 /* MetalRenderer.swift */; };
 		BF0798E82E5496EC00949707 /* MetalNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0798E72E5496EC00949707 /* MetalNode.swift */; };
 		BF1A71272E5F2F39007EF611 /* NodeGraphProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF1A71262E5F2F39007EF611 /* NodeGraphProcessor.swift */; };
 		BF1A712B2E5F323B007EF611 /* NodeGraphExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF1A712A2E5F3228007EF611 /* NodeGraphExtensions.swift */; };
+		BF1A71352E5F36DB007EF611 /* CompositorTests in Sources */ = {isa = PBXBuildFile; fileRef = BF1A71342E5F36DB007EF611 /* CompositorTests */; };
+		BF1A71372E5F36DB007EF611 /* SimpleNodeRegistryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF1A71362E5F36DB007EF611 /* SimpleNodeRegistryTests.swift */; };
 		BF1A71522E5F39F9007EF611 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF0798C92E548B6B00949707 /* XCTest.framework */; };
 		BF1A71532E5F39F9007EF611 /* XCTest.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = BF0798C92E548B6B00949707 /* XCTest.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		BF1A715A2E604B36007EF611 /* CoreImageNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF1A71592E604B36007EF611 /* CoreImageNode.swift */; };
+		BF1A718E2E604E34007EF611 /* BrightnessNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF1A718D2E604E34007EF611 /* BrightnessNode.swift */; };
+		BF1A71902E60522E007EF611 /* NodeRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF1A718F2E60522E007EF611 /* NodeRegistry.swift */; };
 		BF8EDBA12E506E300040E898 /* CompositorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB8A2E506E300040E898 /* CompositorView.swift */; };
 		BF8EDBA22E506E300040E898 /* Color+NodeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB802E506E300040E898 /* Color+NodeTypes.swift */; };
 		BF8EDBA32E506E300040E898 /* NodeGraphRenderStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB8E2E506E300040E898 /* NodeGraphRenderStyle.swift */; };
@@ -42,7 +47,6 @@
 		BF8EDBBF2E506E300040E898 /* MetalNodeInspector.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB842E506E300040E898 /* MetalNodeInspector.swift */; };
 		BF8EDBC02E506E300040E898 /* Merge.metal in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB6A2E506E300040E898 /* Merge.metal */; };
 		BF8EDBC12E506E300040E898 /* ViewerPanelController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB9B2E506E300040E898 /* ViewerPanelController.swift */; };
-		BF8EDBC22E506E300040E898 /* MetalRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB722E506E300040E898 /* MetalRenderer.swift */; };
 		BF8EDBC32E506E300040E898 /* NotificationNames.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB7E2E506E300040E898 /* NotificationNames.swift */; };
 		BF8EDBC42E506E300040E898 /* NodeGraphCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB912E506E300040E898 /* NodeGraphCache.swift */; };
 		BF8EDBC52E506E300040E898 /* Types.metal in Sources */ = {isa = PBXBuildFile; fileRef = BF8EDB6F2E506E300040E898 /* Types.metal */; };
@@ -100,21 +104,21 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		BF0798C42E54764900949707 /* VideoInspectorControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoInspectorControls.swift; sourceTree = "<group>"; };
 		BF0798C92E548B6B00949707 /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Platforms/MacOSX.platform/Developer/Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
 		BF0798CD2E548CBE00949707 /* PerformanceConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceConstants.swift; sourceTree = "<group>"; };
 		BF0798E32E54967600949707 /* TextureData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextureData.swift; sourceTree = "<group>"; };
-		BF0798E52E5496AD00949707 /* OptimizedMetalRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptimizedMetalRenderer.swift; sourceTree = "<group>"; };
+		BF0798E52E5496AD00949707 /* MetalRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalRenderer.swift; sourceTree = "<group>"; };
 		BF0798E72E5496EC00949707 /* MetalNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalNode.swift; sourceTree = "<group>"; };
 		BF1A71262E5F2F39007EF611 /* NodeGraphProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeGraphProcessor.swift; sourceTree = "<group>"; };
 		BF1A712A2E5F3228007EF611 /* NodeGraphExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeGraphExtensions.swift; sourceTree = "<group>"; };
-		BF1A712C2E5F36DB007EF611 /* AsyncProcessingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncProcessingTests.swift; sourceTree = "<group>"; };
 		BF1A712D2E5F36DB007EF611 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		BF1A712E2E5F36DB007EF611 /* NodeConnectionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeConnectionTests.swift; sourceTree = "<group>"; };
-		BF1A712F2E5F36DB007EF611 /* NodeGraphTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeGraphTests.swift; sourceTree = "<group>"; };
-		BF1A71322E5F36DB007EF611 /* TextureDataTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextureDataTests.swift; sourceTree = "<group>"; };
-		BF1A71332E5F36DB007EF611 /* TextureManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextureManagerTests.swift; sourceTree = "<group>"; };
+
+
+		BF1A71362E5F36DB007EF611 /* SimpleNodeRegistryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleNodeRegistryTests.swift; sourceTree = "<group>"; };
 		BF1A71392E5F39EB007EF611 /* CompositorTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CompositorTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		BF1A71592E604B36007EF611 /* CoreImageNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreImageNode.swift; sourceTree = "<group>"; };
+		BF1A718D2E604E34007EF611 /* BrightnessNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrightnessNode.swift; sourceTree = "<group>"; };
+		BF1A718F2E60522E007EF611 /* NodeRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeRegistry.swift; sourceTree = "<group>"; };
 		BF8EDB562E506BBA0040E898 /* DIContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DIContainer.swift; sourceTree = "<group>"; };
 		BF8EDB622E506E300040E898 /* NodeFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeFactory.swift; sourceTree = "<group>"; };
 		BF8EDB632E506E300040E898 /* NodeGraph.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeGraph.swift; sourceTree = "<group>"; };
@@ -124,7 +128,6 @@
 		BF8EDB6C2E506E300040E898 /* UIPrimitives.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = UIPrimitives.metal; sourceTree = "<group>"; };
 		BF8EDB6E2E506E300040E898 /* Color.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Color.metal; sourceTree = "<group>"; };
 		BF8EDB6F2E506E300040E898 /* Types.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Types.metal; sourceTree = "<group>"; };
-		BF8EDB722E506E300040E898 /* MetalRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalRenderer.swift; sourceTree = "<group>"; };
 		BF8EDB732E506E300040E898 /* MetalRenderingManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalRenderingManager.swift; sourceTree = "<group>"; };
 		BF8EDB742E506E300040E898 /* TextureManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextureManager.swift; sourceTree = "<group>"; };
 		BF8EDB7B2E506E300040E898 /* NodeGraphViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeGraphViewModel.swift; sourceTree = "<group>"; };
@@ -226,11 +229,9 @@
 			isa = PBXGroup;
 			children = (
 				BF1A712D2E5F36DB007EF611 /* Info.plist */,
-				BF1A712C2E5F36DB007EF611 /* AsyncProcessingTests.swift */,
-				BF1A712E2E5F36DB007EF611 /* NodeConnectionTests.swift */,
-				BF1A712F2E5F36DB007EF611 /* NodeGraphTests.swift */,
-				BF1A71322E5F36DB007EF611 /* TextureDataTests.swift */,
-				BF1A71332E5F36DB007EF611 /* TextureManagerTests.swift */,
+
+
+				BF1A71362E5F36DB007EF611 /* SimpleNodeRegistryTests.swift */,
 			);
 			path = CompositorTests;
 			sourceTree = "<group>";
@@ -313,9 +314,8 @@
 			isa = PBXGroup;
 			children = (
 				BF8EDB712E506E300040E898 /* Shaders */,
-				BF8EDB722E506E300040E898 /* MetalRenderer.swift */,
 				BF8EDB732E506E300040E898 /* MetalRenderingManager.swift */,
-				BF0798E52E5496AD00949707 /* OptimizedMetalRenderer.swift */,
+				BF0798E52E5496AD00949707 /* MetalRenderer.swift */,
 				BF8EDB742E506E300040E898 /* TextureManager.swift */,
 				BF0798E32E54967600949707 /* TextureData.swift */,
 			);
@@ -383,7 +383,6 @@
 				BF8EDB862E506E300040E898 /* NodeInspectors.swift */,
 				BF8EDB872E506E300040E898 /* VideoInspectorControls.swift */,
 				BF8EDB882E506E300040E898 /* VideoScrubber.swift */,
-				BF0798C42E54764900949707 /* VideoInspectorControls.swift */,
 			);
 			path = Inspector;
 			sourceTree = "<group>";
@@ -501,8 +500,10 @@
 			isa = PBXGroup;
 			children = (
 				BFCD14202E53827D00FE99DD /* BaseNode.swift */,
+				BF1A71592E604B36007EF611 /* CoreImageNode.swift */,
 				BF0798E72E5496EC00949707 /* MetalNode.swift */,
 				BFCD14242E53827D00FE99DD /* BlurNode.swift */,
+				BF1A718D2E604E34007EF611 /* BrightnessNode.swift */,
 				BFCD14232E53827D00FE99DD /* InputNode.swift */,
 				BFCD14252E53827D00FE99DD /* ViewNode.swift */,
 			);
@@ -515,6 +516,7 @@
 				BFCD14382E53846000FE99DD /* MediaFormatSupport.swift */,
 				BFCD14272E53827D00FE99DD /* NodeConnection.swift */,
 				BFCD14282E53827D00FE99DD /* NodeTypes.swift */,
+				BF1A718F2E60522E007EF611 /* NodeRegistry.swift */,
 			);
 			path = Support;
 			sourceTree = "<group>";
@@ -688,6 +690,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BF1A71352E5F36DB007EF611 /* CompositorTests in Sources */,
+				BF1A71372E5F36DB007EF611 /* SimpleNodeRegistryTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -703,6 +707,7 @@
 				BF8EDBA42E506E300040E898 /* Compositor.xcdatamodeld in Sources */,
 				BF8EDBA52E506E300040E898 /* NodeGraphViewModel.swift in Sources */,
 				BF8EDBA62E506E300040E898 /* NodeGraphSelectionManager.swift in Sources */,
+				BF1A718E2E604E34007EF611 /* BrightnessNode.swift in Sources */,
 				BF8EDBA72E506E300040E898 /* InspectorPanel.swift in Sources */,
 				BF8EDBA82E506E300040E898 /* NodeGraphConnectionManager.swift in Sources */,
 				BF8EDBA92E506E300040E898 /* TextureManager.swift in Sources */,
@@ -713,6 +718,7 @@
 				BFCD142D2E53827D00FE99DD /* ViewNode.swift in Sources */,
 				BFCD142E2E53827D00FE99DD /* BaseNode.swift in Sources */,
 				BFCD14302E53827D00FE99DD /* NodeTypes.swift in Sources */,
+				BF1A71902E60522E007EF611 /* NodeRegistry.swift in Sources */,
 				BFCD14312E53827D00FE99DD /* BlurNode.swift in Sources */,
 				BFBAE05B2E551255000A7D70 /* PerformanceSettingsView.swift in Sources */,
 				BF8EDBAA2E506E300040E898 /* Blur.metal in Sources */,
@@ -725,8 +731,10 @@
 				BFCD14192E537E6400FE99DD /* MetalFXManager.swift in Sources */,
 				BFCD141A2E537E6400FE99DD /* MPSProcessor.swift in Sources */,
 				BFCD141E2E537E6400FE99DD /* PerformanceOptimizer.swift in Sources */,
+				BF1A715A2E604B36007EF611 /* CoreImageNode.swift in Sources */,
 				BFCD143B2E53848300FE99DD /* UniversalMediaProcessor.swift in Sources */,
 				BFCD141F2E537E6400FE99DD /* ProcessingStrategy.swift in Sources */,
+				BF1A71902E60522E007EF611 /* NodeRegistry.swift in Sources */,
 				BF8EDBB32E506E300040E898 /* VideoScrubber.swift in Sources */,
 				BF8EDBB42E506E300040E898 /* ContentView.swift in Sources */,
 				BF8EDBB52E506E300040E898 /* NodeGraph.swift in Sources */,
@@ -736,13 +744,12 @@
 				BF8EDBB82E506E300040E898 /* NodeViewConstants.swift in Sources */,
 				BF8EDBB92E506E300040E898 /* VideoInspectorControls.swift in Sources */,
 				BF8EDBBC2E506E300040E898 /* Edge.metal in Sources */,
-				BF0798E62E5496AD00949707 /* OptimizedMetalRenderer.swift in Sources */,
+				BF0798E62E5496AD00949707 /* MetalRenderer.swift in Sources */,
 				BF8EDBBD2E506E300040E898 /* NodeView.swift in Sources */,
 				BFCD14392E53846000FE99DD /* MediaFormatSupport.swift in Sources */,
 				BF8EDBBF2E506E300040E898 /* MetalNodeInspector.swift in Sources */,
 				BF8EDBC02E506E300040E898 /* Merge.metal in Sources */,
 				BF8EDBC12E506E300040E898 /* ViewerPanelController.swift in Sources */,
-				BF8EDBC22E506E300040E898 /* MetalRenderer.swift in Sources */,
 				BF8EDBC32E506E300040E898 /* NotificationNames.swift in Sources */,
 				BF8EDBC42E506E300040E898 /* NodeGraphCache.swift in Sources */,
 				BFCD143F2E5384B400FE99DD /* ProResAdapter.swift in Sources */,
@@ -777,10 +784,12 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = PK2473XF3P;
+				ENABLE_TESTING_SEARCH_PATHS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = MaxEliseyev.CompositorTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Compositor.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Compositor";
@@ -794,6 +803,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = PK2473XF3P;
+				ENABLE_TESTING_SEARCH_PATHS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = MaxEliseyev.CompositorTests;

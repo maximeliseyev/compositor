@@ -13,8 +13,8 @@ struct MetalNodeInspector: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            // Заголовок ноды
-            NodeHeaderView(node: node)
+            // Universal parameters
+            UniversalParameterInspector(node: node)
             
             Divider()
             
@@ -28,13 +28,9 @@ struct MetalNodeInspector: View {
             
             Divider()
             
-            // Параметры ноды
-            NodeParametersSection(node: node)
-            
-            Spacer()
+            // Metal-specific parameters
+            MetalParametersSection(node: node)
         }
-        .padding()
-        .frame(minWidth: 250, maxWidth: 300)
     }
 }
 
@@ -98,50 +94,21 @@ struct ProcessingModeSection: View {
         case .metal:
             return "Force Metal rendering (may fallback to Core Image)"
         case .coreImage:
-            return "Use Core Image framework"
+            return "Use Core Image rendering (CPU-based)"
         }
     }
 }
 
-// MARK: - Node Parameters Section
+// MARK: - Metal Parameters Section
 
-struct NodeParametersSection: View {
+struct MetalParametersSection: View {
     @ObservedObject var node: MetalNode
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Parameters")
+            Text("Metal Parameters")
                 .font(.headline)
                 .foregroundColor(.primary)
-            
-            // Динамические параметры в зависимости от типа ноды
-            if node is BlurNode {
-                BlurParameters(node: node as! BlurNode)
-            } else {
-                GenericParameters(node: node)
-            }
-        }
-    }
-}
-
-
-// MARK: - Metal Blur Parameters
-
-struct BlurParameters: View {
-    @ObservedObject var node: BlurNode
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            // Radius
-            ParameterSlider(
-                title: "Radius",
-                value: Binding(
-                    get: { node.parameters["radius"] as? Float ?? 5.0 },
-                    set: { node.setParameter(key: "radius", value: $0) }
-                ),
-                range: 0.0...50.0,
-                step: 1.0
-            )
             
             // Blur Type
             VStack(alignment: .leading, spacing: 4) {
@@ -158,86 +125,6 @@ struct BlurParameters: View {
                 }
                 .pickerStyle(SegmentedPickerStyle())
             }
-        }
-    }
-}
-
-// MARK: - Generic Parameters
-
-struct GenericParameters: View {
-    @ObservedObject var node: MetalNode
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            ForEach(node.getParameterKeys(), id: \.self) { key in
-                if let value = node.getParameter(key: key) {
-                    ParameterRow(key: key, value: value, node: node)
-                }
-            }
-        }
-    }
-}
-
-// MARK: - Parameter Row
-
-struct ParameterRow: View {
-    let key: String
-    let value: Any
-    @ObservedObject var node: MetalNode
-    
-    var body: some View {
-        HStack {
-            Text(key.capitalized)
-                .font(.subheadline)
-                .foregroundColor(.primary)
-            
-            Spacer()
-            
-            if let floatValue = value as? Float {
-                Text(String(format: "%.2f", floatValue))
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            } else if let intValue = value as? Int {
-                Text("\(intValue)")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            } else if let stringValue = value as? String {
-                Text(stringValue)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            } else {
-                Text("\(value)")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-        }
-    }
-}
-
-// MARK: - Parameter Slider
-
-struct ParameterSlider: View {
-    let title: String
-    @Binding var value: Float
-    let range: ClosedRange<Float>
-    let step: Float
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                Text(title)
-                    .font(.subheadline)
-                    .foregroundColor(.primary)
-                
-                Spacer()
-                
-                Text(String(format: "%.2f", value))
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-            
-            Slider(value: $value, in: range, step: step)
-                .accentColor(.blue)
         }
     }
 }

@@ -15,6 +15,11 @@ struct InputNodeInspector: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
+            // Universal parameters
+            UniversalParameterInspector(node: node)
+            
+            Divider()
+            
             // Media Loading Section
             VStack(alignment: .leading, spacing: 8) {
                 Text("Media Source")
@@ -148,6 +153,12 @@ struct InputNodeInspector: View {
                         .font(.caption)
                     }
                 }
+            }
+            
+            // Video Controls (if applicable)
+            if node.mediaType == .video || node.mediaType == .proRes {
+                Divider()
+                VideoInspectorControls(node: node)
             }
         }
     }

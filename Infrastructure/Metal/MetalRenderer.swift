@@ -5,13 +5,14 @@
 //  Created by Maxim Eliseyev on 12.08.2025.
 //
 
-
 import Foundation
 @preconcurrency import Metal
 @preconcurrency import MetalKit
 import SwiftUI
 @preconcurrency import CoreImage
 
+/// Оптимизированный Metal рендерер с системой TextureData
+/// Минимизирует конвертации между CIImage и MTLTexture
 class MetalRenderer: ObservableObject, @unchecked Sendable {
     
     // MARK: - Metal Properties
@@ -23,26 +24,41 @@ class MetalRenderer: ObservableObject, @unchecked Sendable {
     private var renderPipelineCache: [String: MTLRenderPipelineState] = [:]
     private var computePipelineCache: [String: MTLComputePipelineState] = [:]
     
-    // MARK: - Managers
+    // MARK: - Texture Management
     let textureManager: TextureManager
+    let textureDataFactory: TextureDataFactory
+    let textureDataCache: TextureDataCache
     
     // MARK: - Published Properties
     @Published var isReady = false
     @Published var errorMessage: String?
+    
+    // MARK: - Performance Metrics
+    @Published var conversionCount: Int = 0
+    @Published var cacheHitRate: Double = 0.0
+    @Published var averageProcessingTime: TimeInterval = 0.0
+    
+    private var totalConversions = 0
+    private var totalCacheHits = 0
+    private var totalCacheMisses = 0
+    private var processingTimes: [TimeInterval] = []
     
     private init(device: MTLDevice, commandQueue: MTLCommandQueue, library: MTLLibrary, textureManager: TextureManager) {
         self.device = device
         self.commandQueue = commandQueue
         self.library = library
         self.textureManager = textureManager
+        self.textureDataFactory = TextureDataFactory(textureManager: textureManager)
+        self.textureDataCache = TextureDataCache(maxCacheSize: TextureDataConstants.maxCacheSize)
+        
         self.isReady = true
         
-        print("✅ Metal initialized successfully")
+        print("✅ Optimized Metal initialized successfully")
         print("📱 Device: \(device.name)")
         print("🔧 Max threads per group: \(device.maxThreadsPerThreadgroup)")
     }
     
-    /// Создает новый экземпляр MetalRenderer асинхронно
+    /// Создает новый экземпляр OptimizedMetalRenderer асинхронно
     static func create() async -> MetalRenderer? {
         // Проверяем доступность Metal
         guard let device = MTLCreateSystemDefaultDevice() else {
@@ -61,96 +77,90 @@ class MetalRenderer: ObservableObject, @unchecked Sendable {
             return nil
         }
         
-        let textureManager = await TextureManager(device: device)
+        let textureManager = TextureManager(device: device)
         return MetalRenderer(device: device, commandQueue: commandQueue, library: library, textureManager: textureManager)
     }
     
-    // MARK: - CIImage Integration
+    // MARK: - Optimized Processing Interface
     
-    // MARK: - Shared CIContext for performance
-    private lazy var sharedCIContext: CIContext = {
-        CIContext(mtlDevice: device, options: [
-            .workingColorSpace: CGColorSpace(name: CGColorSpace.sRGB)!,
-            .cacheIntermediates: false // Prevent memory accumulation
-        ])
-    }()
-    
-    /// Конвертирует CIImage в MTLTexture
-    func textureFromCIImage(_ ciImage: CIImage) async throws -> MTLTexture? {
-        // Захватываем необходимые значения на MainActor до перехода на фон
-        let extent = ciImage.extent
-        guard let texture = await self.textureManager.acquireTextureSync(
-            width: Int(extent.width),
-            height: Int(extent.height),
-            pixelFormat: MTLPixelFormat.rgba8Unorm
-        ) else {
-            throw MetalError.cannotCreateTexture
-        }
-
-        return try await withCheckedThrowingContinuation { continuation in
-            DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-                guard let self = self else {
-                    continuation.resume(throwing: MetalError.rendererDeallocated)
-                    return
-                }
-                
-                self.sharedCIContext.render(
-                    ciImage,
-                    to: texture,
-                    commandBuffer: nil,
-                    bounds: extent,
-                    colorSpace: CGColorSpace(name: CGColorSpace.sRGB)!
-                )
-                continuation.resume(returning: texture)
-            }
-        }
-    }
-    
-    /// Конвертирует MTLTexture в CIImage
-    func ciImageFromTexture(_ texture: MTLTexture) -> CIImage? {
-        let ciImage = CIImage(mtlTexture: texture, options: nil)
-        return ciImage
-    }
-    
-    // MARK: - Node Processing Interface
-    
-    /// Обрабатывает изображение через Metal шейдер
-    func processImage(_ inputImage: CIImage, withShader shaderName: String, parameters: [String: Any] = [:]) async throws -> CIImage? {
-        guard let inputTexture = try await textureFromCIImage(inputImage) else {
-            throw MetalError.cannotCreateTexture
+    /// Оптимизированная обработка изображения через Metal шейдер
+    /// Использует TextureData для минимизации конвертаций
+    func processImageOptimized(_ inputImage: CIImage, withShader shaderName: String, parameters: [String: Any] = [:]) async throws -> CIImage? {
+        let startTime = CFAbsoluteTimeGetCurrent()
+        
+        // Создаем TextureData из CIImage
+        let inputTextureData = textureDataFactory.createFromCIImage(inputImage)
+        
+        // Проверяем кэш
+        let cacheKey = "\(shaderName)_\(inputTextureData.cacheKey)_\(String(describing: parameters).hashValue)"
+        if let cachedResult = textureDataCache.get(for: cacheKey) {
+            totalCacheHits += 1
+            updateMetrics(processingTime: CFAbsoluteTimeGetCurrent() - startTime)
+            return cachedResult.getCIImage()
         }
         
-        guard let outputTexture = await textureManager.acquireTexture(
-            width: inputTexture.width,
-            height: inputTexture.height,
-            pixelFormat: inputTexture.pixelFormat
-        ) else {
-            throw MetalError.cannotCreateTexture
-        }
+        totalCacheMisses += 1
         
-        try await processTextureWithShader(
-            inputTexture: inputTexture,
-            outputTexture: outputTexture,
+        // Обрабатываем через Metal
+        let outputTextureData = try await processTextureDataOptimized(
+            inputTextureData: inputTextureData,
             shaderName: shaderName,
             parameters: parameters
         )
         
-        let result = ciImageFromTexture(outputTexture)
+        // Кэшируем результат
+        textureDataCache.set(outputTextureData, for: cacheKey)
         
-        // Освобождаем текстуры
-        await textureManager.releaseTexture(inputTexture)
-        await textureManager.releaseTexture(outputTexture)
+        // Получаем CIImage для возврата
+        let result = outputTextureData.getCIImage()
+        
+        updateMetrics(processingTime: CFAbsoluteTimeGetCurrent() - startTime)
         
         return result
     }
     
-    /// Асинхронно обрабатывает текстуру через Metal шейдер
-    private func processTextureWithShader(
-        inputTexture: MTLTexture,
-        outputTexture: MTLTexture,
+    /// Обрабатывает TextureData через Metal шейдер
+    /// Избегает ненужных конвертаций
+    private func processTextureDataOptimized(
+        inputTextureData: TextureData,
         shaderName: String,
         parameters: [String: Any]
+    ) async throws -> TextureData {
+        
+        // Получаем MTLTexture для Metal операций
+        let inputTexture = try await inputTextureData.getMetalTexture(device: device)
+        
+        // Создаем выходную текстуру
+        guard let outputTexture = await textureManager.acquireTexture(
+            width: inputTextureData.width,
+            height: inputTextureData.height,
+            pixelFormat: inputTextureData.pixelFormat
+        ) else {
+            throw MetalError.cannotCreateTexture
+        }
+        
+        // Применяем шейдер
+        try await applyComputeShaderOptimized(
+            shaderName: shaderName,
+            inputTexture: inputTexture,
+            outputTexture: outputTexture,
+            parameters: parameters
+        )
+        
+        // Создаем TextureData из выходной текстуры
+        let outputTextureData = textureDataFactory.createFromMTLTexture(outputTexture)
+        
+        return outputTextureData
+    }
+    
+    /// Применяет compute шейдер к текстурам (оптимизированная версия)
+    private func applyComputeShaderOptimized(
+        shaderName: String,
+        inputTexture: MTLTexture,
+        outputTexture: MTLTexture,
+        parameters: [String: Any]
     ) async throws {
+        
         guard let commandBuffer = commandQueue.makeCommandBuffer() else {
             throw MetalError.cannotCreateCommandBuffer
         }
@@ -166,27 +176,31 @@ class MetalRenderer: ObservableObject, @unchecked Sendable {
         computeEncoder.setTexture(inputTexture, index: 0)
         computeEncoder.setTexture(outputTexture, index: 1)
         
-        // Устанавливаем параметры если есть
-        if !parameters.isEmpty {
-            let (buffer, _) = try createParameterBuffer(parameters: parameters)
-            computeEncoder.setBuffer(buffer, offset: 0, index: 0)
-            // Optionally: we can validate length against expected struct sizes per shader
+        // Устанавливаем параметры
+        if let params = parameters as? [String: Float] {
+            for (key, value) in params {
+                if let index = getParameterIndex(for: key) {
+                    var floatValue = value
+                    computeEncoder.setBytes(&floatValue, length: MemoryLayout<Float>.size, index: index)
+                }
+            }
         }
         
         // Вычисляем размеры thread groups
-        let threadGroupSize = MTLSize(width: 16, height: 16, depth: 1)
-        let threadGroups = MTLSize(
-            width: (outputTexture.width + threadGroupSize.width - 1) / threadGroupSize.width,
-            height: (outputTexture.height + threadGroupSize.height - 1) / threadGroupSize.height,
-            depth: 1
+        let threadGroupSize = MTLSizeMake(16, 16, 1)
+        let threadGroups = MTLSizeMake(
+            (inputTexture.width + threadGroupSize.width - 1) / threadGroupSize.width,
+            (inputTexture.height + threadGroupSize.height - 1) / threadGroupSize.height,
+            1
         )
         
         computeEncoder.dispatchThreadgroups(threadGroups, threadsPerThreadgroup: threadGroupSize)
         computeEncoder.endEncoding()
         
+        // Выполняем команды
         commandBuffer.commit()
         
-        // Асинхронное ожидание завершения
+        // Ждем завершения
         return try await withCheckedThrowingContinuation { continuation in
             commandBuffer.addCompletedHandler { _ in
                 continuation.resume()
@@ -194,81 +208,64 @@ class MetalRenderer: ObservableObject, @unchecked Sendable {
         }
     }
     
-
+    // MARK: - Batch Processing
     
-    /// Создает буфер параметров для шейдера
-    private func createParameterBuffer(parameters: [String: Any]) throws -> (MTLBuffer, Int) {
-        // Поддержим разные наборы параметров. Для Blur ожидаем BlurParams (5 полей = 32 байта выравнивания).
-        if parameters.keys.contains("radius") && parameters.keys.contains("textureWidth") {
-            // Собираем BlurParams вручную
-            struct BlurParamsCPU {
-                var radius: Float
-                var direction: SIMD2<Float>
-                var textureSize: SIMD2<Float>
-                var samples: Int32
+    /// Обрабатывает несколько изображений пакетно
+    /// Максимально эффективно использует GPU
+    func processBatchOptimized(_ images: [CIImage], withShader shaderName: String, parameters: [String: Any] = [:]) async throws -> [CIImage?] {
+        let startTime = CFAbsoluteTimeGetCurrent()
+        
+        // Создаем TextureData для всех изображений
+        let inputTextureDataArray = images.map { textureDataFactory.createFromCIImage($0) }
+        
+        // Обрабатываем пакетно
+        let results = try await withThrowingTaskGroup(of: (Int, TextureData?).self) { group in
+            for (index, inputTextureData) in inputTextureDataArray.enumerated() {
+                group.addTask {
+                    let result = try await self.processTextureDataOptimized(
+                        inputTextureData: inputTextureData,
+                        shaderName: shaderName,
+                        parameters: parameters
+                    )
+                    return (index, result)
+                }
             }
-            let rp: Float = (parameters["radius"] as? Float) ?? Float((parameters["radius"] as? Double) ?? 0)
-            let dir = SIMD2<Float>(
-                Float((parameters["dirX"] as? Float) ?? 1.0),
-                Float((parameters["dirY"] as? Float) ?? 0.0)
-            )
-            let texSize = SIMD2<Float>(
-                Float(parameters["textureWidth"] as? Int ?? 0),
-                Float(parameters["textureHeight"] as? Int ?? 0)
-            )
-            let smp: Int32 = Int32(parameters["samples"] as? Int ?? 0)
-            var cpu = BlurParamsCPU(radius: rp, direction: dir, textureSize: texSize, samples: smp)
-            let length = MemoryLayout<BlurParamsCPU>.stride
-            guard let buffer = device.makeBuffer(bytes: &cpu, length: length, options: .storageModeShared) else {
-                throw MetalError.cannotCreateBuffer
+            
+            var outputArray: [TextureData?] = Array(repeating: nil, count: images.count)
+            for try await (index, result) in group {
+                outputArray[index] = result
             }
-            return (buffer, length)
+            return outputArray
         }
         
-        // Generic float packing fallback
-        var floatParams: [Float] = []
-        for (_, value) in parameters {
-            if let floatValue = value as? Float { floatParams.append(floatValue) }
-            else if let intValue = value as? Int { floatParams.append(Float(intValue)) }
-            else if let doubleValue = value as? Double { floatParams.append(Float(doubleValue)) }
-        }
-        let length = floatParams.count * MemoryLayout<Float>.size
-        guard let buffer = device.makeBuffer(bytes: floatParams, length: length, options: .storageModeShared) else {
-            throw MetalError.cannotCreateBuffer
-        }
-        return (buffer, length)
+        // Конвертируем обратно в CIImage
+        let ciImageResults = results.map { $0?.getCIImage() }
+        
+        updateMetrics(processingTime: CFAbsoluteTimeGetCurrent() - startTime)
+        
+        return ciImageResults
     }
-
-    // MARK: - Pipeline State Creation
-    func getRenderPipelineState(
-        vertexFunction: String = "vertex_main",
-        fragmentFunction: String,
-        pixelFormat: MTLPixelFormat = .rgba8Unorm
-    ) throws -> MTLRenderPipelineState {
-        
-        let key = "\(vertexFunction)_\(fragmentFunction)_\(pixelFormat.rawValue)"
-        
-        if let cached = renderPipelineCache[key] {
+    
+    // MARK: - Pipeline Management
+    
+    func getRenderPipelineState(for functionName: String) throws -> MTLRenderPipelineState {
+        if let cached = renderPipelineCache[functionName] {
             return cached
         }
         
-        guard let vertexFunc = library.makeFunction(name: vertexFunction) else {
-            throw MetalError.functionNotFound(vertexFunction)
+        guard let function = library.makeFunction(name: functionName) else {
+            throw MetalError.functionNotFound(functionName)
         }
         
-        guard let fragmentFunc = library.makeFunction(name: fragmentFunction) else {
-            throw MetalError.functionNotFound(fragmentFunction)
-        }
+        let pipelineDescriptor = MTLRenderPipelineDescriptor()
+        pipelineDescriptor.vertexFunction = function
+        pipelineDescriptor.fragmentFunction = function
+        pipelineDescriptor.colorAttachments[0].pixelFormat = .rgba8Unorm
         
-        let descriptor = MTLRenderPipelineDescriptor()
-        descriptor.vertexFunction = vertexFunc
-        descriptor.fragmentFunction = fragmentFunc
-        descriptor.colorAttachments[0].pixelFormat = pixelFormat
+        let pipelineState = try device.makeRenderPipelineState(descriptor: pipelineDescriptor)
+        renderPipelineCache[functionName] = pipelineState
         
-        let pipelineState = try device.makeRenderPipelineState(descriptor: descriptor)
-        renderPipelineCache[key] = pipelineState
-        
-        print("🔨 Created render pipeline: \(key)")
+        print("🔨 Created render pipeline: \(functionName)")
         return pipelineState
     }
     
@@ -288,118 +285,81 @@ class MetalRenderer: ObservableObject, @unchecked Sendable {
         return pipelineState
     }
     
-    // MARK: - Texture Loading
-    func loadTexture(from imagePath: String) async throws -> MTLTexture? {
-        // Избегаем обращения к свойствам @MainActor внутри фоновой очереди
-        let device = self.device
-        return try await withCheckedThrowingContinuation { continuation in
-            DispatchQueue.global(qos: .userInitiated).async {
-                do {
-                    guard let image = NSImage(contentsOfFile: imagePath) else {
-                        throw MetalError.cannotLoadImage(imagePath)
-                    }
-
-                    guard let cgImage = image.cgImage(
-                        forProposedRect: nil,
-                        context: nil,
-                        hints: nil
-                    ) else {
-                        throw MetalError.cannotCreateCGImage
-                    }
-
-                    let textureLoader = MTKTextureLoader(device: device)
-                    let texture = try textureLoader.newTexture(cgImage: cgImage)
-
-                    print("📷 Loaded texture: \(texture.width)x\(texture.height)")
-                    continuation.resume(returning: texture)
-                } catch {
-                    continuation.resume(throwing: error)
-                }
+    // MARK: - Performance Monitoring
+    
+    private func updateMetrics(processingTime: TimeInterval) {
+        DispatchQueue.main.async {
+            self.processingTimes.append(processingTime)
+            
+            // Ограничиваем размер массива
+            if self.processingTimes.count > 100 {
+                self.processingTimes.removeFirst()
+            }
+            
+            // Обновляем метрики
+            self.averageProcessingTime = self.processingTimes.reduce(0, +) / Double(self.processingTimes.count)
+            self.conversionCount = self.totalConversions
+            
+            let totalCacheAccesses = self.totalCacheHits + self.totalCacheMisses
+            if totalCacheAccesses > 0 {
+                self.cacheHitRate = Double(self.totalCacheHits) / Double(totalCacheAccesses)
             }
         }
     }
     
-    // MARK: - Basic Rendering Operations
-    func createBlankTexture(width: Int, height: Int, pixelFormat: MTLPixelFormat = .rgba8Unorm) async -> MTLTexture? {
-        return await textureManager.acquireTexture(
-            width: width,
-            height: height,
-            pixelFormat: pixelFormat
-        )
-    }
-    
-    func copyTexture(from source: MTLTexture, to destination: MTLTexture) async throws {
-        guard let commandBuffer = commandQueue.makeCommandBuffer() else {
-            throw MetalError.cannotCreateCommandBuffer
-        }
-        
-        guard let blitEncoder = commandBuffer.makeBlitCommandEncoder() else {
-            throw MetalError.cannotCreateEncoder
-        }
-        
-        blitEncoder.copy(
-            from: source,
-            sourceSlice: 0,
-            sourceLevel: 0,
-            sourceOrigin: MTLOrigin(x: 0, y: 0, z: 0),
-            sourceSize: MTLSize(width: source.width, height: source.height, depth: 1),
-            to: destination,
-            destinationSlice: 0,
-            destinationLevel: 0,
-            destinationOrigin: MTLOrigin(x: 0, y: 0, z: 0)
-        )
-        
-        blitEncoder.endEncoding()
-        commandBuffer.commit()
-        
-        // Асинхронное ожидание завершения
-        return try await withCheckedThrowingContinuation { continuation in
-            commandBuffer.addCompletedHandler { _ in
-                continuation.resume()
-            }
-        }
-    }
-    
-    // MARK: - Debug Helpers
-    func getDeviceInfo() -> String {
+    /// Получает статистику производительности
+    func getPerformanceStats() -> String {
         return """
-        📱 Device: \(device.name)
-        🔧 Max threads per group: \(device.maxThreadsPerThreadgroup)
-        💾 Recommended working set size: \(device.recommendedMaxWorkingSetSize / 1024 / 1024) MB
-        ⚡ Low power: \(device.isLowPower)
+        📊 Optimized Metal Performance Stats:
+        🔄 Total conversions: \(totalConversions)
+        🎯 Cache hit rate: \(String(format: "%.1f", cacheHitRate * 100))%
+        ⏱️ Average processing time: \(String(format: "%.3f", averageProcessingTime))s
+        💾 Cache size: \(textureDataCache.getCacheSize())
         """
+    }
+    
+    // MARK: - Utility Methods
+    
+    private func getParameterIndex(for key: String) -> Int? {
+        // Маппинг параметров на индексы буферов
+        let parameterMap: [String: Int] = [
+            "radius": 0,
+            "intensity": 1,
+            "threshold": 2,
+            "blurType": 3
+        ]
+        return parameterMap[key]
+    }
+    
+    /// Очищает кэш и освобождает ресурсы
+    func cleanup() {
+        textureDataCache.clear()
+        renderPipelineCache.removeAll()
+        computePipelineCache.removeAll()
+        
+        print("🧹 Optimized Metal renderer cleaned up")
     }
 }
 
 // MARK: - Error Definitions
-enum MetalError: LocalizedError {
-    case functionNotFound(String)
-    case cannotLoadImage(String)
-    case cannotCreateCGImage
+
+/// Ошибки Metal операций
+enum MetalError: Error, LocalizedError {
+    case cannotCreateTexture
     case cannotCreateCommandBuffer
     case cannotCreateEncoder
-    case cannotCreateTexture
-    case cannotCreateBuffer
-    case rendererDeallocated
+    case functionNotFound(String)
     
     var errorDescription: String? {
         switch self {
-        case .functionNotFound(let name):
-            return "Metal function '\(name)' not found in shader library"
-        case .cannotLoadImage(let path):
-            return "Cannot load image from: \(path)"
-        case .cannotCreateCGImage:
-            return "Cannot create CGImage from NSImage"
-        case .cannotCreateCommandBuffer:
-            return "Cannot create Metal command buffer"
-        case .cannotCreateEncoder:
-            return "Cannot create Metal encoder"
         case .cannotCreateTexture:
-            return "Cannot create Metal texture"
-        case .cannotCreateBuffer:
-            return "Cannot create Metal buffer"
-        case .rendererDeallocated:
-            return "MetalRenderer was deallocated"
+            return "Failed to create Metal texture"
+        case .cannotCreateCommandBuffer:
+            return "Failed to create Metal command buffer"
+        case .cannotCreateEncoder:
+            return "Failed to create Metal command encoder"
+        case .functionNotFound(let functionName):
+            return "Metal function not found: \(functionName)"
         }
     }
 }

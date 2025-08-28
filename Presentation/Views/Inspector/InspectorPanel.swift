@@ -29,8 +29,8 @@ struct InspectorPanel: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     if let node = selectedNode {
-                        // Node-specific inspector
-                        NodeInspectorView(node: node)
+                        // Universal node inspector
+                        UniversalNodeInspector(node: node)
                     } else {
                         // Empty state
                         EmptyInspectorView()
@@ -69,9 +69,9 @@ struct EmptyInspectorView: View {
     }
 }
 
-// MARK: - Node Inspector Router
+// MARK: - Universal Node Inspector
 
-struct NodeInspectorView: View {
+struct UniversalNodeInspector: View {
     let node: BaseNode
     
     var body: some View {
@@ -81,16 +81,8 @@ struct NodeInspectorView: View {
             
             Divider()
             
-            // Node-specific controls
-            Group {
-                if let inputNode = node as? InputNode {
-                    InputNodeInspector(node: inputNode)
-                } else if let viewNode = node as? ViewNode {
-                    ViewNodeInspector(node: viewNode)
-                } else {
-                    BaseNodeInspector(node: node)
-                }
-            }
+            // Node-specific inspector using factory
+            NodeInspectorFactory.createInspector(for: node)
         }
     }
 }
